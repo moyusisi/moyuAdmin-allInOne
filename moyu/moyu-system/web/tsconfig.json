@@ -26,8 +26,10 @@
     "strict": true,
     // 是否为为具有隐含"any"类型的表达式和声明启用错误报告
     "noImplicitAny": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    // 是否检查未使用的本地变量
+    "noUnusedLocals": false,
+    // 是否检查未使用的参数
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     // 配置项用于禁用自动包含任何库文件。如果设置了此选项，lib 配置将被忽略。
