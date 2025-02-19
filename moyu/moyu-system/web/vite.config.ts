@@ -37,8 +37,8 @@ export default defineConfig(({ mode }): UserConfig => {
       open: true,
       proxy: {
         '/api': {
-          // target: env.VITE_API_BASEURL,
-          target: 'http://127.0.0.1:8080',
+          target: env.VITE_API_BASEURL,
+          // target: 'http://127.0.0.1:8080',
           ws: false,
           changeOrigin: true,
           // rewrite: (path) => path.replace(/^\/api/, '')
@@ -50,7 +50,7 @@ export default defineConfig(({ mode }): UserConfig => {
       viteMockServe({
         // 模拟数据的配置
         mockPath: 'mock',
-        enable: false//mode === 'dev',
+        enable: mode === 'dev',
       }),
       viteCompression(),
       vueSetupExtend(),
