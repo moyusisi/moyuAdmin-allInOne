@@ -71,9 +71,12 @@
     <!-- 兜底日志 -->
     <root level="INFO">
         <appender-ref ref="consoleAppender"/>
-        <appender-ref ref="infoAppender"/>
-        <appender-ref ref="errorAppender"/>
-        <appender-ref ref="rootAppender"/>
+        <!-- 生产环境. -->
+        <springProfile name="prod">
+            <appender-ref ref="infoAppender"/>
+            <appender-ref ref="errorAppender"/>
+            <appender-ref ref="rootAppender"/>
+        </springProfile>
     </root>
 
 </configuration>
