@@ -95,12 +95,15 @@
           await userStore.initUserInfo()
           message.success('登录成功')
           await router.push({ path: "/" })
-				} catch (err) {
-					loading.value = false
-				}
-			})
-			.catch(() => {})
-	}
+        } catch (err) {
+          message.error('登陆失败')
+          console.log(err)
+          loading.value = false
+        }
+    }).catch((err) => {
+      console.log(err)
+    })
+  }
 
 </script>
 <style >
