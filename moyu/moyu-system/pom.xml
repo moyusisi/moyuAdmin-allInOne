@@ -122,6 +122,11 @@
         <finalName>${project.artifactId}</finalName>
 
         <plugins>
+            <!-- spring boot 打包工具 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
             <!-- 运行模块只打包,不部署 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -73,10 +73,10 @@ public class SecurityConfig {
         // 白名单放行
         http.authorizeRequests().antMatchers(whiteList.toArray(new String[0])).permitAll();
         // 静态资源放行
-        http.authorizeRequests().antMatchers(HttpMethod.GET, "/static/**", "/public/**", "/**/*.ico").permitAll();
+        http.authorizeRequests().antMatchers("/static/**", "/public/**", "/**/*.ico").permitAll();
 
-        // 其他的都需要授权访问
-        http.authorizeRequests().anyRequest().authenticated();
+        // /api下的接口需要保护，其他的都需要授权访问
+        http.authorizeRequests().antMatchers("/api/**").authenticated().anyRequest().permitAll();
 
         // 添加JWT filter
         http.addFilterBefore(new JwtTokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
