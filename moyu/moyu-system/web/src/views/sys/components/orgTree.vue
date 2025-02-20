@@ -1,6 +1,6 @@
 <template>
 	<!-- 组织树 -->
-	<a-card size="small" :loading="cardLoading" :bodyStyle="{paddingLeft:'5px', paddingRight:'5px'}">
+	<a-card size="small" :loading="cardLoading" :bodyStyle="{paddingLeft:'5px', paddingRight:'5px'}" class="admin-ui-main">
 		<a-tree
 			v-if="treeData.length > 0"
 			v-model:expandedKeys="defaultExpandedKeys"
