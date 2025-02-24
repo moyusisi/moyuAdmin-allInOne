@@ -3,6 +3,7 @@ package com.moyu.system.sys.service;
 import com.moyu.system.sys.model.entity.SysRole;
 import com.moyu.system.sys.model.entity.SysUser;
 import com.moyu.system.sys.model.param.SysGroupParam;
+import com.moyu.system.sys.model.param.SysRoleParam;
 
 import java.util.List;
 
@@ -40,5 +41,10 @@ public interface RelationService {
      * group删除用户
      */
     void groupDeleteUser(SysGroupParam groupParam);
+
+    /**
+     * 拥有某角色的用户列表，仅包含用户-角色关系直接指定的用户，即全局角色
+     */
+    List<SysUser> roleUserList(SysRoleParam roleParam);
 
 }

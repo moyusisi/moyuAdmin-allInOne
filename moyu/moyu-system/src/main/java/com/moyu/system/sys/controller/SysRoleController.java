@@ -8,7 +8,10 @@ import com.moyu.common.annotation.Log;
 import com.moyu.common.model.BaseResponse;
 import com.moyu.common.model.PageResult;
 import com.moyu.system.sys.model.entity.SysRole;
+import com.moyu.system.sys.model.entity.SysUser;
+import com.moyu.system.sys.model.param.SysGroupParam;
 import com.moyu.system.sys.model.param.SysRoleParam;
+import com.moyu.system.sys.service.RelationService;
 import com.moyu.system.sys.service.SysRoleService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +35,9 @@ public class SysRoleController {
 
     @Resource
     private SysRoleService sysRoleService;
+
+    @Resource
+    private RelationService relationService;
 
     /**
      * 获取角色列表
@@ -108,6 +114,38 @@ public class SysRoleController {
         Assert.notEmpty(roleParam.getModule(), "模块module不能为空");
         Assert.notEmpty(roleParam.getGrantMenuList(), "授权列表grantMenuList不能为空");
         sysRoleService.grantMenu(roleParam);
+        return BaseResponse.getSuccessResponse();
+    }
+
+    /**
+     * 查询拥有指定角色的所有用户(仅直接通过 用户-角色 关系指定的用户，即全局角色用户)
+     */
+    @PostMapping("/userList")
+    public BaseResponse<List<SysUser>> userList(@RequestBody SysRoleParam roleParam) {
+        Assert.notEmpty(roleParam.getCode(), "分组code不能为空");
+        List<SysUser> list = relationService.roleUserList(roleParam);
+        return BaseResponse.getSuccessResponse(list);
+    }
+
+    /**
+     * 授权用户角色
+     */
+    @PostMapping("/userGrantRole")
+    public BaseResponse<?> userGrantRole(@RequestBody SysRoleParam roleParam) {
+        Assert.notEmpty(roleParam.getCode(), "角色code不能为空");
+        Assert.notEmpty(roleParam.getCodeSet(), "指定集合codeSet不能为空");
+        sysRoleService.userGrantRole(roleParam);
+        return BaseResponse.getSuccessResponse();
+    }
+
+    /**
+     * 撤销用户已授权的角色
+     */
+    @PostMapping("/userRevokeRole")
+    public BaseResponse<?> userRevokeRole(@RequestBody SysRoleParam roleParam) {
+        Assert.notEmpty(roleParam.getCode(), "角色code不能为空");
+        Assert.notEmpty(roleParam.getCodeSet(), "指定集合codeSet不能为空");
+        sysRoleService.userRevokeRole(roleParam);
         return BaseResponse.getSuccessResponse();
     }
 

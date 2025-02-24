@@ -64,12 +64,12 @@ public class RelationServiceImpl implements RelationService {
             return new ArrayList<>();
         }
         // userSet
-        Set<String> roleSet = list.stream().map(SysRelation::getTargetId).collect(Collectors.toSet());
-        // 查询角色(可指定搜索词)
+        Set<String> userSet = list.stream().map(SysRelation::getTargetId).collect(Collectors.toSet());
+        // 查询用户(可指定搜索词)
         List<SysUser> userList = sysUserService.list(SysUserParam.builder()
                 .searchKey(groupParam.getSearchKey())
                 .orgCode(groupParam.getOrgCode())
-                .codeSet(roleSet).build());
+                .codeSet(userSet).build());
         return userList;
     }
 
@@ -163,5 +163,20 @@ public class RelationServiceImpl implements RelationService {
         if (ObjectUtil.isNotEmpty(ids)) {
             sysRelationService.removeByIds(ids);
         }
+    }
+
+    @Override
+    public List<SysUser> roleUserList(SysRoleParam roleParam) {
+        // 查询指定role的所有user
+        Set<String> userSet = sysRelationService.roleUser(roleParam.getCode());
+        if (ObjectUtil.isEmpty(userSet)) {
+            return new ArrayList<>();
+        }
+        // 查询用户(可指定搜索词)
+        List<SysUser> userList = sysUserService.list(SysUserParam.builder()
+                .searchKey(roleParam.getSearchKey())
+                .orgCode(roleParam.getOrgCode())
+                .codeSet(userSet).build());
+        return userList;
     }
 }

@@ -53,10 +53,23 @@ public interface SysRoleService extends IService<SysRole> {
     List<Tree<String>> treeForGrant(SysRoleParam roleParam);
 
     /**
-     * 获取菜单树，用于给角色授权时选择(treeNode不包含button)
+     * 角色授权，ROLE_HAS_MENU
      *
      * @param roleParam 角色code，授权module必须传
      */
     void grantMenu(SysRoleParam roleParam);
 
+    /**
+     * 用户分配角色，USER_HAS_ROLE
+     *
+     * @param roleParam 角色code，用户集合 codeSet
+     */
+    void userGrantRole(SysRoleParam roleParam);
+
+    /**
+     * 用户撤销角色，USER_HAS_ROLE
+     *
+     * @param roleParam 角色code，用户集合 codeSet
+     */
+    void userRevokeRole(SysRoleParam roleParam);
 }
