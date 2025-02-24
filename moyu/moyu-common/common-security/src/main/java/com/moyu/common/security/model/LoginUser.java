@@ -3,6 +3,7 @@ package com.moyu.common.security.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.moyu.common.security.util.SecurityUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 
@@ -101,13 +101,7 @@ public class LoginUser implements UserDetails, CredentialsContainer {
      * 根据perms和roles生成授权列表
      */
     public void initAuthorities() {
-        Set<String> authorities = new HashSet<>();
-        if (!CollectionUtils.isEmpty(roles)) {
-            roles.forEach(role -> {
-                // SecurityExpressionRoot#hasRole中会根据前缀判断
-                authorities.add("ROLE_" + role);
-            });
-        }
+        Set<String> authorities = SecurityUtils.initRoleSet(roles);
         if (!CollectionUtils.isEmpty(perms)) {
             authorities.addAll(perms);
         }

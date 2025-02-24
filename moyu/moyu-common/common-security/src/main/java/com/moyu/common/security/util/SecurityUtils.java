@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -21,6 +22,13 @@ import java.util.Set;
  * @since 2025-01-06
  */
 public class SecurityUtils {
+
+    /**
+     * 角色前缀
+     *
+     * @see org.springframework.security.access.expression.SecurityExpressionRoot #defaultRolePrefix
+     */
+    public static final String rolePrefix = "ROLE_";
 
     /**
      * 获取Authentication
@@ -60,6 +68,20 @@ public class SecurityUtils {
     public static Set<String> getAuthorities() {
         Collection<GrantedAuthority> authorities = getLoginUser().getAuthorities();
         return authorities == null ? new HashSet<>() : AuthorityUtils.authorityListToSet(authorities);
+    }
+
+    /**
+     * 生成角色集合
+     */
+    public static Set<String> initRoleSet(Set<String> roles) {
+        Set<String> roleSet = new HashSet<>();
+        if (!CollectionUtils.isEmpty(roles)) {
+            roles.forEach(role -> {
+                // SecurityExpressionRoot#hasRole中会根据前缀判断
+                roleSet.add(rolePrefix + role);
+            });
+        }
+        return roleSet;
     }
 
     /**
