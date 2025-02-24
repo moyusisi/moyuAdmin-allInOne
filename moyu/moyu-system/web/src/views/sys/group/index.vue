@@ -41,7 +41,7 @@
 				>
 					<template #operator class="table-operator">
 						<a-space>
-							<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(searchFormData.orgCode)">新增</a-button>
+							<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(searchFormData.orgCode, treeRef.treeData)">新增</a-button>
 							<BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDeleteGroup" />
 						</a-space>
 					</template>
@@ -70,7 +70,7 @@
 								</a-tooltip>
 								<a-divider type="vertical" />
 								<a-tooltip title="编辑">
-									<a @click="editFormRef.onOpen(record)"><FormOutlined /></a>
+									<a @click="editFormRef.onOpen(record, treeRef.treeData)"><FormOutlined /></a>
 								</a-tooltip>
 								<a-divider type="vertical" />
 								<a-tooltip title="删除">
@@ -92,7 +92,6 @@
 </template>
 
 <script setup>
-	import orgApi from '@/api/sys/orgApi'
 	import groupApi from '@/api/sys/groupApi'
 	import { onMounted, h } from "vue";
 	import { message } from 'ant-design-vue'

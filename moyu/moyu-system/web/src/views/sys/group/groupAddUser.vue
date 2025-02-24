@@ -197,8 +197,9 @@
 
 	// 打开抽屉
 	const onOpen = (record, tree) => {
-		treeData.value = tree
-		defaultExpandedKeys.value = [tree[0]?.code]
+    // 组织树赋值并展开顶级节点
+    treeData.value = tree
+    defaultExpandedKeys.value = [tree[0]?.code]
 		group.value = record;
 		title.value = group.value.name + "-添加用户"
 		// 加载数据

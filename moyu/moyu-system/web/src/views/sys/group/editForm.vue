@@ -72,7 +72,6 @@
 </template>
 
 <script setup>
-	import orgApi from '@/api/sys/orgApi'
 	import groupApi from '@/api/sys/groupApi'
 
 	import { required } from '@/utils/formRules'
@@ -101,17 +100,15 @@
 	})
 
 	// 打开抽屉
-	const onOpen = (record) => {
+	const onOpen = (record, tree) => {
 		visible.value = true
 		// 获取组织信息
 		groupApi.groupDetail({ code: record.code }).then((res) => {
 			formData.value = res.data
 		})
-		// 获取组织树并加入顶级节点
-		orgApi.orgTree({}).then((res) => {
-			treeData.value = res.data
-			defaultExpandedKeys.value = [res.data[0]?.code]
-		})
+    // 组织树赋值并展开顶级节点
+    treeData.value = tree
+    defaultExpandedKeys.value = [tree[0]?.code]
 	}
 	// 关闭抽屉
 	const onClose = () => {

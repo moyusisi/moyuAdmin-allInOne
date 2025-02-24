@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import orgApi from "@/api/sys/orgApi"
+import userCenterApi from "@/api/sys/userCenterApi"
 
 import { Empty } from "ant-design-vue"
 
@@ -45,7 +45,8 @@ const onSelect = (value, node) => {
 // 加载左侧的树
 const loadTreeData = () => {
 	cardLoading.value = true
-	orgApi.orgTree().then((res) => {
+  // 获取当前登陆者的orgTree 获取所有组织机构可使用orgApi.orgTree
+  userCenterApi.loginUserOrgTree().then((res) => {
 		cardLoading.value = false
 		if (res.data !== null) {
 			treeData.value = res.data

@@ -2,7 +2,7 @@
 	<a-row :gutter="8">
 		<!-- 左侧组织树 -->
 		<a-col :span="5">
-			<OrgTree @onSelect="treeSelect"></OrgTree>
+      <OrgTree ref="treeRef" @onSelect="treeSelect"></OrgTree>
 		</a-col>
 		<!-- 右侧内容 -->
 		<a-col :span="19">
@@ -42,7 +42,7 @@
 				>
 					<template #operator>
 						<a-space>
-							<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(searchFormData.orgCode)">新增用户</a-button>
+							<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(searchFormData.orgCode, treeRef.treeData)">新增用户</a-button>
 							<BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDeleteUser" />
 						</a-space>
 					</template>
@@ -59,7 +59,7 @@
 						<template v-if="column.dataIndex === 'action'">
 							<a-space>
 								<a-tooltip title="编辑">
-									<a @click="editFormRef.onOpen(record)"><FormOutlined /></a>
+									<a @click="editFormRef.onOpen(record, treeRef.treeData)"><FormOutlined /></a>
 								</a-tooltip>
 								<a-divider type="vertical" />
 								<a-tooltip title="删除">
@@ -171,6 +171,8 @@
 	const editFormRef = ref()
 	const searchFormRef = ref()
 	const searchFormData = ref({})
+  // 定义treeRef
+  const treeRef = ref()
 
 	const loading = ref(false)
 

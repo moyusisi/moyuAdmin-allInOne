@@ -42,7 +42,7 @@
 				>
 					<template #operator class="table-operator">
 						<a-space>
-							<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(searchFormState.parentCode)">新增</a-button>
+							<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(searchFormState.parentCode, treeRef.treeData)">新增</a-button>
 							<BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDeleteOrg" />
 						</a-space>
 					</template>
@@ -62,7 +62,7 @@
 						<template v-if="column.dataIndex === 'action'">
 							<a-space>
 								<a-tooltip title="编辑">
-									<a @click="editFormRef.onOpen(record)"><FormOutlined /></a>
+									<a @click="editFormRef.onOpen(record, treeRef.treeData)"><FormOutlined /></a>
 								</a-tooltip>
 								<a-divider type="vertical" />
 								<a-tooltip title="删除">

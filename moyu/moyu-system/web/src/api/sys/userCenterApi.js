@@ -12,5 +12,8 @@ export default {
 	loginUserMenu(data) {
 		return service.postJson('/api/sys/userCenter/userMenu', data)
 	},
-
+	// 获取登陆用户的组织机构树
+	loginUserOrgTree(data) {
+		return service.postJson('/api/sys/userCenter/userOrgTree', data)
+	},
 }
