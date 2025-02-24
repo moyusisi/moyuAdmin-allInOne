@@ -7,7 +7,6 @@ import com.moyu.common.security.filter.JwtTokenAuthenticationFilter;
 import com.moyu.common.security.handler.AuthExceptionEntryPoint;
 import com.moyu.common.security.handler.CustomAccessDeniedHandler;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
