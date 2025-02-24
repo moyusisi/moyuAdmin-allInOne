@@ -3,6 +3,7 @@ import systemRouter from './systemRouter'
 import NProgress from '@/utils/nprogress'
 import settings from "@/config/settings.ts"
 import { useMenuStore, useUserStore } from "@/store";
+import { message } from "ant-design-vue";
 
 const routes = [...systemRouter]
 
@@ -84,6 +85,7 @@ router.afterEach((to, from) => {
 
 router.onError((error) => {
   NProgress.done()
+  message.error('路由错误,请检查网络')
   console.error({ message: '路由错误', description: error.message })
 })
 

@@ -61,12 +61,12 @@
 						</template>
 						<template v-if="column.dataIndex === 'action'">
 							<a-space>
-								<a-tooltip title="授权角色">
+								<a-tooltip title="分配角色">
 									<a style="color:#1980FF;" @click="groupRoleRef.onOpen(record)"><DeploymentUnitOutlined /></a>
 								</a-tooltip>
 								<a-divider type="vertical" />
-								<a-tooltip title="授权用户">
-									<a style="color:#53C61D;" @click="groupUserRef.onOpen(record, treeRef.treeData)"><UserAddOutlined /></a>
+								<a-tooltip title="分配用户">
+									<a style="color:#53C61D;" @click="groupUserRef.onOpen(record, treeRef.treeData)"><UsergroupAddOutlined /></a>
 								</a-tooltip>
 								<a-divider type="vertical" />
 								<a-tooltip title="编辑">
