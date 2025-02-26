@@ -55,7 +55,7 @@
 					</a-col>
 					<a-col :span="12">
 						<a-form-item label="排序:" name="sortNum" :rules="[required('请填写排序值')]">
-							<a-input-number class="xn-wd" v-model:value="formData.sortNum" :max="100" />
+							<a-input-number class="wd" v-model:value="formData.sortNum" :max="100" />
 						</a-form-item>
 					</a-col>
 				</a-row>

@@ -104,7 +104,7 @@
 					<!-- 目录、菜单、外链:图标 -->
 					<a-col :span="12" v-if="formData.menuType === 2 || formData.menuType === 3 || formData.menuType === 5">
 						<a-form-item label="图标" name="icon">
-							<a-input v-model:value="formData.icon" class="xn-wdcalc-70" placeholder="请选择图标" allow-clear disabled />
+							<a-input v-model:value="formData.icon" class="wdcalc-70" placeholder="请选择图标" allow-clear disabled />
 							<a-button type="primary" @click="iconSelector.showIconModal(formData.icon)">选择</a-button>
 						</a-form-item>
 					</a-col>
