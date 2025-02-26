@@ -1,6 +1,7 @@
 package com.moyu.common.security.util;
 
 
+import cn.hutool.core.convert.Convert;
 import com.moyu.common.exception.BaseException;
 import com.moyu.common.security.model.LoginUser;
 import org.springframework.http.HttpStatus;
@@ -9,7 +10,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -24,11 +24,9 @@ import java.util.Set;
 public class SecurityUtils {
 
     /**
-     * 角色前缀
-     *
-     * @see org.springframework.security.access.expression.SecurityExpressionRoot #defaultRolePrefix
+     * 超级管理员角色编码
      */
-    public static final String rolePrefix = "ROLE_";
+    private static final String ROOT_ROLE_CODE = "ROOT";
 
     /**
      * 获取Authentication
@@ -71,17 +69,10 @@ public class SecurityUtils {
     }
 
     /**
-     * 生成角色集合
+     * 是否为root超级管理员
      */
-    public static Set<String> initRoleSet(Set<String> roles) {
-        Set<String> roleSet = new HashSet<>();
-        if (!CollectionUtils.isEmpty(roles)) {
-            roles.forEach(role -> {
-                // SecurityExpressionRoot#hasRole中会根据前缀判断
-                roleSet.add(rolePrefix + role);
-            });
-        }
-        return roleSet;
+    public static boolean isRoot() {
+        return getRoles().contains(ROOT_ROLE_CODE);
     }
 
     /**
