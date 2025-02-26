@@ -24,4 +24,5 @@ public class UnitTest {
         String camelCaseName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, underscoreName);
         log.info(camelCaseName);
     }
+
 }
