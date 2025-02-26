@@ -12,6 +12,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.base.Strings;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +42,19 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> implements SysOrgService {
+
+    /**
+     * 组织结构树(本地缓存)
+     */
+    private Tree<String> rootTree;
+
+    @Override
+    public List<String> childrenCodeList(String orgCode) {
+        List<String> codeList = new ArrayList<>();
+        List<SysOrg> orgList = this.baseMapper.selectChildren(orgCode);
+        orgList.forEach(e -> codeList.add(e.getCode()));
+        return codeList;
+    }
 
     @Override
     public List<SysOrg> list(SysOrgParam orgParam) {
@@ -86,25 +101,20 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
      */
     @Override
     public List<Tree<String>> tree() {
-        return singleTree(SysConstants.ROOT_ID).getChildren();
+        return singleTree().getChildren();
     }
 
     @Override
-    public Tree<String> singleTree(String rootId) {
-        // 查询所有组织结构
-        List<SysOrg> orgList = this.list(new LambdaQueryWrapper<SysOrg>()
-                // 查询部分字段
-                .select(SysOrg::getCode, SysOrg::getParentCode, SysOrg::getName, SysOrg::getSortNum, SysOrg::getOrgType)
-                .eq(SysOrg::getDeleteFlag, 0)
-                .orderByAsc(SysOrg::getSortNum)
-        );
-        // 构建树
-        return buildSingleTree(orgList, rootId);
+    public Tree<String> singleTree() {
+        if (ObjectUtil.isEmpty(rootTree)) {
+            rootTree = loadRootTree();
+        }
+        return rootTree;
     }
 
     @Override
     public SysOrg detail(SysOrgParam orgParam) {
-        LambdaQueryWrapper<SysOrg> queryWrapper = new QueryWrapper<SysOrg>().checkSqlInjection().lambda()
+        LambdaQueryWrapper<SysOrg> queryWrapper = Wrappers.lambdaQuery(SysOrg.class)
                 .eq(ObjectUtil.isNotEmpty(orgParam.getId()), SysOrg::getId, orgParam.getId())
                 .eq(ObjectUtil.isNotEmpty(orgParam.getCode()), SysOrg::getCode, orgParam.getCode());
         // id、code均为唯一标识
@@ -127,7 +137,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
                 throw new BaseException(ExceptionEnum.INVALID_PARAMETER, "唯一编码重复，请更换或留空自动生成");
             }
         }
-        // 不使用beanCopy是为了效率
+        // 组装SysOrg
         SysOrg org = buildSysOrg(orgParam);
         org.setId(null);
         // 若未指定唯一编码code，则自动生成
@@ -135,6 +145,10 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
             // 唯一code RandomUtil.randomString(10)、IdUtil.objectId()24位
             org.setCode(IdUtil.objectId());
         }
+        // 所属组织链(不包含本节点)
+        Tree<String> rootTree = singleTree();
+        List<String> list = TreeUtil.getParentsId(rootTree.getNode(orgParam.getParentCode()), true);
+        org.setOrgChain(SysConstants.COMMA_JOINER.join(list));
         this.save(org);
     }
 
@@ -196,6 +210,14 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         // 不使用beanCopy是为了效率
         SysOrg updateOrg = buildSysOrg(orgParam);
         updateOrg.setId(oldOrg.getId());
+        // 若父节点有变化，则orgChain也要变
+        if (ObjectUtil.isEmpty(oldOrg.getOrgChain()) || ObjectUtil.notEqual(oldOrg.getParentCode(), orgParam.getParentCode())) {
+            // 所属组织链
+            Tree<String> rootTree = singleTree();
+            List<String> list = TreeUtil.getParentsId(rootTree.getNode(orgParam.getParentCode()), true);
+            updateOrg.setOrgChain(SysConstants.COMMA_JOINER.join(list));
+            // 本节点的子节点orgChain也应该改变，待tree更新之后才可以修改 TODO
+        }
         this.updateById(updateOrg);
     }
 
@@ -237,6 +259,21 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
                 }).collect(Collectors.toList());
         // 构建树
         return TreeUtil.buildSingle(treeNodeList, rootId, nodeConfig, new DefaultNodeParser<>());
+    }
+
+    /**
+     * 从数据库中加载组织机构树
+     */
+    private Tree<String> loadRootTree() {
+        // 查询所有组织结构
+        List<SysOrg> orgList = this.list(Wrappers.lambdaQuery(SysOrg.class)
+                // 查询部分字段
+                .select(SysOrg::getCode, SysOrg::getParentCode, SysOrg::getName, SysOrg::getSortNum, SysOrg::getOrgType)
+                .eq(SysOrg::getDeleteFlag, 0)
+                .orderByAsc(SysOrg::getSortNum)
+        );
+        // 构建树
+        return buildSingleTree(orgList, SysConstants.ROOT_NODE_ID);
     }
 }
 

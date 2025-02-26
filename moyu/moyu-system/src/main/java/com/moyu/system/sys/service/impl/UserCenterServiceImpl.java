@@ -12,6 +12,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.google.common.collect.Lists;
+import com.moyu.common.security.constant.SecurityConstants;
 import com.moyu.common.security.util.SecurityUtils;
 import com.moyu.system.sys.constant.SysConstants;
 import com.moyu.system.sys.enums.MenuTypeEnum;
@@ -107,7 +108,7 @@ public class UserCenterServiceImpl implements UserCenterService {
             }
         });
         // 构建菜单路由树结构
-        Tree<String> singleTree = buildMenuTree(userMenuList, SysConstants.ROOT_ID);
+        Tree<String> singleTree = buildMenuTree(userMenuList, SysConstants.ROOT_NODE_ID);
         // 移除空目录
         removeTreeNodes(singleTree, tree -> {
             Object menuType = ((Map<?, ?>) tree.get("meta")).get("type");
@@ -119,22 +120,11 @@ public class UserCenterServiceImpl implements UserCenterService {
 
     @Override
     public List<Tree<String>> userOrgTree(String account) {
-        if (SecurityUtils.getRoles().contains(SecurityUtils.rolePrefix + "superAdmin")) {
+        if (SecurityUtils.getRoles().contains(SecurityConstants.ROOT_ROLE_CODE)) {
             return sysOrgService.tree();
         }
         // 获取全部树
-        Tree<String> tree = sysOrgService.singleTree(SysConstants.ROOT_ID);
-//        // 获取用户所在分组
-//        Set<String> groupSet = new HashSet<>();
-//        sysRelationService.list(SysRelationParam.builder().targetId(account)
-//                .relationType(RelationTypeEnum.GROUP_HAS_USER.getCode()).build()
-//        ).forEach(e -> groupSet.add(e.getObjectId()));
-//        // 收集用户分组归属的org
-//        Set<String> orgSet = new HashSet<>();
-//        // 不为空则查询group所属的org
-//        if (ObjectUtil.isNotEmpty(groupSet)) {
-//            sysGroupService.list(SysGroupParam.builder().codeSet(groupSet).build()).forEach(group -> orgSet.add(group.getOrgCode()));
-//        }
+        Tree<String> tree = sysOrgService.singleTree();
         // 查询用户信息
         SysUser user = sysUserService.detail(SysUserParam.builder().account(account).build());
         // 获取用户所属的最近一级公司组织code

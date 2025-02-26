@@ -16,6 +16,11 @@ import java.util.List;
 public interface SysOrgService extends IService<SysOrg> {
 
     /**
+     * 查询指定orgCode的下属组织机构code列表(包含本身)
+     */
+    List<String> childrenCodeList(String orgCode);
+
+    /**
      * 查询组织列表
      */
     List<SysOrg> list(SysOrgParam sysOrgParam);
@@ -33,12 +38,11 @@ public interface SysOrgService extends IService<SysOrg> {
     List<Tree<String>> tree();
 
     /**
-     * 指定根结点的组织机构树（只有一颗树）
+     * 根结点的组织机构树（只有一颗树）
      *
-     * @param rootId 指定的根节点
      * @return 组织机构树
      */
-    Tree<String> singleTree(String rootId);
+    Tree<String> singleTree();
 
     /**
      * 获取组织机构详情

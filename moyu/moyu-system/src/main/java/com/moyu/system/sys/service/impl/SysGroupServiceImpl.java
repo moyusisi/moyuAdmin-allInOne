@@ -2,30 +2,30 @@ package com.moyu.system.sys.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.tree.Tree;
-import cn.hutool.core.lang.tree.TreeUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.moyu.common.enums.ExceptionEnum;
 import com.moyu.common.exception.BaseException;
 import com.moyu.common.model.PageResult;
-import com.moyu.system.sys.constant.SysConstants;
+import com.moyu.common.security.constant.SecurityConstants;
+import com.moyu.common.security.util.SecurityUtils;
 import com.moyu.system.sys.mapper.SysGroupMapper;
 import com.moyu.system.sys.model.entity.SysGroup;
-import com.moyu.system.sys.model.entity.SysOrg;
 import com.moyu.system.sys.model.param.SysGroupParam;
-import com.moyu.system.sys.service.SysOrgService;
 import com.moyu.system.sys.service.SysGroupService;
+import com.moyu.system.sys.service.SysOrgService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -45,12 +45,8 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         QueryWrapper<SysGroup> queryWrapper = new QueryWrapper<SysGroup>().checkSqlInjection();
         // 查询条件
         queryWrapper.lambda()
-                // 查询部分字段
-//                .select(SysMenu::getCode, SysMenu::getName, SysMenu::getSortNum)
                 // 关键词搜索
                 .like(StrUtil.isNotBlank(groupParam.getSearchKey()), SysGroup::getName, groupParam.getSearchKey())
-                // 模糊搜索所属组织(选的是一个code，搜的是所有code)
-                .like(StrUtil.isNotBlank(groupParam.getOrgCode()), SysGroup::getOrgChain, groupParam.getOrgCode())
                 // 指定类型
                 .eq(ObjectUtil.isNotEmpty(groupParam.getGroupType()), SysGroup::getGroupType, groupParam.getGroupType())
                 // 指定状态
@@ -64,15 +60,22 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
 
     @Override
     public PageResult<SysGroup> pageList(SysGroupParam groupParam) {
-        QueryWrapper<SysGroup> queryWrapper = new QueryWrapper<SysGroup>().checkSqlInjection();
+        // 用户的数据权限
+        List<String> scopeList = new ArrayList<>();
+        // 非超管才设置数据权限
+        if (!SecurityUtils.getRoles().contains(SecurityConstants.ROOT_ROLE_CODE)) {
+            scopeList = sysOrgService.childrenCodeList(SecurityUtils.getLoginUser().getOrgCode());
+        }
         // 查询条件
-        queryWrapper.lambda()
+        LambdaQueryWrapper<SysGroup> queryWrapper = Wrappers.lambdaQuery(SysGroup.class)
                 // 关键词搜索
                 .like(StrUtil.isNotBlank(groupParam.getSearchKey()), SysGroup::getName, groupParam.getSearchKey())
                 // 指定orgCode
                 .eq(StrUtil.isNotBlank(groupParam.getOrgCode()), SysGroup::getOrgCode, groupParam.getOrgCode())
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(groupParam.getStatus()), SysGroup::getStatus, groupParam.getStatus())
+                // 数据权限(非空才有效)
+                .in(ObjectUtil.isNotEmpty(scopeList), SysGroup::getOrgCode, scopeList)
                 .eq(SysGroup::getDeleteFlag, 0)
                 .orderByAsc(SysGroup::getSortNum);
         // 分页查询
@@ -107,13 +110,10 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         // 若指定了直属组织，则设置所属组织
         if (ObjectUtil.isNotEmpty(group.getOrgCode())) {
             // 获取组织结构树
-            Tree<String> orgTree = sysOrgService.singleTree(SysConstants.ROOT_ID);
-            Tree<String> orgNode = orgTree.getNode(group.getOrgCode());
+            Tree<String> rootTree = sysOrgService.singleTree();
+            Tree<String> orgNode = rootTree.getNode(group.getOrgCode());
             // 设置直属机构名称
             group.setOrgName(orgNode.getName().toString());
-            // 所属机构列表
-            List<String> list = TreeUtil.getParentsId(orgNode, true);
-            group.setOrgChain(Joiner.on(",").join(list));
         }
         this.save(group);
     }
@@ -134,13 +134,13 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         // 属性复制
         SysGroup updateOrg = BeanUtil.copyProperties(groupParam, SysGroup.class);
         updateOrg.setId(oldGroup.getId());
-        // 若指定了直属组织，则设置所属组织
-        if (ObjectUtil.isNotEmpty(updateOrg.getOrgCode())) {
+        // 若新指定了直属组织，则设置组织名
+        if (ObjectUtil.notEqual(oldGroup.getOrgCode(), updateOrg.getOrgCode()) && ObjectUtil.isNotEmpty(updateOrg.getOrgCode())) {
             // 获取组织结构树
-            Tree<String> orgTree = sysOrgService.singleTree(SysConstants.ROOT_ID);
-            Tree<String> orgNode = orgTree.getNode(updateOrg.getOrgCode());
-            List<String> list = TreeUtil.getParentsId(orgNode, true);
-            updateOrg.setOrgChain(Joiner.on(",").join(list));
+            Tree<String> rootTree = sysOrgService.singleTree();
+            Tree<String> orgNode = rootTree.getNode(updateOrg.getOrgCode());
+            // 设置直属机构名称
+            updateOrg.setOrgName(orgNode.getName().toString());
         }
         this.updateById(updateOrg);
     }
