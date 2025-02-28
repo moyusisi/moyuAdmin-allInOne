@@ -1,16 +1,11 @@
 package com.moyu.system.auth.service;
 
 
-import cn.hutool.core.util.ObjectUtil;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.moyu.common.security.model.LoginUser;
 import com.moyu.system.sys.enums.StatusEnum;
-import com.moyu.system.sys.model.entity.SysMenu;
 import com.moyu.system.sys.model.entity.SysUser;
 import com.moyu.system.sys.model.param.SysUserParam;
-import com.moyu.system.sys.service.SysMenuService;
-import com.moyu.system.sys.service.SysRelationService;
-import com.moyu.system.sys.service.SysUserService;
+import com.moyu.system.sys.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,7 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,6 +29,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Resource
     private SysUserService sysUserService;
+
+    @Resource
+    private SysRoleService sysRoleService;
+
+    @Resource
+    private SysScopeService sysScopeService;
 
     @Resource
     private SysRelationService sysRelationService;
@@ -68,22 +68,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      * 创建LoginUserDetails
      */
     private LoginUser buildUserDetails(SysUser sysUser) {
-        // 直接授权的角色
-        Set<String> roleSet = sysRelationService.userRole(sysUser.getAccount());
-        // 分组授权的角色
-        Set<String> groupRoleSet = sysRelationService.userGroupRole(sysUser.getAccount());
-        // 全部角色
-        roleSet.addAll(groupRoleSet);
-        // 用户有权限的菜单code集合(含按钮)
-        Set<String> menuSet = sysRelationService.roleMenu(roleSet);
-        // 所有权限
-        Set<String> permSet = new HashSet<>();
-        sysMenuService.list(Wrappers.lambdaQuery(SysMenu.class).in(SysMenu::getCode, menuSet))
-                .forEach(e -> {
-                    if (ObjectUtil.isNotEmpty(e.getPermission())) {
-                        permSet.add(e.getPermission());
-                    }
-                });
+        // 所有的角色集，包括 userRole + userGroupRole
+        Set<String> roleSet = sysRoleService.userAllRoles(sysUser.getAccount());
+        // 所有权限集
+        Set<String> permSet = sysRoleService.rolePerms(roleSet);
+        // 所有数据权限集
+        Set<String> scopeSet = sysScopeService.userDataScopes(sysUser.getAccount());
         // 组装LoginUser
         LoginUser loginUser = LoginUser.builder()
                 .username(sysUser.getAccount())
@@ -92,6 +82,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orgCode(sysUser.getOrgCode())
                 .roles(roleSet)
                 .perms(permSet)
+                .scopes(scopeSet)
                 .build();
         // 初始化权限
         loginUser.initAuthorities();

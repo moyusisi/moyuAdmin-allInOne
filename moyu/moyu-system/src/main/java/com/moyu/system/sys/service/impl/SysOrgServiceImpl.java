@@ -19,16 +19,14 @@ import com.google.common.base.Strings;
 import com.moyu.common.enums.ExceptionEnum;
 import com.moyu.common.exception.BaseException;
 import com.moyu.common.model.PageResult;
-import com.moyu.common.security.constant.SecurityConstants;
 import com.moyu.common.security.util.SecurityUtils;
 import com.moyu.system.sys.constant.SysConstants;
 import com.moyu.system.sys.mapper.SysOrgMapper;
-import com.moyu.system.sys.model.entity.SysGroup;
 import com.moyu.system.sys.model.entity.SysOrg;
-import com.moyu.system.sys.model.entity.SysUser;
 import com.moyu.system.sys.model.param.SysOrgParam;
 import com.moyu.system.sys.service.SysOrgService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -43,6 +41,7 @@ import java.util.stream.Collectors;
  * @description 针对表【sys_org(组织机构表)】的数据库操作Service实现
  * @createDate 2024-11-26 09:55:33
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> implements SysOrgService {
@@ -57,6 +56,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         List<String> codeList = new ArrayList<>();
         List<SysOrg> orgList = this.baseMapper.selectChildren(orgCode);
         orgList.forEach(e -> codeList.add(e.getCode()));
+//        this.baseMapper.selectAll(Wrappers.lambdaQuery());
         return codeList;
     }
 
@@ -83,11 +83,11 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
      */
     @Override
     public PageResult<SysOrg> pageList(SysOrgParam orgParam) {
-        // 用户的数据权限
-        List<String> scopeList = new ArrayList<>();
-        // 非超管才设置数据权限
-        if (!SecurityUtils.getRoles().contains(SecurityConstants.ROOT_ROLE_CODE)) {
-            scopeList = childrenCodeList(SecurityUtils.getLoginUser().getOrgCode());
+        // 数据权限范围
+        Set<String> scopeSet = SecurityUtils.getScopes();
+        // 非ROOT则限制
+        if (!SecurityUtils.isRoot()) {
+            scopeSet = SecurityUtils.getScopes();
         }
         // 查询条件
         LambdaQueryWrapper<SysOrg> queryWrapper = Wrappers.lambdaQuery(SysOrg.class)
@@ -98,7 +98,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(orgParam.getStatus()), SysOrg::getStatus, orgParam.getStatus())
                 // 数据权限(非空才有效)
-                .in(ObjectUtil.isNotEmpty(scopeList), SysOrg::getCode, scopeList)
+                .in(ObjectUtil.isNotEmpty(scopeSet), SysOrg::getCode, scopeSet)
                 .eq(SysOrg::getDeleteFlag, 0)
                 .orderByAsc(SysOrg::getSortNum);
         // 分页查询

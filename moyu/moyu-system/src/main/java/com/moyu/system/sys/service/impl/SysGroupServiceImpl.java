@@ -15,7 +15,6 @@ import com.google.common.base.Strings;
 import com.moyu.common.enums.ExceptionEnum;
 import com.moyu.common.exception.BaseException;
 import com.moyu.common.model.PageResult;
-import com.moyu.common.security.constant.SecurityConstants;
 import com.moyu.common.security.util.SecurityUtils;
 import com.moyu.system.sys.enums.RelationTypeEnum;
 import com.moyu.system.sys.mapper.SysGroupMapper;
@@ -77,11 +76,11 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
 
     @Override
     public PageResult<SysGroup> pageList(SysGroupParam groupParam) {
-        // 用户的数据权限
-        List<String> scopeList = new ArrayList<>();
-        // 非超管才设置数据权限
-        if (!SecurityUtils.getRoles().contains(SecurityConstants.ROOT_ROLE_CODE)) {
-            scopeList = sysOrgService.childrenCodeList(SecurityUtils.getLoginUser().getOrgCode());
+        // 数据权限范围
+        Set<String> scopeSet = SecurityUtils.getScopes();
+        // 非ROOT则限制
+        if (!SecurityUtils.isRoot()) {
+            scopeSet = SecurityUtils.getScopes();
         }
         // 查询条件
         LambdaQueryWrapper<SysGroup> queryWrapper = Wrappers.lambdaQuery(SysGroup.class)
@@ -92,7 +91,7 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(groupParam.getStatus()), SysGroup::getStatus, groupParam.getStatus())
                 // 数据权限(非空才有效)
-                .in(ObjectUtil.isNotEmpty(scopeList), SysGroup::getOrgCode, scopeList)
+                .in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet)
                 .eq(SysGroup::getDeleteFlag, 0)
                 .orderByAsc(SysGroup::getSortNum);
         // 分页查询
@@ -107,11 +106,11 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
                 .eq(ObjectUtil.isNotEmpty(groupParam.getId()), SysGroup::getId, groupParam.getId())
                 .eq(ObjectUtil.isNotEmpty(groupParam.getCode()), SysGroup::getCode, groupParam.getCode());
         // id、code均为唯一标识
-        SysGroup SysGroup = this.getOne(queryWrapper);
-        if (SysGroup == null) {
+        SysGroup sysGroup = this.getOne(queryWrapper);
+        if (sysGroup == null) {
             throw new BaseException(ExceptionEnum.INVALID_PARAMETER, "未查到指定数据");
         }
-        return SysGroup;
+        return sysGroup;
     }
 
     @Override
@@ -248,11 +247,25 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         if (ObjectUtil.isEmpty(targetSet)) {
             return;
         }
+        // 已加入分组的用户
         Set<String> oldSet = new HashSet<>();
+        Set<String> otherGroupUserSet = new HashSet<>();
         // 查询指定group包含的user，放入oldSet
-        sysRelationService.list(SysRelationParam.builder().objectId(objectId).targetSet(targetSet)
-                .relationType(RelationTypeEnum.GROUP_HAS_USER.getCode()).build()
-        ).forEach(e -> oldSet.add(e.getTargetId()));
+        sysRelationService.list(Wrappers.lambdaQuery(SysRelation.class)
+                .in(SysRelation::getTargetId, targetSet)
+                .eq(SysRelation::getRelationType, RelationTypeEnum.GROUP_HAS_USER.getCode())
+        ).forEach(e -> {
+            if (objectId.equals(e.getObjectId())) {
+                oldSet.add(e.getTargetId());
+            } else {
+                otherGroupUserSet.add(e.getTargetId());
+            }
+        });
+        // 限制用户只允许加入一个分组
+        if (ObjectUtil.isNotEmpty(otherGroupUserSet)) {
+            String message = "下列用户已加入其他分组，不可重复添加:" + otherGroupUserSet;
+            throw new BaseException(ExceptionEnum.INVALID_PARAMETER.getCode(), message);
+        }
         // 从target中删除已经存在的
         targetSet.removeAll(oldSet);
         // 再次判断要新增的内容为空则返回
