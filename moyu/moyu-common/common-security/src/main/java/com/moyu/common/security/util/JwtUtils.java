@@ -2,6 +2,7 @@ package com.moyu.common.security.util;
 
 
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.jwt.JWT;
 import cn.hutool.jwt.JWTPayload;
 import com.moyu.common.security.model.LoginUser;
@@ -36,6 +37,7 @@ public class JwtUtils {
                 .setPayload("orgCode", loginUser.getOrgCode())
                 .setPayload("perms", loginUser.getPerms())
                 .setPayload("roles", loginUser.getRoles())
+                .setPayload("scopes", loginUser.getScopes())
                 .setKey(SECRET.getBytes())
                 .sign();
         return token;
@@ -50,11 +52,12 @@ public class JwtUtils {
         // 根据token获取claims
         String username = (String) jwt.getPayload(JWTPayload.SUBJECT);
         String orgCode = (String) jwt.getPayload("orgCode");
-        Set<String> perms = new HashSet<>((List<String>) jwt.getPayload("perms"));
-        Set<String> roles = new HashSet<>((List<String>) jwt.getPayload("roles"));
+        Set<String> perms = ObjectUtil.isEmpty(jwt.getPayload("perms")) ? new HashSet<>() : new HashSet<>((List<String>) jwt.getPayload("perms"));
+        Set<String> roles = ObjectUtil.isEmpty(jwt.getPayload("roles")) ? new HashSet<>() : new HashSet<>((List<String>) jwt.getPayload("roles"));
+        Set<String> scopes = ObjectUtil.isEmpty(jwt.getPayload("scopes")) ? new HashSet<>() : new HashSet<>((List<String>) jwt.getPayload("scopes"));
         // 转换成登录用户
-        LoginUser loginUser = LoginUser.builder().enabled(true)
-                .username(username).orgCode(orgCode).perms(perms).roles(roles).build();
+        LoginUser loginUser = LoginUser.builder().enabled(true).username(username).orgCode(orgCode)
+                .perms(perms).roles(roles).scopes(scopes).build();
         // 初始化authorities后才可使用springSecurity鉴权
         loginUser.initAuthorities();
         // 返回当前登陆用户
