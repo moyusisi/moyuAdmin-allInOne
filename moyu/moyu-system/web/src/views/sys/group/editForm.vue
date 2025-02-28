@@ -1,7 +1,7 @@
 <template>
 	<a-drawer
 		:open="visible"
-		title="编辑分组(角色组、用户组、岗位)"
+		title="编辑分组"
 		:width="drawerWidth"
 		:closable="false"
 		:footerStyle="{display: 'flex', justifyContent: 'flex-end'}"

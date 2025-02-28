@@ -27,13 +27,13 @@
 				</a-card>
 			</a-col>
 			<a-col :span="19">
-        <a-alert message="用户只能加入一个分组，若用户已加入其他分组，需在其他分组删除后才可添加。" type="warning" />
 				<a-card size="small">
+					<!-- 上方查询框 -->
 					<a-form ref="searchFormRef" :model="searchFormData">
 						<a-row :gutter="16">
 							<a-col :span="8">
 								<a-form-item name="searchKey">
-									<a-input v-model:value="searchFormData.searchKey" placeholder="请输入用户名" allowClear />
+									<a-input v-model:value="searchFormData.searchKey" placeholder="请输入关键词" allowClear />
 								</a-form-item>
 							</a-col>
 							<a-col :span="8">
@@ -43,7 +43,10 @@
 								</a-space>
 							</a-col>
 							<a-col :span="8" style="text-align: right">
-								<a-button type="dashed" @click="addRows" :icon="h(PlusOutlined)" style="color: #52C41AFF; border-color: #52C41AFF">添加</a-button>
+								<a-space>
+									<a-button type="dashed" @click="scopeAddUserRef.onOpen(scope, treeData)" :icon="h(PlusOutlined)" style="color: #52C41AFF; border-color: #52C41AFF">添加用户</a-button>
+									<a-button type="dashed" danger @click="delRows" :icon="h(MinusOutlined)">移除用户</a-button>
+								</a-space>
 							</a-col>
 						</a-row>
 					</a-form>
@@ -53,8 +56,6 @@
 							 :data-source="tableData"
 							 :row-key="(record) => record.account"
 							 :row-selection="rowSelection"
-							 :pagination="paginationRef"
-							 @change="handleTableChange"
 							 bordered>
 						<template #bodyCell="{ column, record }">
 							<template v-if="column.dataIndex === 'gender'">
@@ -73,23 +74,21 @@
 				</a-card>
 			</a-col>
 		</a-row>
-		<!-- 底部内容 -->
-		<template #footer>
-			<a-space>
-				<a-button @click="onClose">关闭</a-button>
-			</a-space>
-		</template>
+
+		<!-- 弹窗 -->
+		<ScopeAddUser ref="scopeAddUserRef" @successful="handleSuccess()" />
+
 	</a-drawer>
 </template>
 
 <script setup>
-	import groupApi from '@/api/sys/groupApi'
+  import scopeApi from '@/api/sys/scopeApi'
 
-	import { useSettingsStore } from "@/store";
 	import { Empty, message } from "ant-design-vue";
 	import { h } from "vue";
-	import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
-	import userApi from "@/api/sys/userApi"
+	import { PlusOutlined, MinusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
+	import ScopeAddUser from "./scopeAddUser.vue";
+	import { useSettingsStore } from "@/store";
 
 	const settingsStore = useSettingsStore()
 
@@ -145,9 +144,10 @@
 
 	// 默认是关闭状态
 	const visible = ref(false)
-	const group = ref()
+	const scope = ref()
 	const title = ref()
 	const emit = defineEmits({ successful: null })
+	const scopeAddUserRef = ref()
 	// 节点树
 	const treeData = ref([])
 	// 默认展开的节点(顶级)
@@ -173,42 +173,29 @@
 			console.log('onChange,selectedKeys:', selectedKeys);
 		}
 	});
-	// 表格的分页配置
-	const paginationRef = ref({
-		// 当前页码
-		current: 1,
-		// 每页显示条数
-		pageSize: 10,
-		// 总条数，需要通过接口获取
-		total: 0,
-		// 显示总记录数
-		showTotal: (total, range) => `共 ${total} 条 `,
-		// 是否可改变每页显示条数
-		showSizeChanger: true,
-		onChange: (page, pageSize) => {
-			// 处理分页切换的逻辑
-			paginationRef.value.current = page
-			paginationRef.value.pageSize = pageSize
-		},
-	})
-	// 抽屉宽度
+
 	const drawerWidth = computed(() => {
 		return settingsStore.menuCollapsed ? `calc(100% - 80px)` : `calc(100% - 210px)`
 	})
 
 	// 打开抽屉
 	const onOpen = (record, tree) => {
-    // 组织树赋值并展开顶级节点
-    treeData.value = tree
-    defaultExpandedKeys.value = [tree[0]?.code]
-		group.value = record;
-		title.value = group.value.name + "-添加用户"
+		treeData.value = tree
+		defaultExpandedKeys.value = [tree[0]?.code]
+		scope.value = record;
+		title.value = record.name + "-已授权用户列表"
 		// 加载数据
 		loadTableData()
 		visible.value = true
 	}
 	// 关闭抽屉
 	const onClose = () => {
+		// 表单清空
+		searchFormData.value = {}
+		// table数据清空
+		tableData.value = []
+		selectedRowKeys.value = []
+		// 关闭
 		visible.value = false
 	}
 	// 点击树查询
@@ -220,41 +207,35 @@
 		}
 		loadTableData()
 	}
+
 	// 表格查询
 	const loadTableData = async () => {
 		selectedRowKeys.value = []
-		let param = { pageNum: paginationRef.value.current, pageSize: paginationRef.value.pageSize }
-		const res = await userApi.userPage(Object.assign(param, searchFormData.value))
-		paginationRef.value.total = res.data.total
-		tableData.value = res.data.records
-	}
-	// 分页、排序、筛选等操作变化时，会触发 change 事件
-	const handleTableChange = (pagination, filters, sorter) => {
-		let param = { pageNum: paginationRef.value.current, pageSize: paginationRef.value.pageSize }
-		userApi.userPage(Object.assign(param, searchFormData.value)).then((res) => {
-			paginationRef.value.total = res.data.total
-			tableData.value = res.data.records
-		})
+		let param = Object.assign({ "code": scope.value.code }, searchFormData.value)
+		const res = await scopeApi.scopeUserList(param)
+		tableData.value = res.data
 	}
 	// 重置
 	const reset = () => {
 		searchFormData.value = {}
-		paginationRef.value.current = 1
 		loadTableData()
 	}
-	// 添加记录
-	const addRows = () => {
+	// 删减记录
+	const delRows = () => {
 		if (selectedRowKeys.value.length < 1) {
 			message.warning('请选择一条或多条数据')
 			return
 		}
-		let data = { code: group.value.code, codeSet: selectedRowKeys.value }
-		groupApi.groupAddUser(data).then((res) => {
+		let data = { code: scope.value.code, codeSet: selectedRowKeys.value }
+    scopeApi.scopeDeleteUser(data).then((res) => {
 			message.success(res.message)
-			emit('successful')
-			// 添加之后重新加载数据
+			// 删掉之后重新加载数据
 			loadTableData()
 		})
+	}
+	// 成功回调
+	const handleSuccess = () => {
+		loadTableData()
 	}
 	// 调用这个函数将子组件的一些数据和方法暴露出去
 	defineExpose({

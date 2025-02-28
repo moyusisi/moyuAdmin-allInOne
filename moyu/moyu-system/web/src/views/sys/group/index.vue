@@ -33,7 +33,7 @@
 					ref="tableRef"
 					:columns="columns"
 					:data="loadTableData"
-					:scroll="{ x: 1000 }"
+          :scroll="{ x: true }"
 					bordered
 					:row-key="(record) => record.code"
 					:tool-config="toolConfig"
@@ -106,7 +106,7 @@
 
 	const columns = [
 		{
-			title: '角色组名称',
+			title: '分组名称',
 			dataIndex: 'name',
 			resizable: true,
 			width: 200
@@ -118,23 +118,17 @@
 			width: 200,
 			ellipsis: true
 		},
-		{
-			title: '分组类型',
-			dataIndex: 'groupType',
-			align: 'center',
-			width: 80
-		},
-		{
-			title: '状态',
-			dataIndex: 'status',
-			align: 'center',
-			width: 80
-		},
+    {
+      title: '状态',
+      dataIndex: 'status',
+      align: 'center',
+      width: 80
+    },
 		{
 			title: '创建时间',
 			dataIndex: 'createTime',
 			align: 'center',
-			width: 140
+			width: 150
 		},
 		{
 			title: '操作',

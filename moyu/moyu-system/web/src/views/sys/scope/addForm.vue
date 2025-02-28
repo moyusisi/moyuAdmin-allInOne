@@ -1,7 +1,7 @@
 <template>
 	<a-drawer
 		:open="visible"
-		title="新增分组"
+		title="新增数据范围分组"
 		:width="drawerWidth"
 		:closable="false"
 		:footerStyle="{display: 'flex', justifyContent: 'flex-end'}"
@@ -15,17 +15,17 @@
 			<a-card title="基本信息">
 				<a-row :gutter="24">
 					<a-col :span="12">
-						<a-form-item label="分组名称：" name="name" :rules="[required('请输入名称')]">
+						<a-form-item label="数据范围名称：" name="name" :rules="[required('请输入名称')]">
 							<a-input v-model:value="formData.name" placeholder="请输入名称" allow-clear />
 						</a-form-item>
 					</a-col>
 					<a-col :span="12">
-						<a-form-item label="分组类型：" name="groupType" :rules="[required('请选择分组类型')]">
-							<a-radio-group v-model:value="formData.groupType" button-style="solid">
-								<!-- 岗位类型(字典 1特有 2通用 3自建) -->
-								<a-radio-button :value="1">特有</a-radio-button>
-								<a-radio-button :value="2">通用</a-radio-button>
-								<a-radio-button :value="3">自建</a-radio-button>
+						<a-form-item label="数据范围类型：" name="scopeType" :rules="[required('请选择数据范围')]">
+							<a-radio-group v-model:value="formData.scopeType" button-style="solid">
+                <!-- 数据范围(字典 2本机构 3本机构及以下 4自定义) -->
+								<a-radio-button :value="2">仅本机构</a-radio-button>
+								<a-radio-button :value="3">本机构及以下</a-radio-button>
+								<a-radio-button :value="4">自定义</a-radio-button>
 							</a-radio-group>
 						</a-form-item>
 					</a-col>
@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-	import groupApi from '@/api/sys/groupApi'
+  import scopeApi from '@/api/sys/scopeApi'
 
 	import { required } from '@/utils/formRules'
 	import { useSettingsStore } from "@/store";
@@ -84,7 +84,7 @@
 	const treeData = ref([])
 	// 表单数据，这里有默认值
 	const formData = ref({
-		groupType: 1,
+		scopeType: 2,
 		sortNum: 99,
 		visible: 1,
 		status: 0
@@ -124,7 +124,7 @@
 	const onSubmit = () => {
 		formRef.value.validate().then(() => {
 			submitLoading.value = true
-			groupApi.addGroup(formData.value).then((res) => {
+      scopeApi.addScope(formData.value).then((res) => {
 				message.success(res.message)
 				emit('successful')
 				onClose()

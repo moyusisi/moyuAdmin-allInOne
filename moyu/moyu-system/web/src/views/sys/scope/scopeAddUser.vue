@@ -27,7 +27,6 @@
 				</a-card>
 			</a-col>
 			<a-col :span="19">
-        <a-alert message="用户只能加入一个分组，若用户已加入其他分组，需在其他分组删除后才可添加。" type="warning" />
 				<a-card size="small">
 					<a-form ref="searchFormRef" :model="searchFormData">
 						<a-row :gutter="16">
@@ -83,15 +82,15 @@
 </template>
 
 <script setup>
-	import groupApi from '@/api/sys/groupApi'
+  import scopeApi from '@/api/sys/scopeApi'
 
-	import { useSettingsStore } from "@/store";
-	import { Empty, message } from "ant-design-vue";
-	import { h } from "vue";
-	import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
-	import userApi from "@/api/sys/userApi"
+  import { useSettingsStore } from "@/store";
+  import { Empty, message } from "ant-design-vue";
+  import { h } from "vue";
+  import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
+  import userApi from "@/api/sys/userApi"
 
-	const settingsStore = useSettingsStore()
+  const settingsStore = useSettingsStore()
 
 	const columns = [
 		{
@@ -145,7 +144,7 @@
 
 	// 默认是关闭状态
 	const visible = ref(false)
-	const group = ref()
+	const scope = ref()
 	const title = ref()
 	const emit = defineEmits({ successful: null })
 	// 节点树
@@ -201,8 +200,8 @@
     // 组织树赋值并展开顶级节点
     treeData.value = tree
     defaultExpandedKeys.value = [tree[0]?.code]
-		group.value = record;
-		title.value = group.value.name + "-添加用户"
+		scope.value = record;
+		title.value = scope.value.name + "-添加用户"
 		// 加载数据
 		loadTableData()
 		visible.value = true
@@ -248,8 +247,8 @@
 			message.warning('请选择一条或多条数据')
 			return
 		}
-		let data = { code: group.value.code, codeSet: selectedRowKeys.value }
-		groupApi.groupAddUser(data).then((res) => {
+		let data = { code: scope.value.code, codeSet: selectedRowKeys.value }
+    scopeApi.scopeAddUser(data).then((res) => {
 			message.success(res.message)
 			emit('successful')
 			// 添加之后重新加载数据
@@ -265,9 +264,5 @@
 <style scoped>
 	.ant-form-item {
 		margin-bottom: 10px !important;
-	}
-	.selectorTree {
-		max-height: 600px;
-		overflow: auto;
 	}
 </style>
