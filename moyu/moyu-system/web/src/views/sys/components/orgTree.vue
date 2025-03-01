@@ -1,14 +1,15 @@
 <template>
 	<!-- 组织树 -->
 	<a-card size="small" :loading="cardLoading" :bodyStyle="{paddingLeft:'5px', paddingRight:'5px'}" class="admin-ui-main">
-		<a-tree
-			v-if="treeData.length > 0"
-			v-model:expandedKeys="defaultExpandedKeys"
-			:tree-data="treeData"
-			:field-names="treeFieldNames"
-			@select="onSelect"
-			show-icon
-		>
+    <a-tree
+        v-if="treeData.length > 0"
+        v-model:expandedKeys="defaultExpandedKeys"
+        :tree-data="treeData"
+        :field-names="treeFieldNames"
+        :showLine="{ showLeafIcon:false }"
+        show-icon
+        @select="onSelect"
+    >
 			<template #icon="{ orgType, selected }">
 				<span v-if="orgType === 1" style="color:#1980FF;"><ClusterOutlined /></span>
 <!--				<span v-else-if="orgType === 2" style="color:#87D068;"><ApartmentOutlined /></span>-->

@@ -5,7 +5,8 @@
 		:width="drawerWidth"
 		:closable="false"
 		:footerStyle="{'display': 'flex', 'justify-content': 'flex-end' }"
-		@close="onClose"
+    :destroy-on-close="true"
+    @close="onClose"
 	>
 		<template #extra>
 			<a-button type="primary" size="small" @click="onClose"><CloseOutlined /></a-button>
@@ -25,18 +26,7 @@
 					</a-col>
 					<a-col :span="12">
 						<a-form-item label="上级菜单" name="parentCode" :rules="[required('请选择上级菜单')]">
-							<a-tree-select
-								v-model:value="formData.parentCode"
-								v-model:treeExpandedKeys="defaultExpandedKeys"
-								:dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
-								placeholder="请选择上级菜单"
-								allow-clear
-								:tree-data="treeData"
-								:field-names="{ children: 'children', label: 'name', value: 'code' }"
-								selectable="false"
-								tree-line
-								@change="parentChange"
-							/>
+              <OrgTreeSelect :tree-data="treeData" :defaultValue="formData.parentCode" @onChange="parentChange"/>
 						</a-form-item>
 					</a-col>
 					<a-col :span="12">
@@ -127,6 +117,7 @@
 	import IconSelector from '@/components/Selector/iconSelector.vue'
 	import { useSettingsStore } from "@/store";
 	import { message } from "ant-design-vue";
+  import OrgTreeSelect from "@/views/sys/components/orgTreeSelect.vue";
 
 	const settingsStore = useSettingsStore()
 
@@ -138,8 +129,6 @@
 	const iconSelector = ref()
 	// 表单数据，这里有默认值
 	const formData = ref({})
-	// 默认展开的节点(顶级)
-	const defaultExpandedKeys = ref([])
 	const submitLoading = ref(false)
 
 	const drawerWidth = computed(() => {
@@ -147,21 +136,19 @@
 	})
 
 	// 打开抽屉
-	const onOpen = (node, moduleCode) => {
-		visible.value = true
+	const onOpen = async (node, moduleCode) => {
 		// 获取菜单信息
-		menuApi.menuDetail({ code: node.code }).then((res) => {
-			formData.value = res.data
-		})
+    const res = await menuApi.menuDetail({ code: node.code })
+    formData.value = res.data
 		// 获取菜单树并加入顶级节点
-		menuApi.menuTreeSelector({ module: moduleCode }).then((res) => {
-			treeData.value = [{
-				code: moduleCode,
-				name: '顶级',
-				children: res.data
-			}]
-			defaultExpandedKeys.value = [moduleCode]
-		})
+    const moduleRes = await menuApi.menuTreeSelector({ module: moduleCode })
+    treeData.value = [{
+      code: moduleCode,
+      name: '顶级',
+      children: moduleRes.data
+    }]
+    // 数据就绪之后显示
+    visible.value = true
 	}
 	// 关闭抽屉
 	const onClose = () => {

@@ -5,7 +5,8 @@
 		:width="drawerWidth"
 		:closable="false"
 		:footerStyle="{'display': 'flex', 'justify-content': 'flex-end' }"
-		@close="onClose"
+    :destroy-on-close="true"
+    @close="onClose"
 	>
 		<template #extra>
 			<a-button type="primary" size="small" @click="onClose"><CloseOutlined /></a-button>
@@ -25,18 +26,7 @@
 					</a-col>
 					<a-col :span="12">
 						<a-form-item label="上级菜单" name="parentCode" :rules="[required('请选择上级菜单')]">
-							<a-tree-select
-								v-model:value="formData.parentCode"
-								v-model:treeExpandedKeys="defaultExpandedKeys"
-								:dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
-								placeholder="请选择上级菜单"
-								allow-clear
-								:tree-data="treeData"
-								:field-names="{ children: 'children', label: 'name', value: 'code' }"
-								selectable="false"
-								tree-line
-								@change="parentChange"
-							/>
+              <OrgTreeSelect :tree-data="treeData" :defaultValue="formData.parentCode" @onChange="parentChange"/>
 						</a-form-item>
 					</a-col>
 					<a-col :span="12">
@@ -127,6 +117,7 @@
 	import IconSelector from '@/components/Selector/iconSelector.vue'
 	import { useSettingsStore } from "@/store";
 	import { message } from "ant-design-vue";
+  import OrgTreeSelect from "@/views/sys/components/orgTreeSelect.vue";
 
 	const settingsStore = useSettingsStore()
 
@@ -143,8 +134,6 @@
 		sortNum: 99,
 		status: 0
 	})
-	// 默认展开的节点(顶级)
-	const defaultExpandedKeys = ref([])
 	const submitLoading = ref(false)
 	// 模块ID
 	const moduleId = ref('')
@@ -175,7 +164,6 @@
 					children: res.data
 				}
 			]
-			defaultExpandedKeys.value = [moduleCode]
 		})
 	}
 	// 关闭抽屉

@@ -31,18 +31,7 @@
 					</a-col>
 					<a-col :span="12">
 						<a-form-item label="直属组织：" name="orgCode" :rules="[required('请选择直属组织')]">
-							<a-tree-select
-								v-model:value="formData.orgCode"
-								v-model:treeExpandedKeys="defaultExpandedKeys"
-								:dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
-								placeholder="请选择直属组织"
-								allow-clear
-								:tree-data="treeData"
-								:field-names="{ children: 'children', label: 'name', value: 'code' }"
-								selectable="false"
-								tree-line
-								@change="parentChange"
-							/>
+              <OrgTreeSelect :tree-data="treeData" :defaultValue="formData.orgCode" @onChange="parentChange"/>
 						</a-form-item>
 					</a-col>
 					<!-- 使用状态 -->
@@ -74,6 +63,7 @@
 	import { required } from '@/utils/formRules'
 	import { useSettingsStore } from "@/store";
 	import { message } from "ant-design-vue";
+  import OrgTreeSelect from "@/views/sys/components/orgTreeSelect.vue";
 
 	const settingsStore = useSettingsStore()
 
@@ -89,8 +79,6 @@
 		visible: 1,
 		status: 0
 	})
-	// 默认展开的节点(顶级)
-	const defaultExpandedKeys = ref([0])
 	const submitLoading = ref(false)
 	// 使用状态options（0正常 1停用）
 	const statusOptions = [
@@ -108,7 +96,6 @@
     formData.value.orgCode = orgCode
     // 组织树赋值并展开顶级节点
     treeData.value = tree
-    defaultExpandedKeys.value = [tree[0]?.code]
 	}
 	// 关闭抽屉
 	const onClose = () => {

@@ -104,13 +104,13 @@
 			title: '分组名称',
 			dataIndex: 'name',
 			resizable: true,
-			width: 200
+			width: 180
 		},
 		{
 			title: '组织机构',
 			dataIndex: 'orgName',
 			resizable: true,
-			width: 200,
+			width: 180,
 			ellipsis: true
 		},
     {

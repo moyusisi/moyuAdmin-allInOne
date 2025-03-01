@@ -1,7 +1,7 @@
 <template>
 	<a-drawer
 		:open="visible"
-		title="新增数据范围分组"
+		title="新增数据权限组"
 		:width="drawerWidth"
 		:closable="false"
 		:footerStyle="{display: 'flex', justifyContent: 'flex-end'}"
@@ -15,47 +15,41 @@
 			<a-card title="基本信息">
 				<a-row :gutter="24">
 					<a-col :span="12">
-						<a-form-item label="数据范围名称：" name="name" :rules="[required('请输入名称')]">
+						<a-form-item label="数据权限组：" name="name" :rules="[required('请输入名称')]">
 							<a-input v-model:value="formData.name" placeholder="请输入名称" allow-clear />
 						</a-form-item>
 					</a-col>
+          <!-- 使用状态 -->
+          <a-col :span="12">
+            <a-form-item label="使用状态:" name="status" :rules="[required('请选择使用状态')]">
+              <a-radio-group v-model:value="formData.status" option-type="button" button-style="solid" :options="statusOptions" />
+            </a-form-item>
+          </a-col>
 					<a-col :span="12">
-						<a-form-item label="数据范围类型：" name="scopeType" :rules="[required('请选择数据范围')]">
-							<a-radio-group v-model:value="formData.scopeType" button-style="solid">
+						<a-form-item label="直属机构：" name="orgCode" :rules="[required('请选择直属机构')]">
+              <OrgTreeSelect :tree-data="treeData" :defaultValue="formData.orgCode" @onChange="parentChange"/>
+            </a-form-item>
+					</a-col>
+          <a-col :span="12">
+            <a-form-item label="数据范围：" name="scopeType" :rules="[required('请选择数据范围')]">
+              <a-radio-group v-model:value="formData.scopeType" button-style="solid">
                 <!-- 数据范围(字典 2本机构 3本机构及以下 4自定义) -->
-								<a-radio-button :value="2">仅本机构</a-radio-button>
-								<a-radio-button :value="3">本机构及以下</a-radio-button>
-								<a-radio-button :value="4">自定义</a-radio-button>
-							</a-radio-group>
-						</a-form-item>
-					</a-col>
-					<a-col :span="12">
-						<a-form-item label="直属组织：" name="orgCode" :rules="[required('请选择直属组织')]">
-							<a-tree-select
-								v-model:value="formData.orgCode"
-								v-model:treeExpandedKeys="defaultExpandedKeys"
-								:dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
-								placeholder="请选择直属组织"
-								allow-clear
-								:tree-data="treeData"
-								:field-names="{ children: 'children', label: 'name', value: 'code' }"
-								selectable="false"
-								tree-line
-								@change="parentChange"
-							/>
-						</a-form-item>
-					</a-col>
-					<!-- 使用状态 -->
-					<a-col :span="12">
-						<a-form-item label="使用状态:" name="status" :rules="[required('请选择使用状态')]">
-							<a-radio-group v-model:value="formData.status" option-type="button" button-style="solid" :options="statusOptions" />
-						</a-form-item>
-					</a-col>
+                <a-radio-button :value="2">仅本机构</a-radio-button>
+                <a-radio-button :value="3">本机构及以下</a-radio-button>
+                <a-radio-button :value="4">自定义</a-radio-button>
+              </a-radio-group>
+            </a-form-item>
+          </a-col>
 					<a-col :span="12">
 						<a-form-item label="排序:" name="sortNum" :rules="[required('请填写排序值')]">
 							<a-input-number class="wd" v-model:value="formData.sortNum" :max="100" />
 						</a-form-item>
 					</a-col>
+          <a-col :span="12" v-if="formData.scopeType === 4">
+            <a-form-item label="自定义范围：" name="orgCode">
+              <OrgTreeSelect :tree-data="treeData" multiSelect @onChange="scopeChange"/>
+            </a-form-item>
+          </a-col>
 				</a-row>
 			</a-card>
 		</a-form>
@@ -74,6 +68,7 @@
 	import { required } from '@/utils/formRules'
 	import { useSettingsStore } from "@/store";
 	import { message } from "ant-design-vue";
+  import OrgTreeSelect from "@/views/sys/components/orgTreeSelect.vue";
 
 	const settingsStore = useSettingsStore()
 
@@ -84,13 +79,11 @@
 	const treeData = ref([])
 	// 表单数据，这里有默认值
 	const formData = ref({
-		scopeType: 2,
+		scopeType: 3,
 		sortNum: 99,
 		visible: 1,
 		status: 0
 	})
-	// 默认展开的节点(顶级)
-	const defaultExpandedKeys = ref([0])
 	const submitLoading = ref(false)
 	// 使用状态options（0正常 1停用）
 	const statusOptions = [
@@ -108,7 +101,6 @@
     formData.value.orgCode = orgCode
     // 组织树赋值并展开顶级节点
     treeData.value = tree
-    defaultExpandedKeys.value = [tree[0]?.code]
 	}
 	// 关闭抽屉
 	const onClose = () => {
@@ -119,7 +111,10 @@
 	const parentChange = (value) => {
 		formData.value.orgCode = value
 	}
-
+  // 自定义数据范围变更
+  const scopeChange = (value) => {
+    formData.value.scopeList = value
+  }
 	// 验证并提交数据
 	const onSubmit = () => {
 		formRef.value.validate().then(() => {

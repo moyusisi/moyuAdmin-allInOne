@@ -58,12 +58,12 @@
 		{ label: "已停用", value: 1 }
 	]
 	// 打开抽屉
-	const onOpen = (record) => {
-		visible.value = true
+	const onOpen = async (record) => {
 		// 获取模块信息
-		roleApi.roleDetail({ id: record.id }).then((res) => {
-			formData.value = res.data
-		})
+		const res = await roleApi.roleDetail({ id: record.id })
+    formData.value = res.data
+    // 数据就绪之后显示
+    visible.value = true
 	}
 	// 关闭抽屉
 	const onClose = () => {
