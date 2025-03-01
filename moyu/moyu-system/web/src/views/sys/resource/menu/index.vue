@@ -3,7 +3,7 @@
 	<a-card size="small">
 		<a-space>
 			<a-radio-group v-model:value="moduleId" button-style="solid">
-				<a-radio-button v-for="module in moduleList" :key="module.code" :value="module.code" @click="moduleClick(module.code)">
+				<a-radio-button v-for="module in moduleList" :key="module.code" :value="module.code" @click="moduleClick(module)">
 					<component :is="module.icon" /> {{ module.name }}
 				</a-radio-button>
 			</a-radio-group>
@@ -25,7 +25,7 @@
 		>
 			<template #operator>
 				<a-space>
-					<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(moduleId)">新增菜单</a-button>
+					<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(module, 2, module.code)">新增菜单</a-button>
 					<BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDeleteMenu" />
 				</a-space>
 			</template>
@@ -62,15 +62,15 @@
 				<template v-if="column.dataIndex === 'action'">
 					<a-space>
 						<a-tooltip v-if="node.menuType === 2" title="添加菜单">
-							<a style="color:#53C61D;" @click="addFormRef.onOpen(moduleId, 3, node.code)"><PlusSquareOutlined /></a>
+							<a style="color:#53C61D;" @click="addFormRef.onOpen(module, 3, node.code)"><PlusSquareOutlined /></a>
               <a-divider type="vertical" />
 						</a-tooltip>
 						<a-tooltip v-else-if="node.menuType === 3" title="添加按钮">
-							<a style="color:#53C61D;" @click="addFormRef.onOpen(moduleId, 4, node.code)"><PlusSquareOutlined /></a>
+							<a style="color:#53C61D;" @click="addFormRef.onOpen(module, 4, node.code)"><PlusSquareOutlined /></a>
               <a-divider type="vertical" />
 						</a-tooltip>
 						<a-tooltip title="编辑">
-							<a @click="editFormRef.onOpen(node, moduleId)"><FormOutlined /></a>
+							<a @click="editFormRef.onOpen(node, module)"><FormOutlined /></a>
 						</a-tooltip>
 						<a-divider type="vertical" />
 						<a-tooltip title="删除">
@@ -103,7 +103,8 @@
 	const tableRef = ref()
 	const addFormRef = ref()
 	const editFormRef = ref()
-	const moduleId = ref()
+  const moduleId = ref()
+  const module = ref()
 	const moduleList = ref([])
 	const toolConfig = { refresh: true, height: true, columnSetting: false, striped: false }
 	const columns = [
@@ -176,35 +177,26 @@
 			}
 		}
 	}
-	const loadData = (parameter) => {
+	const loadData = async (parameter) => {
 		if (!moduleId.value) {
 			// 若无moduleId, 则查询module列表第一个module的code作为默认moduleId
-			return menuApi.moduleList().then((res) => {
-				moduleList.value = res.data
-				moduleId.value = res.data.length > 0 ? res.data[0].code : ''
-				queryForm.value.module = moduleId.value
-				return menuApi.menuTree(Object.assign(parameter, queryForm.value)).then((res) => {
-					if (res.data) {
-						return res.data
-					} else {
-						return []
-					}
-				})
-			})
+			const res = await menuApi.moduleList()
+      moduleList.value = res.data
+      module.value = res.data.length > 0 ? res.data[0] : null
+      moduleId.value = module.value.code
+      queryForm.value.module = moduleId.value
+      const treeRes = await menuApi.menuTree(Object.assign(parameter, queryForm.value))
+      return treeRes.data ? treeRes.data : []
 		} else {
 			// menuTree获取到的data中的id和parentId均为code
-			return menuApi.menuTree(Object.assign(parameter, queryForm.value)).then((res) => {
-				if (res.data) {
-					return res.data
-				} else {
-					return []
-				}
-			})
+      const treeRes = await menuApi.menuTree(Object.assign(parameter, queryForm.value))
+      return treeRes.data ? treeRes.data : []
 		}
 	}
 	// 切换应用标签查询菜单列表
 	const moduleClick = (value) => {
-		queryForm.value.module = value
+    module.value = value
+		queryForm.value.module = module.value.code
 		tableRef.value.refresh(true)
 	}
 	// 单个删除

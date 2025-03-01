@@ -136,15 +136,15 @@
 	})
 
 	// 打开抽屉
-	const onOpen = async (node, moduleCode) => {
+	const onOpen = async (node, module) => {
 		// 获取菜单信息
     const res = await menuApi.menuDetail({ code: node.code })
     formData.value = res.data
 		// 获取菜单树并加入顶级节点
-    const moduleRes = await menuApi.menuTreeSelector({ module: moduleCode })
+    const moduleRes = await menuApi.menuTreeSelector({ module: module.code })
     treeData.value = [{
-      code: moduleCode,
-      name: '顶级',
+      code: module.code,
+      name: module.name,
       children: moduleRes.data
     }]
     // 数据就绪之后显示

@@ -143,29 +143,21 @@
 	})
 
 	// 打开抽屉(新增时无data)
-	const onOpen = (moduleCode, menuType, parentCode) => {
-		visible.value = true
-		// 模块赋值
-		moduleId.value = moduleCode
-		// 若指定了menuType则赋值
-		if (menuType) {
-			formData.value.menuType = menuType
-		}
-		// 若指定了parentCode则赋值
-		if (parentCode) {
-			formData.value.parentCode = parentCode
-		}
-		// 获取菜单树并加入顶级节点
-		menuApi.menuTreeSelector({ module: moduleCode }).then((res) => {
-			treeData.value = [
-				{
-					code: moduleCode,
-					name: '顶级',
-					children: res.data
-				}
-			]
-		})
-	}
+  const onOpen = async (module, menuType, parentCode) => {
+    // 模块赋值
+    moduleId.value = module.code
+    // 若指定了menuType则赋值  1模块 2目录 3菜单 4按钮 5外链
+    if (menuType) {
+      formData.value.menuType = menuType
+    }
+    // 若指定了parentCode则赋值
+    formData.value.parentCode = parentCode
+    // 获取菜单树并加入顶级节点
+    const res = await menuApi.menuTreeSelector({ module: module.code })
+    treeData.value = [{ code: module.code, name: module.name, children: res.data }]
+    // 数据就绪之后显示
+    visible.value = true
+  }
 	// 关闭抽屉
 	const onClose = () => {
 		formRef.value.resetFields()
