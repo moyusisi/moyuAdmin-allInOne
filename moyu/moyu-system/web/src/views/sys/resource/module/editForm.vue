@@ -33,7 +33,7 @@
 				<a-radio-group v-model:value="formData.status" option-type="button" button-style="solid" :options="statusOptions"/>
 			</a-form-item>
 			<a-form-item label="排序" name="sortNum" :rules="[required('请填写排序顺序')]">
-				<a-input-number v-model:value="formData.sortNum" :max="100" />
+				<a-input-number v-model:value="formData.sortNum" :max="100" class="wd" />
 			</a-form-item>
 		</a-form>
 		<template #footer>

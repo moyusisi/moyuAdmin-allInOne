@@ -20,7 +20,7 @@
 						</a-form-item>
 					</a-col>
 					<a-col :span="12">
-						<a-form-item label="菜单编码" name="code" tooltip="不可更改！不填将会自动生成">
+						<a-form-item label="唯一编码" name="code" tooltip="不可更改！不填将会自动生成">
 							<a-input v-model:value="formData.code" placeholder="唯一编码，不填将自动生成，创建后不可更改" allow-clear />
 						</a-form-item>
 					</a-col>
@@ -77,13 +77,22 @@
 							<a-input v-model:value="formData.component" addon-before="src/views/" placeholder="请输入组件地址" allow-clear/>
 						</a-form-item>
 					</a-col>
-					<!-- 按钮:权限标识 -->
-					<a-col :span="12" v-if="formData.menuType === 4">
-						<a-form-item label="权限标识" name="permission" tooltip="权限标识应与后端接口保持一致且用':'分割，如'sys:user:add'" :rules="[required('请输入权限标识')]">
-							<a-input v-model:value="formData.permission" placeholder="请输入权限标识" allow-clear/>
-						</a-form-item>
-					</a-col>
 				</a-row>
+        <!-- 按钮:接口地址、权限标识 -->
+        <a-row :gutter="24">
+          <!-- 按钮:接口地址 -->
+          <a-col :span="12" v-if="formData.menuType === 4">
+            <a-form-item label="接口地址" name="path" tooltip="非必填，以反斜杠'/'开头">
+              <a-input v-model:value="formData.path" placeholder="请输入接口地址" allow-clear />
+            </a-form-item>
+          </a-col>
+          <!-- 按钮:权限标识 -->
+          <a-col :span="12" v-if="formData.menuType === 4">
+            <a-form-item label="权限标识" name="permission" tooltip="权限标识应与后端接口保持一致且用':'分割，如'sys:user:add'" :rules="[required('请输入权限标识')]">
+              <a-input v-model:value="formData.permission" placeholder="请输入权限标识" allow-clear/>
+            </a-form-item>
+          </a-col>
+        </a-row>
 				<a-row :gutter="24">
 					<!-- 目录、菜单、外链:是否可见 -->
 					<a-col :span="12" v-if="formData.menuType === 2 || formData.menuType === 3 || formData.menuType === 5">
