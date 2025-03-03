@@ -23,6 +23,7 @@ import com.google.common.collect.Multimap;
 import com.moyu.common.enums.ExceptionEnum;
 import com.moyu.common.exception.BaseException;
 import com.moyu.common.model.PageResult;
+import com.moyu.common.security.util.SecurityUtils;
 import com.moyu.system.sys.constant.SysConstants;
 import com.moyu.system.sys.enums.MenuTypeEnum;
 import com.moyu.system.sys.enums.RelationTypeEnum;
@@ -172,7 +173,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
         // 所有的role-menu关系(menu.code->menu)
         Map<String, SysRelation> rmMap = new HashMap<>();
-        sysRelationService.list(new LambdaQueryWrapper<SysRelation>()
+        sysRelationService.list(Wrappers.lambdaQuery(SysRelation.class)
                         // 指定关系类型
                         .eq(SysRelation::getRelationType, RelationTypeEnum.ROLE_HAS_MENU.getCode())
                         // 指定哪个role
@@ -224,15 +225,14 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     public void grantMenu(SysRoleParam roleParam) {
-        // 查询指定模块的可授权内容(菜单、按钮、链接)
-        QueryWrapper<SysMenu> queryWrapper = new QueryWrapper<SysMenu>().checkSqlInjection();
-        queryWrapper.lambda().select(SysMenu::getCode)
+        // 查询指定模块的所有可授权内容(菜单、按钮、链接)
+        List<SysMenu> menuList = sysMenuService.list(Wrappers.lambdaQuery(SysMenu.class)
+                .select(SysMenu::getCode)
                 // 指定模块
                 .eq(SysMenu::getModule, roleParam.getModule())
                 // 指定菜单类型
                 .in(SysMenu::getMenuType, MenuTypeEnum.MENU.getCode(), MenuTypeEnum.BUTTON.getCode(), MenuTypeEnum.LINK.getCode())
-                .eq(SysMenu::getDeleteFlag, 0);
-        List<SysMenu> menuList = sysMenuService.list(queryWrapper);
+                .eq(SysMenu::getDeleteFlag, 0));
         // 本模块的所有权限
         List<String> allMenuCode = menuList.stream().map(SysMenu::getCode).collect(Collectors.toList());
         // 如果本模块无任何可用资源，则不用授权
@@ -249,9 +249,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             // TransactionCallbackWithoutResult 有异常则会自动回滚
 
             // 清空角色在本模块的所有权限
-            QueryWrapper<SysRelation> wrapper = new QueryWrapper<SysRelation>().checkSqlInjection();
-            wrapper.lambda().eq(SysRelation::getObjectId, roleParam.getCode()).in(SysRelation::getTargetId, allMenuCode);
-            sysRelationService.remove(wrapper);
+            sysRelationService.remove(Wrappers.lambdaQuery(SysRelation.class)
+                    .eq(SysRelation::getObjectId, roleParam.getCode()).in(SysRelation::getTargetId, allMenuCode));
             // 非空则新加权限
             if (ObjectUtil.isNotEmpty(grantMenuSet)) {
                 List<SysRelation> addList = new ArrayList<>();
@@ -260,6 +259,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                     relation.setObjectId(roleParam.getCode());
                     relation.setTargetId(code);
                     relation.setRelationType(RelationTypeEnum.ROLE_HAS_MENU.getCode());
+                    relation.setCreateTime(new Date());
+                    relation.setCreateUser(SecurityUtils.getLoginUser().getUsername());
                     addList.add(relation);
                 });
                 sysRelationService.saveBatch(addList);
@@ -300,6 +301,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             entity.setObjectId(roleParam.getCode());
             entity.setTargetId(code);
             entity.setRelationType(RelationTypeEnum.ROLE_HAS_USER.getCode());
+            entity.setCreateTime(new Date());
+            entity.setCreateUser(SecurityUtils.getLoginUser().getUsername());
             addList.add(entity);
         });
         sysRelationService.saveBatch(addList);

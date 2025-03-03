@@ -13,6 +13,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.base.Strings;
@@ -21,14 +22,18 @@ import com.moyu.common.exception.BaseException;
 import com.moyu.common.model.PageResult;
 import com.moyu.system.sys.constant.SysConstants;
 import com.moyu.system.sys.enums.MenuTypeEnum;
+import com.moyu.system.sys.enums.RelationTypeEnum;
 import com.moyu.system.sys.enums.StatusEnum;
 import com.moyu.system.sys.mapper.SysMenuMapper;
 import com.moyu.system.sys.model.entity.SysMenu;
+import com.moyu.system.sys.model.entity.SysRelation;
 import com.moyu.system.sys.model.param.SysMenuParam;
 import com.moyu.system.sys.service.SysMenuService;
+import com.moyu.system.sys.service.SysRelationService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -43,6 +48,9 @@ import java.util.stream.Collectors;
 @Service
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
 
+    @Resource
+    private SysRelationService sysRelationService;
+
     @Override
     public List<Tree<String>> tree(SysMenuParam menuParam) {
         // 查询条件(可指定module、status)
@@ -56,9 +64,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     public List<SysMenu> list(SysMenuParam menuParam) {
-        QueryWrapper<SysMenu> queryWrapper = new QueryWrapper<SysMenu>().checkSqlInjection();
         // 查询条件
-        queryWrapper.lambda()
+        LambdaQueryWrapper<SysMenu> queryWrapper = Wrappers.lambdaQuery(SysMenu.class)
                 // 关键词搜索
                 .like(StrUtil.isNotBlank(menuParam.getSearchKey()), SysMenu::getName, menuParam.getSearchKey())
                 // 指定菜单类型
@@ -158,6 +165,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         UpdateWrapper<SysMenu> updateWrapper = new UpdateWrapper<>();
         updateWrapper.in("id", idSet).set("delete_flag", 1);
         this.update(updateWrapper);
+        // 资源删除时,对应的role_has_menu也要删除
+        clearRoleMenu(idSet);
     }
 
     @Override
@@ -201,6 +210,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         UpdateWrapper<SysMenu> updateWrapper = new UpdateWrapper<>();
         updateWrapper.in("id", idSet).set("delete_flag", 1);
         this.update(updateWrapper);
+        // 资源删除时,对应的role_has_menu也要删除
+        clearRoleMenu(idSet);
     }
 
     @Override
@@ -320,6 +331,25 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 }).collect(Collectors.toList());
         // 构建树
         return TreeUtil.build(treeNodeList, rootId, nodeConfig, new DefaultNodeParser<>());
+    }
+
+    /**
+     * 清除关系表中role_has_menu的指定的menu id的关系
+     *
+     * @param menuIds 指定的menu id集合
+     */
+    private void clearRoleMenu(Set<Long> menuIds) {
+        if (ObjectUtil.isEmpty(menuIds)) {
+            return;
+        }
+        // 查询出来menu对应的code
+        Set<String> codeSet = new HashSet<>();
+        this.list(Wrappers.lambdaQuery(SysMenu.class).select(SysMenu::getCode).in(SysMenu::getId, menuIds))
+                .forEach(e -> codeSet.add(e.getCode()));
+        // 删除指定menuCode 的 ROLE_HAS_MENU
+        sysRelationService.remove(Wrappers.lambdaQuery(SysRelation.class)
+                .eq(SysRelation::getRelationType, RelationTypeEnum.ROLE_HAS_MENU)
+                .in(SysRelation::getTargetId, codeSet));
     }
 }
 
