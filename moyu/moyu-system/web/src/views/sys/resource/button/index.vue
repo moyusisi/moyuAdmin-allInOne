@@ -100,6 +100,8 @@
     {
       title: '显示名称',
       dataIndex: 'name',
+      resizable: true,
+      width: 180
     },
     {
       title: '类型',

@@ -15,6 +15,9 @@
       <a-form-item label="显示名称" name="name" :rules="[required('请输入按钮名称')]">
         <a-input v-model:value="formData.name" placeholder="请输入显示名称" allow-clear />
       </a-form-item>
+      <a-form-item label="唯一编码" name="code" tooltip="不可更改！不填将会自动生成">
+        <a-input v-model:value="formData.code" placeholder="唯一编码，不填将自动生成，创建后不可更改" allow-clear />
+      </a-form-item>
       <a-form-item label="上级菜单" name="parentCode" :rules="[required('请选择上级菜单')]">
         <OrgTreeSelect :tree-data="treeData" :defaultValue="moduleId" @onChange="parentChange"/>
       </a-form-item>
