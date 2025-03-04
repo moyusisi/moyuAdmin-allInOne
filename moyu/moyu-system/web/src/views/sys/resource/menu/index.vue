@@ -30,12 +30,12 @@
 				</a-space>
 			</template>
 			<template #bodyCell="{ column, record : node }">
-				<template v-if="column.dataIndex === 'menuType'">
-					<a-tag v-if="node.menuType === 1" color="orange">模块</a-tag>
-					<a-tag v-if="node.menuType === 2" color="cyan">目录</a-tag>
-					<a-tag v-if="node.menuType === 3" color="blue">菜单</a-tag>
-					<a-tag v-if="node.menuType === 4" color="purple">按钮</a-tag>
-					<a-tag v-if="node.menuType === 5" color="green">链接</a-tag>
+				<template v-if="column.dataIndex === 'resourceType'">
+					<a-tag v-if="node.resourceType === 1" color="orange">模块</a-tag>
+					<a-tag v-if="node.resourceType === 2" color="cyan">目录</a-tag>
+					<a-tag v-if="node.resourceType === 3" color="blue">菜单</a-tag>
+					<a-tag v-if="node.resourceType === 4" color="purple">按钮</a-tag>
+					<a-tag v-if="node.resourceType === 5" color="green">链接</a-tag>
 				</template>
 				<template v-if="column.dataIndex === 'path'">
 					<a-tag v-if="node.path" :bordered="false">{{ node.path }}</a-tag>
@@ -53,7 +53,7 @@
 					<span v-else />
 				</template>
 				<template v-if="column.dataIndex === 'visible'">
-					<span v-if="node.menuType !== 4" >
+					<span v-if="node.resourceType !== 4" >
 						<a-tag v-if="node.visible === 1" color="green">可见</a-tag>
 						<a-tag v-else>不可见</a-tag>
 					</span>
@@ -61,11 +61,11 @@
 				</template>
 				<template v-if="column.dataIndex === 'action'">
 					<a-space>
-						<a-tooltip v-if="node.menuType === 2" title="添加菜单">
+						<a-tooltip v-if="node.resourceType === 2" title="添加菜单">
 							<a style="color:#53C61D;" @click="addFormRef.onOpen(module, 3, node.code)"><PlusSquareOutlined /></a>
               <a-divider type="vertical" />
 						</a-tooltip>
-						<a-tooltip v-else-if="node.menuType === 3" title="添加按钮">
+						<a-tooltip v-else-if="node.resourceType === 3" title="添加按钮">
 							<a style="color:#53C61D;" @click="addFormRef.onOpen(module, 4, node.code)"><PlusSquareOutlined /></a>
               <a-divider type="vertical" />
 						</a-tooltip>
@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-	import menuApi from '@/api/sys/menuApi'
+	import resourceApi from '@/api/sys/resourceApi.js'
 
 	import { h } from 'vue'
 	import { PlusOutlined } from '@ant-design/icons-vue'
@@ -114,7 +114,7 @@
 		},
 		{
 			title: '类型',
-			dataIndex: 'menuType',
+			dataIndex: 'resourceType',
 			align: 'center',
 			width: 80
 		},
@@ -180,16 +180,16 @@
 	const loadData = async (parameter) => {
 		if (!moduleId.value) {
 			// 若无moduleId, 则查询module列表第一个module的code作为默认moduleId
-			const res = await menuApi.moduleList()
+			const res = await resourceApi.moduleList()
       moduleList.value = res.data
       module.value = res.data.length > 0 ? res.data[0] : null
       moduleId.value = module.value.code
       queryForm.value.module = moduleId.value
-      const treeRes = await menuApi.menuTree(Object.assign(parameter, queryForm.value))
+      const treeRes = await resourceApi.menuTree(Object.assign(parameter, queryForm.value))
       return treeRes.data ? treeRes.data : []
 		} else {
 			// menuTree获取到的data中的id和parentId均为code
-      const treeRes = await menuApi.menuTree(Object.assign(parameter, queryForm.value))
+      const treeRes = await resourceApi.menuTree(Object.assign(parameter, queryForm.value))
       return treeRes.data ? treeRes.data : []
 		}
 	}
@@ -202,7 +202,7 @@
 	// 单个删除
 	const deleteMenu = (node) => {
 		let data = { codes: [node.code] }
-		menuApi.deleteMenuTree(data).then((res) => {
+		resourceApi.deleteMenuTree(data).then((res) => {
 			message.success(res.message)
 			tableRef.value.refresh(true)
 			refreshCacheMenu()
@@ -211,7 +211,7 @@
 	// 批量删除
 	const batchDeleteMenu = (params) => {
 		let data = { codes: selectedRowKeys.value }
-		menuApi.deleteMenuTree(data).then((res) => {
+		resourceApi.deleteMenuTree(data).then((res) => {
 			message.success(res.message)
 			tableRef.value.clearRefreshSelected()
 			refreshCacheMenu()

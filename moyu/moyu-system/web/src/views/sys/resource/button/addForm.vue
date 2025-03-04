@@ -44,7 +44,7 @@
 
 <script setup>
 	import { required } from '@/utils/formRules'
-	import menuApi from '@/api/sys/menuApi'
+	import resourceApi from '@/api/sys/resourceApi.js'
   import OrgTreeSelect from "@/views/sys/components/orgTreeSelect.vue";
 	import { message } from "ant-design-vue";
 	// 默认是关闭状态
@@ -55,7 +55,7 @@
   const moduleId = ref()
 	// 表单数据，这里有默认值
 	const formData = ref({
-		menuType: 4,
+    resourceType: 4,
 		sortNum: 9,
 		status: 0
 	})
@@ -64,7 +64,7 @@
   const onOpen = async (module) => {
     moduleId.value = module.code
     // 获取菜单树并加入顶级节点
-    const moduleRes = await menuApi.menuTreeSelector({ module: module.code })
+    const moduleRes = await resourceApi.menuTreeSelector({ module: module.code })
     treeData.value = [{
       code: module.code,
       name: module?.name,
@@ -86,7 +86,7 @@
 	// 验证并提交数据
 	const onSubmit = () => {
 		formRef.value.validate().then(() => {
-			menuApi.addMenu(formData.value).then((res) => {
+			resourceApi.addResource(formData.value).then((res) => {
 				message.success(res.message)
 				emit('successful')
 				onClose()

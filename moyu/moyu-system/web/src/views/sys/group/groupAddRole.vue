@@ -69,7 +69,7 @@
 
 <script setup>
 	import groupApi from '@/api/sys/groupApi'
-	import roleApi from "@/api/sys/roleApi"
+  import userCenterApi from "@/api/sys/userCenterApi"
 
 	import { useSettingsStore } from "@/store";
 	import { h } from "vue";
@@ -169,8 +169,7 @@
 	// 表格查询 返回 Promise 对象
 	const loadTableData = async () => {
 		selectedRowKeys.value = []
-		let param = Object.assign({ "code": group.value.code }, searchFormData.value)
-		const res = await roleApi.roleList(param)
+		const res = await userCenterApi.userRoleList(searchFormData.value)
 		tableData.value = res.data
 	}
 	// 重置

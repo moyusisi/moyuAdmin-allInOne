@@ -30,8 +30,8 @@
 						</a-form-item>
 					</a-col>
 					<a-col :span="12">
-						<a-form-item label="菜单类型" name="menuType" :rules="[required('请选择菜单类型')]">
-							<a-radio-group v-model:value="formData.menuType" button-style="solid">
+						<a-form-item label="菜单类型" name="resourceType" :rules="[required('请选择菜单类型')]">
+							<a-radio-group v-model:value="formData.resourceType" button-style="solid">
 								<!-- 1模块 2目录 3菜单 4按钮 5外链 -->
 								<a-radio-button :value="2">目录</a-radio-button>
 								<a-radio-button :value="3">菜单</a-radio-button>
@@ -51,19 +51,19 @@
 				<!-- 路由、组件、权限、图标、可见、排序 -->
 				<a-row :gutter="24">
 					<!-- 目录、菜单:路由地址 -->
-					<a-col :span="12" v-if="formData.menuType === 2 || formData.menuType === 3">
+					<a-col :span="12" v-if="formData.resourceType === 2 || formData.resourceType === 3">
 						<a-form-item label="路由地址" name="path" tooltip="菜单路由必须以反斜杠'/'开头" :rules="[required('请输入路由地址')]">
 							<a-input v-model:value="formData.path" placeholder="请输入路由地址" allow-clear />
 						</a-form-item>
 					</a-col>
 					<!-- 外链:链接地址 -->
-					<a-col :span="12" v-else-if="formData.menuType === 5">
+					<a-col :span="12" v-else-if="formData.resourceType === 5">
 						<a-form-item label="链接地址" name="path" tooltip="链接必须以http(s)开头" :rules="[required('请输入链接地址')]">
 							<a-input v-model:value="formData.path" placeholder="请输入链接地址" allow-clear />
 						</a-form-item>
 					</a-col>
           <!-- 目录:组件地址 -->
-          <a-col :span="12" v-if="formData.menuType === 2">
+          <a-col :span="12" v-if="formData.resourceType === 2">
             <a-form-item label="目录组件" name="component" tooltip="最外层目录选Layout">
               <a-select v-model:value="formData.component" allowClear>
                 <a-select-option value="Layout">Layout</a-select-option>
@@ -72,7 +72,7 @@
             </a-form-item>
           </a-col>
 					<!-- 菜单:组件地址 -->
-					<a-col :span="12" v-if="formData.menuType === 3">
+					<a-col :span="12" v-if="formData.resourceType === 3">
 						<a-form-item label="组件地址" name="component" tooltip="前端组件(不带.vue)" :rules="[required('请输入组件地址')]">
 							<a-input v-model:value="formData.component" addon-before="src/views/" placeholder="请输入组件地址" allow-clear/>
 						</a-form-item>
@@ -81,13 +81,13 @@
         <!-- 按钮:接口地址、权限标识 -->
         <a-row :gutter="24">
           <!-- 按钮:接口地址 -->
-          <a-col :span="12" v-if="formData.menuType === 4">
+          <a-col :span="12" v-if="formData.resourceType === 4">
             <a-form-item label="接口地址" name="path" tooltip="非必填，以反斜杠'/'开头">
               <a-input v-model:value="formData.path" placeholder="请输入接口地址" allow-clear />
             </a-form-item>
           </a-col>
           <!-- 按钮:权限标识 -->
-          <a-col :span="12" v-if="formData.menuType === 4">
+          <a-col :span="12" v-if="formData.resourceType === 4">
             <a-form-item label="权限标识" name="permission" tooltip="权限标识应与后端接口保持一致且用':'分割，如'sys:user:add'" :rules="[required('请输入权限标识')]">
               <a-input v-model:value="formData.permission" placeholder="请输入权限标识" allow-clear/>
             </a-form-item>
@@ -95,13 +95,13 @@
         </a-row>
 				<a-row :gutter="24">
 					<!-- 目录、菜单、外链:是否可见 -->
-					<a-col :span="12" v-if="formData.menuType === 2 || formData.menuType === 3 || formData.menuType === 5">
+					<a-col :span="12" v-if="formData.resourceType === 2 || formData.resourceType === 3 || formData.resourceType === 5">
 						<a-form-item label="是否可见" name="visible" :rules="[required('请选择是否可见')]">
 							<a-radio-group v-model:value="formData.visible" option-type="button" button-style="solid" :options="visibleOptions"/>
 						</a-form-item>
 					</a-col>
 					<!-- 目录、菜单、外链:图标 -->
-					<a-col :span="12" v-if="formData.menuType === 2 || formData.menuType === 3 || formData.menuType === 5">
+					<a-col :span="12" v-if="formData.resourceType === 2 || formData.resourceType === 3 || formData.resourceType === 5">
 						<a-form-item label="图标" name="icon">
 							<a-input v-model:value="formData.icon" class="wdcalc-70" placeholder="请选择图标" allow-clear disabled />
 							<a-button type="primary" @click="iconSelector.showIconModal(formData.icon)">选择</a-button>
@@ -122,7 +122,7 @@
 
 <script setup>
 	import { required } from '@/utils/formRules'
-	import menuApi from '@/api/sys/menuApi'
+	import resourceApi from '@/api/sys/resourceApi.js'
 	import IconSelector from '@/components/Selector/iconSelector.vue'
 	import { useSettingsStore } from "@/store";
 	import { message } from "ant-design-vue";
@@ -147,10 +147,10 @@
 	// 打开抽屉
 	const onOpen = async (node, module) => {
 		// 获取菜单信息
-    const res = await menuApi.menuDetail({ code: node.code })
+    const res = await resourceApi.resourceDetail({ code: node.code })
     formData.value = res.data
 		// 获取菜单树并加入顶级节点
-    const moduleRes = await menuApi.menuTreeSelector({ module: module.code })
+    const moduleRes = await resourceApi.menuTreeSelector({ module: module.code })
     treeData.value = [{
       code: module.code,
       name: module.name,
@@ -185,7 +185,7 @@
 		formRef.value.validate().then(() => {
 			const param = buildParam(formData.value)
 			submitLoading.value = true
-			menuApi.editMenu(param).then((res) => {
+			resourceApi.editResource(param).then((res) => {
 				message.success(res.message)
 				emit('successful')
 				onClose()

@@ -48,7 +48,7 @@
 
 <script setup>
 	import { required } from '@/utils/formRules'
-	import menuApi from '@/api/sys/menuApi'
+	import resourceApi from '@/api/sys/resourceApi.js'
 	import IconSelector from '@/components/Selector/iconSelector.vue'
 	import { message } from "ant-design-vue";
 	// 默认是关闭状态
@@ -58,7 +58,7 @@
 	const iconSelectorRef = ref()
 	// 表单数据，这里有默认值
 	const formData = ref({
-		menuType: 1,
+    resourceType: 1,
 		visible: 1,
 		sortNum: 9,
 		status: 0
@@ -88,7 +88,7 @@
 	// 验证并提交数据
 	const onSubmit = () => {
 		formRef.value.validate().then(() => {
-			menuApi.addMenu(formData.value).then((res) => {
+			resourceApi.addResource(formData.value).then((res) => {
 				message.success(res.message)
 				emit('successful')
 				onClose()
