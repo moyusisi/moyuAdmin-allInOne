@@ -54,6 +54,12 @@ export const useMenuStore = defineStore('menuStore', () => {
 	// 当前的所有路由(包括静态配置的和动态生成的)
 	const routes = ref<RouteRecordRaw[]>([]);
 
+	// 在 Setup Stores 中，您需要创建自己的 $reset() 方法 https://pinia.vuejs.org/zh/core-concepts/state.html
+	function $reset() {
+		menuList.value = []
+		routes.value = []
+	}
+
 	// actions
 	function setRoutes(newRoutes) {
 		routes.value = routesData.concat(newRoutes);
@@ -120,6 +126,7 @@ export const useMenuStore = defineStore('menuStore', () => {
 	return {
 		menuList,
 		routes,
+		$reset,
 		initModuleMenu,
 		refreshModuleMenu,
 		generateRoutes,

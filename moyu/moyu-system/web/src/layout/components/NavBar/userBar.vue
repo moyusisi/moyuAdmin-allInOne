@@ -41,15 +41,15 @@
 	import Setting from '../setting.vue'
 	import router from '@/router'
 	import loginApi from '@/api/auth/loginApi'
-	import { useUserStore } from '@/store'
+  import { useMenuStore, useUserStore } from '@/store'
 
 	const settingDialog = ref(false)
-	const userStore = useUserStore()
+  const userStore = useUserStore()
+  const menuStore = useMenuStore()
 	const isMobile = ref(false)
 	const userInfo = computed(() => {
 		return userStore.userInfo
 	})
-	const userName = ref(userInfo.value?.userName || '')
 
 	// 个人信息
 	const handleUser = (key) => {
@@ -68,10 +68,8 @@
 						// 清理掉个人的一些信息
             localStorage.clear()
 						router.replace({ path: '/login' })
-						nextTick(() => {
-							// 清理缓存内的个人信息
-							userStore.userInfo.value = null
-						})
+            userStore.$reset()
+            menuStore.$reset()
 					}).catch(() => {
             localStorage.clear()
 						router.replace({ path: '/login' })

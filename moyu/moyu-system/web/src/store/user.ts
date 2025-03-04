@@ -7,6 +7,11 @@ export const useUserStore = defineStore('userStore', () => {
 	// 用户信息
 	const userInfo = ref<UserInfo>({});
 
+	// 在 Setup Stores 中，您需要创建自己的 $reset() 方法 https://pinia.vuejs.org/zh/core-concepts/state.html
+	function $reset() {
+		userInfo.value = {}
+	}
+
 	// 定义action
 	// 初始化用户信息
 	const initUserInfo = async () => {
@@ -25,5 +30,5 @@ export const useUserStore = defineStore('userStore', () => {
 			localStorage.setItem('USER_INFO', JSON.stringify(userInfo.value))
 		})
 	}
-	return { userInfo, initUserInfo, refreshUserLoginUserInfo }
+	return { userInfo, $reset, initUserInfo, refreshUserLoginUserInfo }
 })
