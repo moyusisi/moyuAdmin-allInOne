@@ -34,9 +34,14 @@ public class SysRoleParam extends BasePageParam {
      */
     private String orgCode;
     /**
-     * 角色授权时的菜单code列表
+     * 角色授权时的资源code列表(按钮也在里面)
      */
     private Set<String> grantMenuList;
+
+    /**
+     * 指定模块
+     */
+    private String module;
 
     /**
      * 名称关键词
@@ -59,11 +64,6 @@ public class SysRoleParam extends BasePageParam {
      * 编码
      */
     private String code;
-
-    /**
-     * 归属模块
-     */
-    private String module;
 
     /**
      * 排序顺序
