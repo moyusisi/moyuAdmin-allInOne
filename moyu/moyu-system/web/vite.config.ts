@@ -45,6 +45,18 @@ export default defineConfig(({ mode }): UserConfig => {
         }
       }
     },
+    build: {
+      manifest: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'ant-design-vue': ['ant-design-vue'],
+            vue: ['vue', 'vue-router', 'pinia', 'vue-i18n']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000
+    },
     plugins: [
       vue(),
       viteMockServe({
