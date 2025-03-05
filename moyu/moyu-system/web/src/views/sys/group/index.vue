@@ -35,7 +35,7 @@
 					:data="loadTableData"
           :scroll="{ x: true }"
 					bordered
-					:row-key="(record) => record.code"
+					:row-key="(record) => record.id"
 					:tool-config="toolConfig"
 					:row-selection="options.rowSelection"
 				>
@@ -128,7 +128,7 @@
 			title: '创建时间',
 			dataIndex: 'createTime',
 			align: 'center',
-			width: 150
+			width: 160
 		},
 		{
 			title: '操作',
@@ -193,7 +193,7 @@
 	}
 	// 单个删除
 	const deleteGroup = (record) => {
-		let data = { codes: [record.code] }
+		let data = { ids: [record.id] }
 		groupApi.deleteGroup(data).then((res) => {
 			message.success(res.message)
 			tableRef.value.refresh(true)
@@ -201,7 +201,7 @@
 	}
 	// 批量删除
 	const batchDeleteGroup = (params) => {
-		let data = { codes: selectedRowKeys.value }
+		let data = { ids: selectedRowKeys.value }
 		groupApi.deleteGroup(data).then((res) => {
 			message.success(res.message)
 			tableRef.value.clearRefreshSelected()
