@@ -3,6 +3,7 @@ import { useSearchStore } from '@/store/search'
 import userCenterApi from '@/api/sys/userCenterApi'
 import routesData from '@/router/systemRouter'
 import { RouteRecordRaw } from "vue-router";
+import Layout from '@/layout/index.vue'
 
 // findPwd和login路由组件已静态加载，此处不在进行异步加载
 const modules = import.meta.glob([
@@ -10,8 +11,6 @@ const modules = import.meta.glob([
 	'!/src/views/auth/findPwd/**.vue',
 	'!/src/views/auth/login/**.vue'
 ])
-// 菜单布局
-const Layout = () => import("@/layout/index.vue")
 // 空布局。多层目录嵌套时需要使用
 const Empty = () => import("@/layout/empty.vue")
 
