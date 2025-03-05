@@ -29,20 +29,28 @@
               <OrgTreeSelect :tree-data="treeData" :defaultValue="formData.orgCode" @onChange="parentChange"/>
 						</a-form-item>
 					</a-col>
-					<a-form-item label="分组类型：" name="groupType" :rules="[required('请选择分组类型')]">
-						<a-radio-group v-model:value="formData.groupType" button-style="solid">
-							<!-- 岗位类型(字典 1特有 2通用 3自建) -->
-							<a-radio-button :value="1">特有</a-radio-button>
-							<a-radio-button :value="2">通用</a-radio-button>
-							<a-radio-button :value="3">自建</a-radio-button>
-						</a-radio-group>
-					</a-form-item>
+          <a-col :span="12">
+            <a-form-item label="数据范围：" name="dataScope" :rules="[required('请选择数据范围')]">
+              <a-radio-group v-model:value="formData.dataScope" button-style="solid">
+                <!-- 数据范围(字典 1本人 2本机构 3本机构及以下 4自定义) -->
+                <a-radio-button :value="1">仅本人</a-radio-button>
+                <a-radio-button :value="2">仅本机构</a-radio-button>
+                <a-radio-button :value="3">本机构及以下</a-radio-button>
+                <a-radio-button :value="4">自定义</a-radio-button>
+              </a-radio-group>
+            </a-form-item>
+          </a-col>
 					<!-- 使用状态 -->
 					<a-col :span="12">
 						<a-form-item label="使用状态:" name="status" :rules="[required('请选择使用状态')]">
 							<a-radio-group v-model:value="formData.status" option-type="button" button-style="solid" :options="statusOptions" />
 						</a-form-item>
 					</a-col>
+          <a-col :span="12" v-if="formData.dataScope === 4">
+            <a-form-item label="自定义范围：" name="scopeList" tooltip="自定义数据范围时必填">
+              <OrgTreeSelect :tree-data="treeData" :defaultValue="scopeList" multiSelect @onChange="scopeChange"/>
+            </a-form-item>
+          </a-col>
 					<a-col :span="12">
 						<a-form-item label="排序:" name="sortNum" :rules="[required('请填写排序值')]">
 							<a-input-number class="wd" v-model:value="formData.sortNum" :max="100" />
@@ -77,6 +85,7 @@
 	const treeData = ref([])
 	// 表单数据，这里有默认值
 	const formData = ref({})
+  const scopeList = ref([])
 	const submitLoading = ref(false)
 	// 使用状态options（0正常 1停用）
 	const statusOptions = [
@@ -92,6 +101,9 @@
 		// 获取组织信息
 		let res = await groupApi.groupDetail({ code: group.code })
     formData.value = res.data
+    if(res.data.scopeSet) {
+      scopeList.value = res.data.scopeSet.split(',')
+    }
     // 组织树赋值并展开顶级节点
     treeData.value = tree
     // 数据就绪之后显示
@@ -106,11 +118,17 @@
 	const parentChange = (value) => {
 		formData.value.orgCode = value
 	}
-
+  // 自定义数据范围变更
+  const scopeChange = (value) => {
+    scopeList.value = value
+  }
 	// 验证并提交数据
 	const onSubmit = () => {
 		formRef.value.validate().then(() => {
-			const param = formData.value
+      const param = formData.value
+      if (scopeList.value) {
+        param.scopeSet = scopeList.value.join(',');
+      }
 			submitLoading.value = true
 			groupApi.editGroup(param).then((res) => {
 				message.success(res.message)

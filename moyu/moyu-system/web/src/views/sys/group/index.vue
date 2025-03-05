@@ -33,7 +33,7 @@
 					ref="tableRef"
 					:columns="columns"
 					:data="loadTableData"
-          :scroll="{ x: true }"
+          :scroll="{ x: 'max-content' }"
 					bordered
 					:row-key="(record) => record.id"
 					:tool-config="toolConfig"
@@ -49,12 +49,13 @@
 						<template v-if="column.dataIndex === 'code'">
 							<a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
 						</template>
-						<template v-if="column.dataIndex === 'groupType'">
-							<!-- 岗位类型(字典 1特有 2通用 3自建) -->
-							<a-tag v-if="record.groupType === 1" color="cyan">特有</a-tag>
-							<a-tag v-if="record.groupType === 2" color="blue">通用</a-tag>
-							<a-tag v-if="record.groupType === 3" color="purple">自建</a-tag>
-						</template>
+            <template v-if="column.dataIndex === 'dataScope'">
+              <!-- 数据范围(字典 0无限制 1本人数据 2本机构 3本机构及以下 4自定义) -->
+              <a-tag v-if="record.dataScope === 1" color="orange">本人数据</a-tag>
+              <a-tag v-if="record.dataScope === 2" color="cyan">本机构</a-tag>
+              <a-tag v-if="record.dataScope === 3" color="blue">本机构及以下</a-tag>
+              <a-tag v-if="record.dataScope === 4" color="purple">自定义</a-tag>
+            </template>
 						<template v-if="column.dataIndex === 'status'">
 							<a-tag v-if="record.status === 0" color="green">正常</a-tag>
 							<a-tag v-else>已停用</a-tag>
@@ -118,6 +119,12 @@
 			width: 200,
 			ellipsis: true
 		},
+    {
+      title: '数据范围',
+      dataIndex: 'dataScope',
+      align: 'center',
+      width: 80
+    },
     {
       title: '状态',
       dataIndex: 'status',

@@ -35,7 +35,7 @@
 					:data="loadTableData"
 					:expand-row-by-click="true"
 					:alert="options.alert.show"
-          :scroll="{ x: true }"
+          :scroll="{ x: 'max-content' }"
 					bordered
 					:row-key="(record) => record.code"
 					:tool-config="toolConfig"

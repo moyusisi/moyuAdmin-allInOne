@@ -33,7 +33,7 @@
 					ref="tableRef"
 					:columns="columns"
 					:data="loadTableData"
-          :scroll="{ x: true }"
+          :scroll="{ x: 'max-content' }"
 					bordered
 					:row-key="(record) => record.id"
 					:tool-config="toolConfig"

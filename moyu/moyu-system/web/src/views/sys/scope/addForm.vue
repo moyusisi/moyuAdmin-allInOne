@@ -84,6 +84,7 @@
 		visible: 1,
 		status: 0
 	})
+  const scopeList = ref([])
 	const submitLoading = ref(false)
 	// 使用状态options（0正常 1停用）
 	const statusOptions = [
@@ -113,12 +114,15 @@
 	}
   // 自定义数据范围变更
   const scopeChange = (value) => {
-    formData.value.scopeList = value
+    scopeList.value = value
   }
 	// 验证并提交数据
 	const onSubmit = () => {
 		formRef.value.validate().then(() => {
 			submitLoading.value = true
+      if (scopeList.value) {
+        formData.value.scopeSet = scopeList.value.join(',');
+      }
       scopeApi.addScope(formData.value).then((res) => {
 				message.success(res.message)
 				emit('successful')

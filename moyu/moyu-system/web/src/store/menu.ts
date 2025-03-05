@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { useSearchStore } from '@/store/search'
 import userCenterApi from '@/api/sys/userCenterApi'
 import routesData from '@/router/systemRouter'
-import { RouteRecordRaw } from "vue-router";
+import { RouteRecordRaw } from "vue-router"
 import Layout from '@/layout/index.vue'
 
 // findPwd和login路由组件已静态加载，此处不在进行异步加载

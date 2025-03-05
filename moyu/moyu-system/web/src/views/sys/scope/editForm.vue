@@ -47,7 +47,7 @@
 					</a-col>
           <a-col :span="12" v-if="formData.scopeType === 4">
             <a-form-item label="自定义范围：" name="orgCode">
-              <OrgTreeSelect :tree-data="treeData" :defaultValue="formData.scopeList" multiSelect @onChange="scopeChange"/>
+              <OrgTreeSelect :tree-data="treeData" :defaultValue="scopeList" multiSelect @onChange="scopeChange"/>
             </a-form-item>
           </a-col>
 					<a-col :span="12">
@@ -84,6 +84,7 @@
 	const treeData = ref([])
 	// 表单数据，这里有默认值
 	const formData = ref({})
+  const scopeList = ref([])
 	const submitLoading = ref(false)
 	// 使用状态options（0正常 1停用）
 	const statusOptions = [
@@ -100,7 +101,7 @@
     const res = await scopeApi.scopeDetail({ code: scope.code });
     formData.value = res.data
     if(res.data.scopeSet) {
-      formData.value.scopeList = res.data.scopeSet.split(',')
+      scopeList.value = res.data.scopeSet.split(',')
     }
     // 组织树赋值并展开顶级节点
     treeData.value = tree
@@ -118,12 +119,15 @@
 	}
   // 自定义数据范围变更
   const scopeChange = (value) => {
-    formData.value.scopeList = value
+    scopeList.value = value
   }
 	// 验证并提交数据
 	const onSubmit = () => {
 		formRef.value.validate().then(() => {
 			const param = formData.value
+      if (scopeList.value) {
+        param.scopeSet = scopeList.value.join(',');
+      }
 			submitLoading.value = true
       scopeApi.editScope(param).then((res) => {
 				message.success(res.message)
