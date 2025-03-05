@@ -1,6 +1,7 @@
 package com.moyu.system.sys.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -15,6 +16,7 @@ import com.google.common.base.Strings;
 import com.moyu.common.enums.ExceptionEnum;
 import com.moyu.common.exception.BaseException;
 import com.moyu.common.model.PageResult;
+import com.moyu.common.mybatis.enums.DataScopeEnum;
 import com.moyu.common.security.util.SecurityUtils;
 import com.moyu.system.sys.constant.SysConstants;
 import com.moyu.system.sys.enums.RelationTypeEnum;
@@ -64,8 +66,6 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         queryWrapper.lambda()
                 // 关键词搜索
                 .like(StrUtil.isNotBlank(groupParam.getSearchKey()), SysGroup::getName, groupParam.getSearchKey())
-                // 指定类型
-                .eq(ObjectUtil.isNotEmpty(groupParam.getGroupType()), SysGroup::getGroupType, groupParam.getGroupType())
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(groupParam.getStatus()), SysGroup::getStatus, groupParam.getStatus())
                 .eq(SysGroup::getDeleteFlag, 0)
@@ -132,6 +132,11 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
             // 设置直属机构名称
             group.setOrgName(orgNode.getName().toString());
         }
+        // 若是自定义数据范围,需要处理
+        if (ObjectUtil.equal(groupParam.getDataScope(), DataScopeEnum.ORG_DEFINE.getCode())) {
+            Assert.notEmpty(groupParam.getScopeSet(), "自定义数据范围时, scopeSet不能为空");
+            group.setScopeSet(groupParam.getScopeSet());
+        }
         this.save(group);
     }
 
@@ -149,17 +154,22 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
     public void edit(SysGroupParam groupParam) {
         SysGroup oldGroup = this.detail(groupParam);
         // 属性复制
-        SysGroup updateOrg = BeanUtil.copyProperties(groupParam, SysGroup.class);
-        updateOrg.setId(oldGroup.getId());
+        SysGroup updateGroup = BeanUtil.copyProperties(groupParam, SysGroup.class);
+        updateGroup.setId(oldGroup.getId());
         // 若新指定了直属组织，则设置组织名
-        if (ObjectUtil.notEqual(oldGroup.getOrgCode(), updateOrg.getOrgCode()) && ObjectUtil.isNotEmpty(updateOrg.getOrgCode())) {
+        if (ObjectUtil.notEqual(oldGroup.getOrgCode(), updateGroup.getOrgCode()) && ObjectUtil.isNotEmpty(updateGroup.getOrgCode())) {
             // 获取组织结构树
             Tree<String> rootTree = sysOrgService.singleTree();
-            Tree<String> orgNode = rootTree.getNode(updateOrg.getOrgCode());
+            Tree<String> orgNode = rootTree.getNode(updateGroup.getOrgCode());
             // 设置直属机构名称
-            updateOrg.setOrgName(orgNode.getName().toString());
+            updateGroup.setOrgName(orgNode.getName().toString());
         }
-        this.updateById(updateOrg);
+        // 若是自定义数据范围,需要处理
+        if (ObjectUtil.equal(groupParam.getDataScope(), DataScopeEnum.ORG_DEFINE.getCode())) {
+            Assert.notEmpty(groupParam.getScopeSet(), "自定义数据范围时, scopeSet不能为空");
+            updateGroup.setScopeSet(groupParam.getScopeSet());
+        }
+        this.updateById(updateGroup);
     }
 
     @Override
@@ -244,37 +254,37 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
     @Override
     public void groupAddUser(SysGroupParam groupParam) {
         String objectId = groupParam.getCode();
-        Set<String> targetSet = groupParam.getCodeSet();
-        if (ObjectUtil.isEmpty(targetSet)) {
+        Set<String> userSet = groupParam.getCodeSet();
+        if (ObjectUtil.isEmpty(userSet)) {
             return;
         }
         // 已加入分组的用户
-        Set<String> oldSet = new HashSet<>();
+        Set<String> oldUserSet = new HashSet<>();
         Set<String> otherGroupUserSet = new HashSet<>();
         // 查询指定group包含的user，放入oldSet
         sysRelationService.list(Wrappers.lambdaQuery(SysRelation.class)
-                .in(SysRelation::getTargetId, targetSet)
+                .in(SysRelation::getTargetId, userSet)
                 .eq(SysRelation::getRelationType, RelationTypeEnum.GROUP_HAS_USER.getCode())
         ).forEach(e -> {
             if (objectId.equals(e.getObjectId())) {
-                oldSet.add(e.getTargetId());
+                oldUserSet.add(e.getTargetId());
             } else {
                 otherGroupUserSet.add(e.getTargetId());
             }
         });
         // 限制用户只允许加入一个分组
         if (ObjectUtil.isNotEmpty(otherGroupUserSet)) {
-            String message = "下列用户已加入其他分组，不可重复添加:" + otherGroupUserSet;
+            String message = String.format("用户%s已加入其他分组，不可重复添加", otherGroupUserSet);
             throw new BaseException(ExceptionEnum.INVALID_PARAMETER.getCode(), message);
         }
         // 从target中删除已经存在的
-        targetSet.removeAll(oldSet);
+        userSet.removeAll(oldUserSet);
         // 再次判断要新增的内容为空则返回
-        if (ObjectUtil.isEmpty(targetSet)) {
+        if (ObjectUtil.isEmpty(userSet)) {
             return;
         }
         List<SysRelation> addList = new ArrayList<>();
-        targetSet.forEach(code -> {
+        userSet.forEach(code -> {
             SysRelation entity = new SysRelation();
             entity.setObjectId(objectId);
             entity.setTargetId(code);
@@ -301,6 +311,29 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         }
     }
 
+    @Override
+    public Set<String> groupDataScopes(String groupCode) {
+        Set<String> scopes = new HashSet<>();
+        // 查询group
+        SysGroup group = detail(SysGroupParam.builder().code(groupCode).build());
+
+        if (ObjectUtil.equal(group.getDataScope(), DataScopeEnum.ORG.getCode())) {
+            scopes.add(group.getOrgCode());
+        } else if (ObjectUtil.equal(group.getDataScope(), DataScopeEnum.ORG_DEFINE.getCode())) {
+            List<String> list = SysConstants.COMMA_SPLITTER.splitToList(group.getScopeSet());
+            scopes.addAll(list);
+        } else if (ObjectUtil.equal(group.getDataScope(), DataScopeEnum.ORG_CHILD.getCode())) {
+            // 添加org
+            scopes.add(group.getOrgCode());
+            // 从rootTree中获取所有child（有缓存时）
+            Tree<String> orgTree = sysOrgService.singleTree().getNode(group.getOrgCode());
+            orgTree.walk(node -> scopes.add(node.getId()));
+            // 从数据库中获取所有child（无缓存时）
+//                List<String> childList = sysOrgService.childrenCodeList(e.getOrgCode());
+//                scopes.addAll(childList);
+        }
+        return scopes;
+    }
 }
 
 
