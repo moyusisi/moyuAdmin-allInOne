@@ -1,7 +1,7 @@
 <template>
-	<div id="admin-ui-main" class="admin-ui-main">
-		<router-view />
-	</div>
+  <div id="admin-ui-main" class="admin-ui-main">
+    <router-view />
+  </div>
 </template>
 
 <script setup>

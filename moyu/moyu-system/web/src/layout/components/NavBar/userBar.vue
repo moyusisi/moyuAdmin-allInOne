@@ -63,7 +63,7 @@
 				icon: createVNode(ExclamationCircleOutlined),
 				maskClosable: false,
 				onOk() {
-					message.loading('退出中...', 1)
+					message.loading('退出中...', 0.5)
 					loginApi.logout().then(() => {
 						// 清理掉个人的一些信息
             localStorage.clear()

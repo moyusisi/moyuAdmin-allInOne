@@ -5,11 +5,11 @@ import settings from "@/config/settings.ts"
 import { useMenuStore, useUserStore } from "@/store";
 import { message } from "ant-design-vue";
 
-const routes = [...systemRouter]
+const constRoutes = [...systemRouter]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes: routes as RouteRecordRaw[],
+  routes: constRoutes as RouteRecordRaw[],
   // 刷新时，滚动条位置还原
   scrollBehavior: () => ({ left: 0, top: 0 }),
 })
@@ -48,7 +48,7 @@ router.beforeEach(async (to, from) => {
         // router.addRoute('layout', route)
       });
       // console.log(asyncRoutes)
-      // console.log(menuStore.routes)
+      // console.log(menuStore.constRoutes)
       // console.log(router.getRoutes())
       // 由于新增加了路由，所以重新导航
       return { ...to, replace: true }
@@ -88,5 +88,22 @@ router.onError((error) => {
   message.error('路由错误,请检查网络')
   console.error({ message: '路由错误', description: error.message })
 })
+
+// 入侵追加自定义方法、对象
+router.reloadRoutes = async () => {
+  const menuStore = useMenuStore()
+  const asyncRoutes = await menuStore.reloadRoutes()
+  // 增加固定路由
+  const currentRoutes = router.getRoutes()
+  currentRoutes.forEach(route => {
+    const isConstRoute = constRoutes.some(e => e.name === route.name)
+    if (!isConstRoute) {
+      router.removeRoute(route.name)
+    }
+  });
+  asyncRoutes.forEach((route) => {
+    router.addRoute(route);
+  });
+}
 
 export default router

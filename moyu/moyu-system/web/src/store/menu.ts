@@ -3,7 +3,10 @@ import { useSearchStore } from '@/store/search'
 import userCenterApi from '@/api/sys/userCenterApi'
 import routesData from '@/router/systemRouter'
 import { RouteRecordRaw } from "vue-router"
+// 布局组件, 一般顶层目录使用
 import Layout from '@/layout/index.vue'
+// 空布局。多层目录嵌套时需要使用
+import Empty from '@/layout/empty.vue'
 
 // findPwd和login路由组件已静态加载，此处不在进行异步加载
 const modules = import.meta.glob([
@@ -11,8 +14,6 @@ const modules = import.meta.glob([
 	'!/src/views/auth/findPwd/**.vue',
 	'!/src/views/auth/login/**.vue'
 ])
-// 空布局。多层目录嵌套时需要使用
-const Empty = () => import("@/layout/empty.vue")
 
 // 过滤异步路由
 const filterAsyncRoutes = (menus) => {
@@ -22,7 +23,7 @@ const filterAsyncRoutes = (menus) => {
 		// menu转路由对象
 		const route: RouteRecordRaw = {
 			path: menu.path,
-			name: menu.path,
+			name: menu.code,
 			meta: menu.meta ? menu.meta : {},
 			redirect: menu.redirect,
 			children: menu.children ? filterAsyncRoutes(menu.children) : null,
@@ -106,6 +107,14 @@ export const useMenuStore = defineStore('menuStore', () => {
 	};
 
 	/**
+	 * 重新加载菜单及路由
+	 */
+	const reloadRoutes = async () => {
+		await refreshModuleMenu()
+		return await generateRoutes()
+	};
+
+	/**
 	 * 根据当前的routes生成菜单的面包屑
 	 */
 	const initBreadcrumb = (routes: RouteRecordRaw[], breadcrumb: RouteRecordRaw[] = []) => {
@@ -129,5 +138,6 @@ export const useMenuStore = defineStore('menuStore', () => {
 		initModuleMenu,
 		refreshModuleMenu,
 		generateRoutes,
+		reloadRoutes
 	}
 })

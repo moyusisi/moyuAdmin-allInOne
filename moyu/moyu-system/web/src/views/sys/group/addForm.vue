@@ -80,7 +80,7 @@
 	const treeData = ref([])
 	// 表单数据，这里有默认值
 	const formData = ref({
-		dataScope: 2,
+		dataScope: 3,
 		sortNum: 99,
 		visible: 1,
 		status: 0
