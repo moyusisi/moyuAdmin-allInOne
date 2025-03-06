@@ -19,6 +19,7 @@ import com.google.common.base.Strings;
 import com.moyu.common.enums.ExceptionEnum;
 import com.moyu.common.exception.BaseException;
 import com.moyu.common.model.PageResult;
+import com.moyu.common.mybatis.enums.DataScopeEnum;
 import com.moyu.common.security.util.SecurityUtils;
 import com.moyu.system.sys.constant.SysConstants;
 import com.moyu.system.sys.mapper.SysOrgMapper;
@@ -56,7 +57,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         List<String> codeList = new ArrayList<>();
         List<SysOrg> orgList = this.baseMapper.selectChildren(orgCode);
         orgList.forEach(e -> codeList.add(e.getCode()));
-//        this.baseMapper.selectAll(Wrappers.lambdaQuery());
+//        this.baseMapper.selectAll(Wrappers.lambdaQuery(SysOrg.class).eq(SysOrg::getCode, orgCode));
         return codeList;
     }
 
@@ -83,12 +84,6 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
      */
     @Override
     public PageResult<SysOrg> pageList(SysOrgParam orgParam) {
-        // 数据权限范围
-        Set<String> scopeSet = new HashSet<>();
-        // 非ROOT则限制
-        if (!SecurityUtils.isRoot()) {
-            scopeSet = SecurityUtils.getScopes();
-        }
         // 查询条件
         LambdaQueryWrapper<SysOrg> queryWrapper = Wrappers.lambdaQuery(SysOrg.class)
                 // 关键词搜索
@@ -97,10 +92,28 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
                 .eq(ObjectUtil.isNotEmpty(orgParam.getParentCode()), SysOrg::getParentCode, orgParam.getParentCode())
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(orgParam.getStatus()), SysOrg::getStatus, orgParam.getStatus())
-                // 数据权限(非空才有效)
-                .in(ObjectUtil.isNotEmpty(scopeSet), SysOrg::getCode, scopeSet)
                 .eq(SysOrg::getDeleteFlag, 0)
                 .orderByAsc(SysOrg::getSortNum);
+        // 非ROOT则限制数据权限
+        if (!SecurityUtils.isRoot()) {
+            // 指定的列名
+            Integer dataScope = SecurityUtils.getLoginUser().getDataScope();
+            if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
+                String username = SecurityUtils.getLoginUser().getUsername();
+                queryWrapper.and(e -> e.eq(SysOrg::getCreateBy, username));
+            } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
+                String orgCode = SecurityUtils.getLoginUser().getOrgCode();
+                queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode));
+            } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
+                String orgCode = SecurityUtils.getLoginUser().getOrgCode();
+                // find_in_set函数比like高效
+//                queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode).or().like(SysOrg::getOrgPath, orgCode));
+                queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode).or().apply("find_in_set('" + orgCode + "', org_path)"));
+            } else if (DataScopeEnum.ORG_DEFINE.getCode().equals(dataScope)) {
+                Set<String> scopes = SecurityUtils.getLoginUser().getScopes();
+                queryWrapper.and(e -> e.in(SysOrg::getCode, scopes));
+            }
+        }
         // 分页查询
         Page<SysOrg> page = new Page<>(orgParam.getPageNum(), orgParam.getPageSize());
         Page<SysOrg> orgPage = this.page(page, queryWrapper);
@@ -156,10 +169,10 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
             // 唯一code RandomUtil.randomString(10)、IdUtil.objectId()24位
             org.setCode(IdUtil.objectId());
         }
-        // 所属组织链(不包含本节点)
+        // 组织机构层级路径,逗号分隔,父节点在后(不包含本节点)
         Tree<String> rootTree = singleTree();
         List<String> list = TreeUtil.getParentsId(rootTree.getNode(orgParam.getParentCode()), true);
-        org.setOrgChain(SysConstants.COMMA_JOINER.join(list));
+        org.setOrgPath(SysConstants.COMMA_JOINER.join(list));
         this.save(org);
     }
 
@@ -221,13 +234,13 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         // 不使用beanCopy是为了效率
         SysOrg updateOrg = buildSysOrg(orgParam);
         updateOrg.setId(oldOrg.getId());
-        // 若父节点有变化，则orgChain也要变
-        if (ObjectUtil.isEmpty(oldOrg.getOrgChain()) || ObjectUtil.notEqual(oldOrg.getParentCode(), orgParam.getParentCode())) {
-            // 所属组织链
+        // 若父节点有变化，则orgPath也要变
+        if (ObjectUtil.isEmpty(oldOrg.getOrgPath()) || ObjectUtil.notEqual(oldOrg.getParentCode(), orgParam.getParentCode())) {
+            // 组织机构层级路径,逗号分隔,父节点在后(不包含本节点)
             Tree<String> rootTree = singleTree();
             List<String> list = TreeUtil.getParentsId(rootTree.getNode(orgParam.getParentCode()), true);
-            updateOrg.setOrgChain(SysConstants.COMMA_JOINER.join(list));
-            // 本节点的子节点orgChain也应该改变，待tree更新之后才可以修改 TODO
+            updateOrg.setOrgPath(SysConstants.COMMA_JOINER.join(list));
+            // 本节点的子节点orgPath也应该改变，待tree更新之后才可以修改 TODO
         }
         this.updateById(updateOrg);
     }

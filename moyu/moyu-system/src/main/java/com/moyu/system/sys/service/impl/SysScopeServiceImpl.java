@@ -3,6 +3,7 @@ package com.moyu.system.sys.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.lang.tree.TreeUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -30,6 +31,7 @@ import com.moyu.system.sys.service.SysOrgService;
 import com.moyu.system.sys.service.SysRelationService;
 import com.moyu.system.sys.service.SysScopeService;
 import com.moyu.system.sys.service.SysUserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
  * @description 针对表【sys_scope(数据权限分组表)】的数据库操作Service实现
  * @createDate 2025-02-27 10:19:59
  */
+@Slf4j
 @Service
 public class SysScopeServiceImpl extends ServiceImpl<SysScopeMapper, SysScope> implements SysScopeService {
 
@@ -58,12 +61,6 @@ public class SysScopeServiceImpl extends ServiceImpl<SysScopeMapper, SysScope> i
 
     @Override
     public PageResult<SysScope> pageList(SysScopeParam scopeParam) {
-        // 数据权限范围
-        Set<String> scopeSet = new HashSet<>();
-        // 非ROOT则限制
-        if (!SecurityUtils.isRoot()) {
-            scopeSet = SecurityUtils.getScopes();
-        }
         // 查询条件
         LambdaQueryWrapper<SysScope> queryWrapper = Wrappers.lambdaQuery(SysScope.class)
                 // 关键词搜索
@@ -72,10 +69,29 @@ public class SysScopeServiceImpl extends ServiceImpl<SysScopeMapper, SysScope> i
                 .eq(StrUtil.isNotBlank(scopeParam.getOrgCode()), SysScope::getOrgCode, scopeParam.getOrgCode())
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(scopeParam.getStatus()), SysScope::getStatus, scopeParam.getStatus())
-                // 数据权限(非空才有效)
-                .in(ObjectUtil.isNotEmpty(scopeSet), SysScope::getOrgCode, scopeSet)
                 .eq(SysScope::getDeleteFlag, 0)
                 .orderByAsc(SysScope::getSortNum);
+        // 非ROOT则限制数据权限
+        if (!SecurityUtils.isRoot()) {
+            // 指定的列名
+            Integer dataScope = SecurityUtils.getLoginUser().getDataScope();
+            if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
+                String username = SecurityUtils.getLoginUser().getUsername();
+                queryWrapper.and(e -> e.eq(SysScope::getCreateBy, username));
+            } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
+                String orgCode = SecurityUtils.getLoginUser().getOrgCode();
+                queryWrapper.and(e -> e.eq(SysScope::getOrgCode, orgCode));
+            } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
+                String orgCode = SecurityUtils.getLoginUser().getOrgCode();
+                // find_in_set函数比like高效
+//                queryWrapper.and(e -> e.eq(SysScope::getOrgCode, orgCode).or().like(SysScope::getOrgPath, orgCode));
+                queryWrapper.and(e -> e.eq(SysScope::getOrgCode, orgCode).or().apply("find_in_set('" + orgCode + "', org_path)"));
+            } else if (DataScopeEnum.ORG_DEFINE.getCode().equals(dataScope)) {
+                Set<String> scopes = SecurityUtils.getLoginUser().getScopes();
+                queryWrapper.and(e -> e.in(SysScope::getOrgCode, scopes));
+            }
+            log.debug("数据权限为:{}, 已追加过滤条件", DataScopeEnum.getByCode(dataScope));
+        }
         // 分页查询
         Page<SysScope> page = new Page<>(scopeParam.getPageNum(), scopeParam.getPageSize());
         Page<SysScope> scopePage = this.page(page, queryWrapper);
@@ -112,6 +128,9 @@ public class SysScopeServiceImpl extends ServiceImpl<SysScopeMapper, SysScope> i
             Tree<String> orgNode = rootTree.getNode(scope.getOrgCode());
             // 设置直属机构名称
             scope.setOrgName(orgNode.getName().toString());
+            // 组织机构层级路径,逗号分隔,父节点在后
+            List<String> list = TreeUtil.getParentsId(orgNode, true);
+            scope.setOrgPath(SysConstants.COMMA_JOINER.join(list));
         }
         // 若是自定义范围,需要处理
         if (ObjectUtil.equal(scopeParam.getScopeType(), DataScopeEnum.ORG_DEFINE.getCode())) {
@@ -144,6 +163,9 @@ public class SysScopeServiceImpl extends ServiceImpl<SysScopeMapper, SysScope> i
             Tree<String> orgNode = rootTree.getNode(updateScope.getOrgCode());
             // 设置直属机构名称
             updateScope.setOrgName(orgNode.getName().toString());
+            // 组织机构层级路径,逗号分隔,父节点在后
+            List<String> list = TreeUtil.getParentsId(orgNode, true);
+            updateScope.setOrgPath(SysConstants.COMMA_JOINER.join(list));
         }
         // 若是自定义范围,需要处理
         if (ObjectUtil.equal(scopeParam.getScopeType(), DataScopeEnum.ORG_DEFINE.getCode())) {

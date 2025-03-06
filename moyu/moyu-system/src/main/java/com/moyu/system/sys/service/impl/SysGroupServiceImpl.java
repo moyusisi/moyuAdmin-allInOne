@@ -3,6 +3,7 @@ package com.moyu.system.sys.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.lang.tree.TreeUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -30,6 +31,7 @@ import com.moyu.system.sys.model.param.SysRelationParam;
 import com.moyu.system.sys.model.param.SysRoleParam;
 import com.moyu.system.sys.model.param.SysUserParam;
 import com.moyu.system.sys.service.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
  * @description 针对表【sys_pos(岗位信息表)】的数据库操作Service实现
  * @createDate 2024-12-20 14:29:15
  */
+@Slf4j
 @Service
 public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> implements SysGroupService {
 
@@ -77,12 +80,6 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
 
     @Override
     public PageResult<SysGroup> pageList(SysGroupParam groupParam) {
-        // 数据权限范围
-        Set<String> scopeSet = new HashSet<>();
-        // 非ROOT则限制
-        if (!SecurityUtils.isRoot()) {
-            scopeSet = SecurityUtils.getScopes();
-        }
         // 查询条件
         LambdaQueryWrapper<SysGroup> queryWrapper = Wrappers.lambdaQuery(SysGroup.class)
                 // 关键词搜索
@@ -91,10 +88,29 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
                 .eq(StrUtil.isNotBlank(groupParam.getOrgCode()), SysGroup::getOrgCode, groupParam.getOrgCode())
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(groupParam.getStatus()), SysGroup::getStatus, groupParam.getStatus())
-                // 数据权限(非空才有效)
-                .in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet)
                 .eq(SysGroup::getDeleteFlag, 0)
                 .orderByAsc(SysGroup::getSortNum);
+        // 非ROOT则限制数据权限
+        if (!SecurityUtils.isRoot()) {
+            // 指定的列名
+            Integer dataScope = SecurityUtils.getLoginUser().getDataScope();
+            if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
+                String username = SecurityUtils.getLoginUser().getUsername();
+                queryWrapper.and(e -> e.eq(SysGroup::getCreateBy, username));
+            } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
+                String orgCode = SecurityUtils.getLoginUser().getOrgCode();
+                queryWrapper.and(e -> e.eq(SysGroup::getOrgCode, orgCode));
+            } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
+                String orgCode = SecurityUtils.getLoginUser().getOrgCode();
+                // find_in_set函数比like高效
+//                queryWrapper.and(e -> e.eq(SysGroup::getOrgCode, orgCode).or().like(SysGroup::getOrgPath, orgCode));
+                queryWrapper.and(e -> e.eq(SysGroup::getOrgCode, orgCode).or().apply("find_in_set('" + orgCode + "', org_path)"));
+            } else if (DataScopeEnum.ORG_DEFINE.getCode().equals(dataScope)) {
+                Set<String> scopes = SecurityUtils.getLoginUser().getScopes();
+                queryWrapper.and(e -> e.in(SysGroup::getOrgCode, scopes));
+            }
+            log.debug("数据权限为:{}, 已追加过滤条件", DataScopeEnum.getByCode(dataScope));
+        }
         // 分页查询
         Page<SysGroup> page = new Page<>(groupParam.getPageNum(), groupParam.getPageSize());
         Page<SysGroup> groupPage = this.page(page, queryWrapper);
@@ -131,6 +147,9 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
             Tree<String> orgNode = rootTree.getNode(group.getOrgCode());
             // 设置直属机构名称
             group.setOrgName(orgNode.getName().toString());
+            // 组织机构层级路径,逗号分隔,父节点在后
+            List<String> list = TreeUtil.getParentsId(orgNode, true);
+            group.setOrgPath(SysConstants.COMMA_JOINER.join(list));
         }
         // 若是自定义数据范围,需要处理
         if (ObjectUtil.equal(groupParam.getDataScope(), DataScopeEnum.ORG_DEFINE.getCode())) {
@@ -163,6 +182,9 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
             Tree<String> orgNode = rootTree.getNode(updateGroup.getOrgCode());
             // 设置直属机构名称
             updateGroup.setOrgName(orgNode.getName().toString());
+            // 组织机构层级路径,逗号分隔,父节点在后
+            List<String> list = TreeUtil.getParentsId(orgNode, true);
+            updateGroup.setOrgPath(SysConstants.COMMA_JOINER.join(list));
         }
         // 若是自定义数据范围,需要处理
         if (ObjectUtil.equal(groupParam.getDataScope(), DataScopeEnum.ORG_DEFINE.getCode())) {
@@ -203,6 +225,25 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
                 .orgCode(groupParam.getOrgCode())
                 .codeSet(userSet).build());
         return userList;
+    }
+
+    @Override
+    public List<SysGroup> userGroupList(String username) {
+        // 查询指定user的所有group
+        List<SysRelation> list = sysRelationService.list(SysRelationParam.builder()
+                .relationType(RelationTypeEnum.GROUP_HAS_USER.getCode()).targetId(username).build());
+        if (ObjectUtil.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+        // groupSet
+        Set<String> groupSet = list.stream().map(SysRelation::getObjectId).collect(Collectors.toSet());
+        // 查询岗位分组
+        List<SysGroup> groupList = this.list(Wrappers.lambdaQuery(SysGroup.class)
+                .in(SysGroup::getCode, groupSet)
+                .eq(SysGroup::getStatus, 0)
+                .eq(SysGroup::getDeleteFlag, 0)
+        );
+        return groupList;
     }
 
     @Override
