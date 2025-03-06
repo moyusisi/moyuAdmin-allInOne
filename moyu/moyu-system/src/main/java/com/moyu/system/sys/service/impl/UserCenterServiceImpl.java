@@ -154,14 +154,31 @@ public class UserCenterServiceImpl implements UserCenterService {
             return sysOrgService.tree();
         }
         // 获取全部树
-        Tree<String> tree = sysOrgService.singleTree();
+        Tree<String> rootTree = sysOrgService.singleTree();
         // 查询用户信息
         SysUser user = sysUserService.detail(SysUserParam.builder().account(username).build());
         // 获取用户所属的最近一级公司组织code
-        String orgCode = getUserCompanyCode(tree, user);
+        String orgCode = getUserCompanyCode(rootTree, user.getOrgCode());
+        // 用户直属公司orgTree
+        Tree<String> orgTree = rootTree.getNode(orgCode);
+        // 用户公司树列表
+        List<Tree<String>> treeList = Lists.newArrayList(rootTree.getNode(orgCode));
+        // 岗位列表
+        List<SysGroup> groupList = sysGroupService.userGroupList(username);
+        if (ObjectUtil.isEmpty(groupList)) {
+            return treeList;
+        }
         // 获取用户有权限的所有公司
+        groupList.forEach(group -> {
+            String groupOrgCode = getUserCompanyCode(rootTree, group.getOrgCode());
+            // 公司以外的groupTree, 也加入列表
+            if (orgTree.getNode(groupOrgCode) == null) {
+                Tree<String> groupTree = rootTree.getNode(groupOrgCode);
+                treeList.add(groupTree);
+            }
+        });
         // 获取公司对应的tree
-        return Lists.newArrayList(tree.getNode(orgCode));
+        return treeList;
     }
 
     @Override
@@ -217,15 +234,17 @@ public class UserCenterServiceImpl implements UserCenterService {
     }
 
     /**
-     * 获取用户直属公司的orgCode
+     * 获取指定部门所属公司的orgCode
      */
-    private String getUserCompanyCode(Tree<String> tree, SysUser user) {
+    private String getUserCompanyCode(Tree<String> tree, String deptCode) {
         // 通过用户的orgPath获取用户的组织链接
-        List<String> orgPathList = TreeUtil.getParentsId(tree.getNode(user.getOrgCode()), true);
+        List<String> orgPathList = TreeUtil.getParentsId(tree.getNode(deptCode), true);
         // 从前往后遍历，因组织链有顺序，所以遍历顺序不能变
         String orgCode = orgPathList.stream()
                 .filter(code -> ObjectUtil.equal(OrgTypeEnum.COMPANY.getCode(), tree.getNode(code).get("orgType")))
-                .findFirst().orElse(user.getOrgCode());
+                .findFirst().orElse(deptCode);
         return orgCode;
     }
+
+
 }
