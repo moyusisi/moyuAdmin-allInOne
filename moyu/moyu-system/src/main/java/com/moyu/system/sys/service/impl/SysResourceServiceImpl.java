@@ -147,6 +147,7 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
         }
         // 转换
         SysResource menu = buildSysMenu(resourceParam);
+        // 填充一些默认值
         fillSysMenu(menu);
         menu.setId(null);
         // 若未指定唯一编码code，则自动生成
@@ -297,14 +298,13 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
             // 菜单的权限为空
             menu.setPermission("");
         } else if (Objects.equals(ResourceTypeEnum.BUTTON.getCode(), menu.getResourceType())) {
-            // 按钮的路径、组件为空，忽略可见性
+            // 按钮的组件为空
             Assert.notEmpty(menu.getPermission(), "权限标识permission不能为空");
-            menu.setPath("");
             menu.setComponent("");
         } else if (Objects.equals(ResourceTypeEnum.LINK.getCode(), menu.getResourceType())) {
             Assert.notEmpty(menu.getPath(), "路由地址path不能为空");
             Assert.isTrue(menu.getPath().startsWith("http"), "链接必须以http(s)开头");
-            // 链接的组件、权限为空，忽略可见性
+            // 链接的组件、权限为空
             menu.setComponent("");
             menu.setPermission("");
         }
