@@ -1,8 +1,5 @@
 package com.moyu.common.aop;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moyu.common.annotation.Log;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -16,6 +13,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -30,16 +28,12 @@ import java.util.Arrays;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class LogAspect {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    static {
-        // 未知字段忽略
-        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        // 不使用科学计数
-        MAPPER.configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);
-        // null 值不输出(节省内存)
-        MAPPER.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
-    }
+    /**
+     * 使用spring容器中的jackson转换器
+     */
+    @Resource
+    private ObjectMapper objectMapper;
 
     /**
      * 拦截方法上的注解
@@ -72,7 +66,7 @@ public class LogAspect {
         // 请求参数
         String request = "";
         if (Boolean.TRUE.equals(log.jsonLog())) {
-            request = MAPPER.writeValueAsString(joinPoint.getArgs());
+            request = objectMapper.writeValueAsString(joinPoint.getArgs());
         } else {
             request = Arrays.toString(joinPoint.getArgs());
         }
@@ -93,7 +87,7 @@ public class LogAspect {
         // 打印响应结果
         if (Boolean.TRUE.equals(log.response()) && !Boolean.TRUE.equals(log.exceptionOnly())) {
             if (Boolean.TRUE.equals(log.jsonLog())) {
-                logger.info("{}返回结果为:{}", signature, MAPPER.writeValueAsString((returnObject)));
+                logger.info("{}返回结果为:{}", signature, objectMapper.writeValueAsString((returnObject)));
             } else {
                 logger.info("{}返回结果为:{}", signature, returnObject);
             }
