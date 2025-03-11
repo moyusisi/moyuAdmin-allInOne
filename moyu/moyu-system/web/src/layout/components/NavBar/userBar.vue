@@ -14,10 +14,20 @@
 			</div>
 			<template #overlay>
 				<a-menu>
-					<a-menu-item key="outLogin" @click="handleUser('outLogin')">
-						<export-outlined class="mr8" />
-						<span>退出登录</span>
-					</a-menu-item>
+          <a-sub-menu v-if="userInfo.groupInfoList && userInfo.groupInfoList.length > 1" key="groupSubMenu" :icon="h(UserSwitchOutlined)" title="岗位切换">
+            <template v-for="group in userInfo.groupInfoList" :key="group.code" :item="group">
+              <a-menu-item :class="{'item-selected':userInfo.groupCode === group.code}" @click="switchUserGroup(group.code)">
+                <user-outlined class="mr8" />
+                <span>{{ group.name }}</span>
+                <div class="item-sub-title">{{ group.orgFullName }}</div>
+              </a-menu-item>
+            </template>
+          </a-sub-menu>
+          <a-menu-divider />
+          <a-menu-item key="logOut" @click="userLogout()">
+            <export-outlined class="mr8" />
+            <span>退出登录</span>
+          </a-menu-item>
 				</a-menu>
 			</template>
 		</a-dropdown>
@@ -33,8 +43,8 @@
 </template>
 
 <script setup>
-	import { createVNode } from 'vue'
-	import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+	import { h, createVNode } from 'vue'
+  import { ExclamationCircleOutlined, UserSwitchOutlined } from '@ant-design/icons-vue'
 	import { Modal } from 'ant-design-vue'
 	import screenFull from 'screenfull'
 	import { message } from 'ant-design-vue'
@@ -51,13 +61,22 @@
 		return userStore.userInfo
 	})
 
-	// 个人信息
-	const handleUser = (key) => {
-		if (key === 'uc') {
-			router.push({ path: '/userCenter' })
-		}
-		if (key === 'outLogin') {
-			Modal.confirm({
+  // 切换用户岗位
+  const switchUserGroup = async (groupCode) => {
+    try {
+      await userStore.switchUserGroup(groupCode)
+      // await router.reloadRoutes()
+      message.loading('切换中...', 0.5)
+      window.location.href = '/index'
+      message.success('切换成功')
+    } catch (err) {
+      message.error('切换失败')
+      console.log(err)
+    }
+  }
+	// 退出登陆
+	const userLogout = () => {
+    Modal.confirm({
 				title: '提示',
 				content: '确认退出当前用户？',
 				icon: createVNode(ExclamationCircleOutlined),
@@ -78,7 +97,6 @@
 				},
 				onCancel() {}
 			})
-		}
 	}
 	// 设置抽屉
 	const openSetting = () => {
@@ -93,7 +111,7 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="less">
 	:deep(.ant-modal) {
 		top: 20px;
 	}
@@ -120,5 +138,12 @@
 	}
   .mr8 {
     margin-right: 8px;
+  }
+  .item-sub-title {
+    font-size: 12px;
+    color: var(--text-color-secondary);
+  }
+  .item-selected {
+    background-color: var(--primary-1);
   }
 </style>

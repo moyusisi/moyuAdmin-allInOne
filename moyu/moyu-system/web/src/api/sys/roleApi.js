@@ -40,12 +40,12 @@ export default {
 	roleUserList(data) {
 		return service.postJson('/api/sys/role/userList', data)
 	},
-	// 用户直接授权角色
-	userGrantRole(data) {
-		return service.postJson('/api/sys/role/userGrantRole', data)
+	// 角色添加用户
+	roleAddUser(data) {
+		return service.postJson('/api/sys/role/roleAddUser', data)
 	},
-	// 用户撤销已授权角色
-	userRevokeRole(data) {
-		return service.postJson('/api/sys/role/userRevokeRole', data)
+	// 角色删除用户
+	roleDeleteUser(data) {
+		return service.postJson('/api/sys/role/roleDeleteUser', data)
 	},
 }

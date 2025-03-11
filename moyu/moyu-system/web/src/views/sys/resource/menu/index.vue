@@ -125,7 +125,7 @@
 			width: 80
 		},
 		{
-			title: '路由地址',
+			title: '地址',
 			dataIndex: 'path',
 			ellipsis: true,
 			width: 150

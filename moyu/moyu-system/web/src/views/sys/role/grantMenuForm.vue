@@ -251,7 +251,7 @@
 	// 刷新缓存
 	const refreshCache = () => {
 		menuStore.refreshModuleMenu()
-		userStore.refreshUserLoginUserInfo()
+		userStore.refreshUserInfo()
 	}
 	// 调用这个函数将子组件的一些数据和方法暴露出去
 	defineExpose({

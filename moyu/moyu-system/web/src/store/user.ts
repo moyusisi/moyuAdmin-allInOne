@@ -24,11 +24,18 @@ export const useUserStore = defineStore('userStore', () => {
 		localStorage.setItem('USER_INFO', JSON.stringify(userInfo.value))
 	}
 	// 刷新登录用户信息
-	const refreshUserLoginUserInfo = () => {
-		userCenterApi.loginUserInfo().then((res) => {
+	const refreshUserInfo = () => {
+		return userCenterApi.loginUserInfo().then((res) => {
 			userInfo.value = res.data
 			localStorage.setItem('USER_INFO', JSON.stringify(userInfo.value))
 		})
 	}
-	return { userInfo, $reset, initUserInfo, refreshUserLoginUserInfo }
+
+	// 切换用户岗位身份
+	const switchUserGroup = async (groupCode: string) => {
+		const res = await userCenterApi.switchUserGroup({ code: groupCode })
+		localStorage.setItem('TOKEN', res.data)
+		await refreshUserInfo()
+	}
+	return { userInfo, $reset, initUserInfo, refreshUserInfo, switchUserGroup }
 })

@@ -197,7 +197,7 @@
 			return
 		}
 		let data = { code: role.value.code, codeSet: selectedRowKeys.value }
-    roleApi.userRevokeRole(data).then((res) => {
+    roleApi.roleDeleteUser(data).then((res) => {
 			message.success(res.message)
 			// 删掉之后重新加载数据
 			loadTableData()

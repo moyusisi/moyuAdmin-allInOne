@@ -19,9 +19,7 @@ const defaultSettings = {
   // 菜单是否折叠
   menuCollapsed: false,
   // 侧边菜单是否排他展开
-  sideUniqueOpen: true,
-  // 是否展开模块坞
-  moduleUnfold: true,
+  sideUniqueOpen: false,
   // 是否展示面包屑
   breadcrumbView: true,
   // 是否展示多标签页

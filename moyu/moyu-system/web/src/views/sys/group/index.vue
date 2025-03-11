@@ -1,91 +1,87 @@
 <template>
-	<a-row :gutter="8">
-		<!-- 左侧组织树 -->
-		<a-col :span="5">
-			<OrgTree ref="treeRef" @onSelect="treeSelect"></OrgTree>
-		</a-col>
-		<!-- 右侧内容 -->
-		<a-col :span="19">
-			<a-card size="small">
-				<a-form ref="searchFormRef" :model="searchFormData">
-					<a-row :gutter="24">
-						<a-col :span="8">
-							<a-form-item name="searchKey" label="名称关键词">
-								<a-input v-model:value="searchFormData.searchKey" placeholder="请输入关键词" allowClear />
-							</a-form-item>
-						</a-col>
-						<a-col :span="6">
-							<a-form-item label="使用状态" name="status">
-								<a-select v-model:value="searchFormData.status" placeholder="请选择状态" :options="statusOptions" allowClear />
-							</a-form-item>
-						</a-col>
-						<a-col :span="8">
-							<a-space>
-								<a-button type="primary" :icon="h(SearchOutlined)" @click="tableRef.refresh(true)">查询</a-button>
-								<a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
-							</a-space>
-						</a-col>
-					</a-row>
-				</a-form>
-			</a-card>
-			<a-card size="small">
-				<STable
-					ref="tableRef"
-					:columns="columns"
-					:data="loadTableData"
-          :scroll="{ x: 'max-content' }"
-					bordered
-					:row-key="(record) => record.id"
-					:tool-config="toolConfig"
-					:row-selection="options.rowSelection"
-				>
-					<template #operator class="table-operator">
-						<a-space>
-							<a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(searchFormData.orgCode, treeRef.treeData)">新增</a-button>
-							<BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDeleteGroup" />
-						</a-space>
-					</template>
-					<template #bodyCell="{ column, record }">
-						<template v-if="column.dataIndex === 'code'">
-							<a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
-						</template>
-            <template v-if="column.dataIndex === 'dataScope'">
-              <!-- 数据范围(字典 0无限制 1本人数据 2本机构 3本机构及以下 4自定义) -->
-              <a-tag v-if="record.dataScope === 1" color="orange">本人数据</a-tag>
-              <a-tag v-if="record.dataScope === 2" color="cyan">本机构</a-tag>
-              <a-tag v-if="record.dataScope === 3" color="blue">本机构及以下</a-tag>
-              <a-tag v-if="record.dataScope === 4" color="purple">自定义</a-tag>
-            </template>
-						<template v-if="column.dataIndex === 'status'">
-							<a-tag v-if="record.status === 0" color="green">正常</a-tag>
-							<a-tag v-else>已停用</a-tag>
-						</template>
-						<template v-if="column.dataIndex === 'action'">
-							<a-space>
-								<a-tooltip title="分配角色">
-									<a style="color:#1980FF;" @click="groupRoleRef.onOpen(record)"><DeploymentUnitOutlined /></a>
-								</a-tooltip>
-								<a-divider type="vertical" />
-								<a-tooltip title="分配用户">
-									<a style="color:#53C61D;" @click="groupUserRef.onOpen(record, treeRef.treeData)"><UsergroupAddOutlined /></a>
-								</a-tooltip>
-								<a-divider type="vertical" />
-								<a-tooltip title="编辑">
-									<a @click="editFormRef.onOpen(record, treeRef.treeData)"><FormOutlined /></a>
-								</a-tooltip>
-								<a-divider type="vertical" />
-								<a-tooltip title="删除">
-									<a-popconfirm title="确定要删除吗？" @confirm="deleteGroup(record)">
-										<a style="color:#FF4D4F;"><DeleteOutlined/></a>
-									</a-popconfirm>
-								</a-tooltip>
-							</a-space>
-						</template>
-					</template>
-				</STable>
-			</a-card>
-		</a-col>
-	</a-row>
+  <a-card size="small">
+    <a-form ref="searchFormRef" :model="searchFormData">
+      <a-row :gutter="24">
+        <a-col :span="6">
+          <a-form-item name="orgCode" label="组织机构">
+            <OrgTreeSelect ref="treeRef" @onChange="orgChange"/>
+          </a-form-item>
+        </a-col>
+        <a-col :span="6">
+          <a-form-item name="searchKey" label="名称关键词">
+            <a-input v-model:value="searchFormData.searchKey" placeholder="请输入关键词" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6">
+          <a-form-item label="使用状态" name="status">
+            <a-select v-model:value="searchFormData.status" placeholder="请选择状态" :options="statusOptions" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6">
+          <a-space>
+            <a-button type="primary" :icon="h(SearchOutlined)" @click="tableRef.refresh(true)">查询</a-button>
+            <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+          </a-space>
+        </a-col>
+      </a-row>
+    </a-form>
+  </a-card>
+  <a-card size="small">
+    <STable
+        ref="tableRef"
+        :columns="columns"
+        :data="loadTableData"
+        :scroll="{ x: 'max-content' }"
+        bordered
+        :row-key="(record) => record.id"
+        :tool-config="toolConfig"
+        :row-selection="options.rowSelection"
+    >
+      <template #operator class="table-operator">
+        <a-space>
+          <a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(searchFormData.orgCode, treeRef.treeData)">新增</a-button>
+          <BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDeleteGroup" />
+        </a-space>
+      </template>
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.dataIndex === 'code'">
+          <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+        </template>
+        <template v-if="column.dataIndex === 'dataScope'">
+          <!-- 数据范围(字典 0无限制 1本人数据 2本机构 3本机构及以下 4自定义) -->
+          <a-tag v-if="record.dataScope === 1" color="orange">本人数据</a-tag>
+          <a-tag v-if="record.dataScope === 2" color="cyan">本机构</a-tag>
+          <a-tag v-if="record.dataScope === 3" color="blue">本机构及以下</a-tag>
+          <a-tag v-if="record.dataScope === 4" color="purple">自定义</a-tag>
+        </template>
+        <template v-if="column.dataIndex === 'status'">
+          <a-tag v-if="record.status === 0" color="green">正常</a-tag>
+          <a-tag v-else>已停用</a-tag>
+        </template>
+        <template v-if="column.dataIndex === 'action'">
+          <a-space>
+            <a-tooltip title="分配角色">
+              <a style="color:#1980FF;" @click="groupRoleRef.onOpen(record)"><DeploymentUnitOutlined /></a>
+            </a-tooltip>
+            <a-divider type="vertical" />
+            <a-tooltip title="分配用户">
+              <a style="color:#53C61D;" @click="groupUserRef.onOpen(record, treeRef.treeData)"><UsergroupAddOutlined /></a>
+            </a-tooltip>
+            <a-divider type="vertical" />
+            <a-tooltip title="编辑">
+              <a @click="editFormRef.onOpen(record, treeRef.treeData)"><FormOutlined /></a>
+            </a-tooltip>
+            <a-divider type="vertical" />
+            <a-tooltip title="删除">
+              <a-popconfirm title="确定要删除吗？" @confirm="deleteGroup(record)">
+                <a style="color:#FF4D4F;"><DeleteOutlined/></a>
+              </a-popconfirm>
+            </a-tooltip>
+          </a-space>
+        </template>
+      </template>
+    </STable>
+  </a-card>
 	<EditForm ref="editFormRef" @successful="tableRef.refresh()" />
 	<AddForm ref="addFormRef" @successful="tableRef.refresh()" />
 	<GroupRole ref="groupRoleRef" @successful="handleSuccess()" />
@@ -104,10 +100,11 @@
 	import OrgTree from "../components/orgTree.vue"
 	import BatchDeleteButton from "@/components/BatchDeleteButton/index.vue"
   import STable from "@/components/STable/index.vue"
+  import OrgTreeSelect from "@/views/sys/components/orgTreeSelect.vue"
 
 	const columns = [
 		{
-			title: '分组名称',
+			title: '岗位名称',
 			dataIndex: 'name',
 			resizable: true,
 			width: 200
@@ -189,6 +186,10 @@
 		tableRef.value.refresh(true)
 	}
 
+  // 组织机构变更
+  const orgChange = (value) => {
+    searchFormData.value.orgCode = value
+  }
 	// 点击树查询
 	const treeSelect = (selectedKeys) => {
 		if (selectedKeys.length > 0) {

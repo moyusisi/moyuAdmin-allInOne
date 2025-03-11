@@ -20,4 +20,8 @@ export default {
 	userRoleList(data) {
 		return service.postJson('/api/sys/userCenter/userRoleList', data)
 	},
+	// 获取登陆用户的信息
+	switchUserGroup(data) {
+		return service.postJson('/api/sys/userCenter/switchUserGroup', data)
+	},
 }
