@@ -11,7 +11,8 @@ import com.moyu.common.mybatis.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 用户信息表
@@ -64,7 +65,7 @@ public class SysUser extends BaseEntity {
     /**
      * 生日
      */
-    private Date birthday;
+    private LocalDate birthday;
 
     /**
      * 邮箱
@@ -94,7 +95,7 @@ public class SysUser extends BaseEntity {
     /**
      * 员工入职日期
      */
-    private Date entryDate;
+    private LocalDate entryDate;
 
     /**
      * 直属组织机构编码
@@ -119,7 +120,7 @@ public class SysUser extends BaseEntity {
     /**
      * 登陆时间
      */
-    private Date loginTime;
+    private LocalDateTime loginTime;
 
     /**
      * 上次登陆IP
@@ -129,12 +130,12 @@ public class SysUser extends BaseEntity {
     /**
      * 上次登陆时间
      */
-    private Date lastLoginTime;
+    private LocalDateTime lastLoginTime;
 
     /**
      * 上次密码更新时间
      */
-    private Date pwdUpdateTime;
+    private LocalDateTime pwdUpdateTime;
 
     /**
      * 状态（0正常 1停用）

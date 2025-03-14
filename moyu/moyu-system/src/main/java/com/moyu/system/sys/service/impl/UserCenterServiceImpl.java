@@ -139,9 +139,9 @@ public class UserCenterServiceImpl implements UserCenterService {
             }
             if (ObjectUtil.isNotEmpty(tree.get("meta"))) {
                 Map<String, Object> meta = (Map<String, Object>) tree.get("meta");
-                Integer menuType = (Integer) meta.get("menuType");
+                String metaType = (String) meta.get("type");
                 // 不是目录
-                boolean notDir = !ResourceTypeEnum.DIR.getCode().equals(menuType) && !ResourceTypeEnum.MODULE.getCode().equals(menuType);
+                boolean notDir = !ResourceTypeEnum.DIR.name().equalsIgnoreCase(metaType) && !ResourceTypeEnum.MODULE.name().equalsIgnoreCase(metaType);
                 // 有权限的菜单叶子节点才符合要求
                 return notDir && permSet.contains(tree.getId());
             } else {
@@ -211,26 +211,28 @@ public class UserCenterServiceImpl implements UserCenterService {
         // 结构转换
         List<TreeNode<String>> treeNodeList = menuList.stream()
                 .map(menu -> {
+                    ResourceTypeEnum resourceType = ResourceTypeEnum.getByCode(menu.getResourceType());
                     TreeNode<String> node = new TreeNode<>(menu.getCode(), menu.getParentCode(), menu.getName(), menu.getSortNum());
                     // path、name、component、redirect、hidden
                     Map<String, Object> extra = new HashMap<>();//BeanUtil.beanToMap(menu, false, true);
                     extra.put("path", menu.getPath());
                     extra.put("component", menu.getComponent());
-                    if (ResourceTypeEnum.DIR.getCode().equals(menu.getResourceType())) {
+                    if (ResourceTypeEnum.DIR.equals(resourceType)) {
                         extra.put("redirect", menu.getLink());
-                    } else if (ResourceTypeEnum.MODULE.getCode().equals(menu.getResourceType())) {
+                    } else if (ResourceTypeEnum.MODULE.equals(resourceType)) {
                         extra.put("redirect", menu.getLink());
                     }
                     Map<String, Object> meta = new HashMap<>();
                     meta.put("icon", menu.getIcon());
                     meta.put("title", menu.getName());
-                    meta.put("menuType", menu.getResourceType());
+                    // metaType 使用字符串
+                    meta.put("type", resourceType.name().toLowerCase());
                     // 如果设置了不可见，那么设置hidden
                     if (ObjectUtil.equal(menu.getVisible(), 0)) {
                         meta.put("hidden", true);
                     }
-                    // 如果是超链接，设置url
-                    if (ResourceTypeEnum.LINK.getCode().equals(menu.getResourceType())) {
+                    // 如果是内链或者外链，设置url
+                    if (ResourceTypeEnum.IFRAME.equals(resourceType) || ResourceTypeEnum.LINK.equals(resourceType)) {
                         meta.put("url", menu.getPath());
                     }
                     extra.put("meta", meta);

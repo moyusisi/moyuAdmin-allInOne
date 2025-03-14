@@ -1,14 +1,11 @@
 package com.moyu.system.sys.model.param;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
-import java.util.Date;
 import java.util.Set;
 
 /**
@@ -56,6 +53,7 @@ public class SysRelationParam {
 
     /**
      * 关系类型(字典 1:group_has_user,2:group_has_role,3:role_has_menu)
+     *
      * @see com.moyu.system.sys.enums.RelationTypeEnum
      */
     private Integer relationType;

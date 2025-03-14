@@ -196,7 +196,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                         // 模块只放图标
                         extMap.put("icon", e.getIcon());
                     } else {
-                        extMap.put("menuType", e.getResourceType());
+                        extMap.put("resourceType", e.getResourceType());
                         // rm关系中存在，表示有权限
                         extMap.put("checked", rmMap.containsKey(e.getCode()));
                         // 将把包含的按钮加进来
@@ -225,7 +225,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 // 指定模块
                 .eq(SysResource::getModule, roleParam.getModule())
                 // 指定菜单类型
-                .in(SysResource::getResourceType, ResourceTypeEnum.MENU.getCode(), ResourceTypeEnum.BUTTON.getCode(), ResourceTypeEnum.LINK.getCode())
+                .in(SysResource::getResourceType, ResourceTypeEnum.MENU.getCode(), ResourceTypeEnum.IFRAME.getCode(), ResourceTypeEnum.LINK.getCode(), ResourceTypeEnum.BUTTON.getCode())
                 .eq(SysResource::getDeleteFlag, 0));
         // 本模块的所有权限
         List<String> allMenuCode = menuList.stream().map(SysResource::getCode).collect(Collectors.toList());

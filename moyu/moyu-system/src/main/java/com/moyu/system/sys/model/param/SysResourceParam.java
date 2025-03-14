@@ -70,7 +70,7 @@ public class SysResourceParam extends BasePageParam {
     private String code;
 
     /**
-     * 资源类型（字典 1模块 2目录 3菜单 4按钮 5外链）
+     * 资源类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）
      *
      * @see com.moyu.system.sys.enums.ResourceTypeEnum
      */
@@ -90,14 +90,19 @@ public class SysResourceParam extends BasePageParam {
     private String component;
 
     /**
-     * 图标
-     */
-    private String icon;
-
-    /**
      * 权限标识
      */
     private String permission;
+
+    /**
+     * 链接地址
+     */
+    private String link;
+
+    /**
+     * 图标
+     */
+    private String icon;
 
     /**
      * 是否可见（0不可见 1可见）
