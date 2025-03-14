@@ -12,7 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * 用户信息表
@@ -120,7 +120,7 @@ public class SysUser extends BaseEntity {
     /**
      * 登陆时间
      */
-    private LocalDateTime loginTime;
+    private Date loginTime;
 
     /**
      * 上次登陆IP
@@ -130,12 +130,12 @@ public class SysUser extends BaseEntity {
     /**
      * 上次登陆时间
      */
-    private LocalDateTime lastLoginTime;
+    private Date lastLoginTime;
 
     /**
      * 上次密码更新时间
      */
-    private LocalDateTime pwdUpdateTime;
+    private Date pwdUpdateTime;
 
     /**
      * 状态（0正常 1停用）
