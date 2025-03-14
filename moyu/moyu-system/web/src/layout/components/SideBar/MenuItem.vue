@@ -7,7 +7,7 @@
 				<component :is="onlyOneRoute.meta.icon" />
 			</template>
 			<!--  如果是超链接 新窗口打开  -->
-			<a v-if="onlyOneRoute.meta?.url" :href="onlyOneRoute.meta.url" target="_blank" @click.stop="() => {}">
+			<a v-if="onlyOneRoute.meta?.type === 'link'" :href="onlyOneRoute.meta.url" target="_blank" @click.stop="() => {}">
 				{{ onlyOneRoute.meta?.title }}
 			</a>
 			<a v-else>{{ onlyOneRoute.meta?.title }}</a>
@@ -34,7 +34,7 @@
   })
 	const onlyOneRoute = ref()
 
-	// 是否隐藏 菜单类型（字典 1模块 2目录 3菜单 4按钮 5外链）
+	// 是否隐藏 资源类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）
 	const isHidden = (item) => {
 		// 在meta中明确设置hidden==true的才隐藏，否则不隐藏
 		return item.meta && item.meta.hidden

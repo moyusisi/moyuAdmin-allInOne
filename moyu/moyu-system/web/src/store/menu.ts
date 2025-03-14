@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { useSearchStore } from '@/store/search'
 import userCenterApi from '@/api/sys/userCenterApi'
-import routesData from '@/router/systemRouter'
+import { constRoutes } from '@/router'
 import { RouteRecordRaw } from "vue-router"
 // 布局组件, 一般顶层目录使用
 import Layout from '@/layout/index.vue'
@@ -20,11 +20,17 @@ const filterAsyncRoutes = (menus) => {
 	const asyncRoutes: RouteRecordRaw[] = [];
 	// 遍历所有菜单
 	menus.forEach((menu) => {
+		menu.meta = menu.meta ? menu.meta : {}
+		// 处理外部链接特殊路由
+		if (menu.meta.type === 'iframe') {
+			menu.meta.url = menu.path
+			menu.path = `/${menu.code}`
+		}
 		// menu转路由对象
 		const route: RouteRecordRaw = {
 			path: menu.path,
 			name: menu.code,
-			meta: menu.meta ? menu.meta : {},
+			meta: menu.meta,
 			redirect: menu.redirect,
 			children: menu.children ? filterAsyncRoutes(menu.children) : null,
 			component: loadComponent(menu)
@@ -36,7 +42,7 @@ const filterAsyncRoutes = (menus) => {
 
 // 加载组件
 const loadComponent = (menu) => {
-	// 菜单类型（字典 1模块 2目录 3菜单 4按钮 5外链）
+	// 资源类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）
 	let item = Empty;
 	const component = menu.component
 	if (component?.toString() === "Layout") {
@@ -62,7 +68,7 @@ export const useMenuStore = defineStore('menuStore', () => {
 
 	// actions
 	function setRoutes(newRoutes) {
-		routes.value = routesData.concat(newRoutes);
+		routes.value = constRoutes.concat(newRoutes);
 	}
 
 	/**

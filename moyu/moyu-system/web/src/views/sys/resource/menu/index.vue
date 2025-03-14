@@ -31,11 +31,12 @@
 			</template>
 			<template #bodyCell="{ column, record : node }">
 				<template v-if="column.dataIndex === 'resourceType'">
-					<a-tag v-if="node.resourceType === 1" color="orange">模块</a-tag>
-					<a-tag v-if="node.resourceType === 2" color="cyan">目录</a-tag>
-					<a-tag v-if="node.resourceType === 3" color="blue">菜单</a-tag>
-					<a-tag v-if="node.resourceType === 4" color="purple">按钮</a-tag>
-					<a-tag v-if="node.resourceType === 5" color="green">链接</a-tag>
+          <a-tag v-if="node.resourceType === 1" color="orange">模块</a-tag>
+          <a-tag v-if="node.resourceType === 2" color="cyan">目录</a-tag>
+          <a-tag v-if="node.resourceType === 3" color="blue">菜单</a-tag>
+          <a-tag v-if="node.resourceType === 4" color="gold">内链</a-tag>
+          <a-tag v-if="node.resourceType === 5" color="green">链接</a-tag>
+          <a-tag v-if="node.resourceType === 6" color="purple">按钮</a-tag>
 				</template>
 				<template v-if="column.dataIndex === 'path'">
 					<a-tag v-if="node.path" :bordered="false">{{ node.path }}</a-tag>
@@ -53,7 +54,7 @@
 					<span v-else />
 				</template>
 				<template v-if="column.dataIndex === 'visible'">
-					<span v-if="node.resourceType !== 4" >
+					<span v-if="node.resourceType !== 6" >
 						<a-tag v-if="node.visible === 1" color="green">可见</a-tag>
 						<a-tag v-else>不可见</a-tag>
 					</span>
@@ -66,7 +67,7 @@
               <a-divider type="vertical" />
 						</a-tooltip>
 						<a-tooltip v-else-if="node.resourceType === 3" title="添加按钮">
-							<a style="color:#53C61D;" @click="addFormRef.onOpen(module, 4, node.code)"><PlusSquareOutlined /></a>
+							<a style="color:#53C61D;" @click="addFormRef.onOpen(module, 6, node.code)"><PlusSquareOutlined /></a>
               <a-divider type="vertical" />
 						</a-tooltip>
 						<a-tooltip title="编辑">

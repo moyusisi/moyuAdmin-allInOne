@@ -31,9 +31,6 @@
 						<span v-if="record.resourceType === 1">
 							<a-tag color="orange">模块</a-tag>{{ record.name }}
 						</span>
-						<span v-if="record.resourceType === 1">
-							<a-tag color="orange">模块</a-tag>{{ record.name }}
-						</span>
 						<span v-if="record.resourceType === 2">
 							<a-tag color="cyan">目录</a-tag>{{ record.name }}
 						</span>
@@ -41,10 +38,13 @@
 							<a-tag color="blue">菜单</a-tag>{{ record.name }}
 						</span>
 						<span v-if="record.resourceType === 4">
-							<a-tag color="purple">按钮</a-tag>{{ record.name }}
+							<a-tag color="gold">内链</a-tag>{{ record.name }}
 						</span>
 						<span v-if="record.resourceType === 5">
 							<a-tag color="green">链接</a-tag>{{ record.name }}
+						</span>
+            <span v-if="record.resourceType === 6">
+							<a-tag color="purple">按钮</a-tag>{{ record.name }}
 						</span>
 					</template>
 					<template v-if="column.dataIndex === 'buttonList'">
