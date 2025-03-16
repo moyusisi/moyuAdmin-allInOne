@@ -65,6 +65,7 @@ const sideTheme = computed(() => {
   return theme.value
 })
 
+// 首次加载会调用onMounted但route不会改变
 onMounted(() => {
   let matched = route.matched
   let pathList = []
@@ -74,9 +75,32 @@ onMounted(() => {
   if (pathList.length) {
     // path中最后一个为菜单，应当选中此菜单，同时移除菜单后的路径列表即为目录，应打开
     selectedKeys.value = pathList.splice(pathList.length - 1, 1)
+    // 首次加载时，只有当前菜单的目录为openKeys
     openKeys.value = pathList
     // console.log('selectedKeys', selectedKeys.value)
     // console.log('openKeys', openKeys.value)
+  }
+})
+
+// 非首次加载则不再调用onMounted，但route会改变。任何地方改变路由时都会被监听到
+watch(route, (to) => {
+  let matched = to.matched
+  let pathList = []
+  matched.forEach((item) => {
+    pathList.push(item.path)
+  })
+  if (pathList.length) {
+    // path中最后一个为菜单，应当选中此菜单，同时移除菜单后的路径列表即为目录，应打开
+    selectedKeys.value = pathList.splice(pathList.length - 1, 1)
+    // 若为排他打开, 则openKey
+    if (sideUniqueOpen.value) {
+      // 排他打开时, 只有当前菜单的目录为openKeys
+      openKeys.value = pathList
+    } else {
+      // 非排他打开时，即将新open的keys要加入到原来的openKey中去
+      let newKeys = pathList.filter(e => !openKeys.value.includes(e));
+      openKeys.value = openKeys.value.concat(newKeys);
+    }
   }
 })
 
@@ -108,7 +132,7 @@ const onOpenChange = (keys) => {
     openKeys.value = keys
   }
 }
-// 获取上级keys
+// 获取上级keys(包括当前key)
 const getParentKeys = (menuList, key) => {
   // 递归查找
   return traverse(menuList, key)
