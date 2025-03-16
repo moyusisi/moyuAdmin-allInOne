@@ -50,18 +50,19 @@ const tagList = computed(() => {
 const activeKey = ref()
 const affixTags = ref<TagView[]>([]);
 
-watch(route, (to) => {
-  // 首次进入回调用onMounted但route不会改变
-  // console.log('watch')
-  addView(to)
-  activeKey.value = to.fullPath
-})
-
+// 首次加载会调用onMounted但route不会改变
 onMounted(() => {
   // console.log('onMounted')
   initTags()
   addView(route)
   activeKey.value = route.fullPath
+})
+
+// 非首次加载则不再调用onMounted，但route会改变
+watch(route, (to) => {
+  // console.log('watch')
+  addView(to)
+  activeKey.value = to.fullPath
 })
 
 
