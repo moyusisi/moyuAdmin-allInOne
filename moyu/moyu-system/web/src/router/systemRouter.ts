@@ -16,7 +16,7 @@ const routes = [
 				path: '/index',
 				name: 'Index',
 				component: () => import('@/views/home/index.vue'),
-				meta: { title: '首页', icon: 'home-outlined' }
+				meta: { title: '首页', icon: 'home-outlined', affix: true }
 			}
 		]
 	},

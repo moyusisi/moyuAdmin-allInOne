@@ -1,7 +1,9 @@
+import { AppSettings } from "@/types/global"
+
 /**
  * 系统默认配置
  */
-const defaultSettings = {
+const defaultSettings: AppSettings = {
   // 默认站点名称
   title: "moyuAdmin",
   // 默认logo

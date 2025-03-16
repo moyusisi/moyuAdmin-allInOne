@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import IframeView from "@/layout/iframeView.vue"
+import IframeView from "./iframeView.vue"
 import { useTagsViewStore } from "@/store"
 
 const route = useRoute()

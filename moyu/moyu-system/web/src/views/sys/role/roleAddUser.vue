@@ -150,7 +150,7 @@
 		selectedRowKeys: selectedRowKeys,
 		onChange: (selectedKeys, selectedRows) => {
 			selectedRowKeys.value = selectedKeys
-			console.log('onChange,selectedKeys:', selectedKeys);
+			// console.log('onChange,selectedKeys:', selectedKeys);
 		}
 	});
 	// 表格的分页配置

@@ -151,7 +151,7 @@
 		selectedRowKeys: selectedRowKeys,
 		onChange: (selectedKeys, selectedRows) => {
 			selectedRowKeys.value = selectedKeys
-			console.log('onChange,selectedKeys:', selectedKeys);
+			// console.log('onChange,selectedKeys:', selectedKeys);
 		}
 	});
 
