@@ -51,6 +51,8 @@ export interface TagView {
   affix?: boolean;
   /** 是否开启缓存 */
   keepAlive?: boolean;
+  /** 是否禁用缓存(与keepAlive保留一个即可) */
+  noCache?: boolean;
   /** 路由查询参数 */
   query?: any;
 }
