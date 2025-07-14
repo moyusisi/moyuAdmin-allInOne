@@ -11,7 +11,8 @@ spring:
   application:
     name: moyu-system
   profiles:
-    active: local
+    active: prod
+#    active: local
   # mvc配置
   mvc:
     # json转换器，默认为jackson
