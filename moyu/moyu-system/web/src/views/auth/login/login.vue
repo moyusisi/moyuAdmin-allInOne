@@ -69,7 +69,7 @@
 	const loading = ref(false)
 
 	const formData = ref({
-		account: 'bjAdmin',
+		account: 'auditor',
 		password: 'qwer@123!',
 		validCode: '',
 		validCodeReqNo: '',
