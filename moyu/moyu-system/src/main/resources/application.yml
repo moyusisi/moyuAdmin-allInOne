@@ -11,8 +11,7 @@ spring:
   application:
     name: moyu-system
   profiles:
-    active: prod
-#    active: local
+    active: local
   # mvc配置
   mvc:
     # json转换器，默认为jackson
@@ -22,6 +21,10 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     locale: zh_CN
+    # Asia/Shanghai 或 GMT+8
+    time-zone: Asia/Shanghai
+    # 不序列化null字段
+    default-property-inclusion: non_null
 
 # MyBatis Plus配置 参考：https://baomidou.com/reference/
 mybatis-plus:
