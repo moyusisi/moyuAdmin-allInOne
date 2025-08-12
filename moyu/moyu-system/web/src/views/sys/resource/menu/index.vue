@@ -38,6 +38,9 @@
           <a-tag v-if="node.resourceType === 5" color="green">链接</a-tag>
           <a-tag v-if="node.resourceType === 6" color="purple">按钮</a-tag>
 				</template>
+        <template v-if="column.dataIndex === 'code'">
+          <a-tag v-if="node.path" :bordered="false">{{ node.code }}</a-tag>
+        </template>
 				<template v-if="column.dataIndex === 'path'">
 					<a-tag v-if="node.path" :bordered="false">{{ node.path }}</a-tag>
 				</template>
@@ -125,6 +128,11 @@
 			align: 'center',
 			width: 80
 		},
+    {
+      title: '唯一编码',
+      dataIndex: 'code',
+      width: 200
+    },
 		{
 			title: '地址',
 			dataIndex: 'path',

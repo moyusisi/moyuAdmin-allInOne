@@ -48,11 +48,11 @@
 				</template>
 				<template v-if="column.dataIndex === 'action'">
 					<a-space>
-            <a-tooltip title="功能授权">
+            <a-tooltip title="分配权限">
               <a style="color:#1980FF;" @click="grantMenuFormRef.onOpen(record)"><DeploymentUnitOutlined /></a>
             </a-tooltip>
             <a-divider type="vertical" />
-            <a-tooltip title="用户授权">
+            <a-tooltip title="分配用户">
               <a style="color:#53C61D;" @click="roleUserRef.onOpen(record)"><UserAddOutlined /></a>
             </a-tooltip>
 						<a-divider type="vertical" />

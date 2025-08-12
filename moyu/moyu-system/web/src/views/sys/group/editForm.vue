@@ -1,7 +1,7 @@
 <template>
 	<a-drawer
 		:open="visible"
-		title="编辑分组"
+		title="编辑岗位(Group)"
 		:width="drawerWidth"
 		:closable="false"
 		:footerStyle="{display: 'flex', justifyContent: 'flex-end'}"
@@ -15,7 +15,7 @@
 			<a-card title="基本信息">
 				<a-row :gutter="24">
 					<a-col :span="12">
-						<a-form-item label="分组名称：" name="name" :rules="[required('请输入名称')]">
+						<a-form-item label="岗位名称：" name="name" :rules="[required('请输入名称')]">
 							<a-input v-model:value="formData.name" placeholder="请输入显示名称" allow-clear />
 						</a-form-item>
 					</a-col>

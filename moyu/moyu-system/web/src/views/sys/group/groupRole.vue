@@ -152,7 +152,7 @@
 	// 打开抽屉
 	const onOpen = (record) => {
 		group.value = record;
-		title.value = record.name + "-已授权角色列表"
+		title.value = record.name + "-角色列表"
 		// 加载数据
 		loadTableData()
 		visible.value = true

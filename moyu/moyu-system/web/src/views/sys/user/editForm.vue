@@ -161,7 +161,6 @@ const drawerWidth = computed(() => {
 
 // 打开抽屉
 const onOpen = async (record, tree) => {
-	visible.value = true
 	// 获取用户信息
   const res = await userApi.userDetail({ account: record.account })
   formData.value = res.data

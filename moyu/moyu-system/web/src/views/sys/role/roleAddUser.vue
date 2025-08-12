@@ -179,7 +179,7 @@
 	// 打开抽屉
 	const onOpen = (record) => {
 		role.value = record;
-		title.value = role.value.name + "-授权用户"
+		title.value = role.value.name + "-添加用户"
 		// 加载数据
 		loadTableData()
 		visible.value = true

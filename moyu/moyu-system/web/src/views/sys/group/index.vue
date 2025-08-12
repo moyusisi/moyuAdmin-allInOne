@@ -123,6 +123,13 @@
       width: 80
     },
     {
+      title: '排序',
+      dataIndex: 'sortNum',
+      sorter: true,
+      align: 'center',
+      width: 100
+    },
+    {
       title: '状态',
       dataIndex: 'status',
       align: 'center',

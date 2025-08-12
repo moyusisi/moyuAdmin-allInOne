@@ -183,7 +183,7 @@
 		treeData.value = tree
 		defaultExpandedKeys.value = [tree[0]?.code]
 		group.value = record;
-		title.value = record.name + "-已授权用户列表"
+		title.value = record.name + "-用户列表"
 		// 加载数据
 		loadTableData()
 		visible.value = true

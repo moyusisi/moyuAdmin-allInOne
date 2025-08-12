@@ -57,4 +57,14 @@ export interface TagView {
   query?: any;
 }
 
+/**
+ * VTable中使用的行内操作对象
+ */
+export interface OpText {
+  name: string;
+  text: string;
+  color?: string,
+  fontSize?: number,
+  padding?: Array<number>;
+}
 
