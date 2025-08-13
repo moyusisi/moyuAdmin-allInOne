@@ -39,7 +39,7 @@
           <a-tag v-if="node.resourceType === 6" color="purple">按钮</a-tag>
 				</template>
         <template v-if="column.dataIndex === 'code'">
-          <a-tag v-if="node.path" :bordered="false">{{ node.code }}</a-tag>
+          <a-tag v-if="node.code" :bordered="false">{{ node.code }}</a-tag>
         </template>
 				<template v-if="column.dataIndex === 'path'">
 					<a-tag v-if="node.path" :bordered="false">{{ node.path }}</a-tag>

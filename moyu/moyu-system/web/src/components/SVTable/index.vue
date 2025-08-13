@@ -163,12 +163,12 @@ const tableOptions = ref({
   //   width: 'auto',
   // },
   // 入场动画
-  animationAppear: {
-    duration: 40,
-    delay: 10,
-    type: 'one-by-one', // 支持 all 和 one-by-one
-    direction: 'row' // 支持 row 和 column
-  }
+  // animationAppear: {
+  //   duration: 40,
+  //   delay: 10,
+  //   type: 'one-by-one', // 支持 all 和 one-by-one
+  //   direction: 'row' // 支持 row 和 column
+  // }
 })
 
 // 加载表格数据 total, records

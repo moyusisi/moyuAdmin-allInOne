@@ -5,7 +5,7 @@ import { AppSettings } from "@/types/global"
  */
 const defaultSettings: AppSettings = {
   // 默认站点名称
-  title: "moyuAdmin",
+  title: "myAdmin",
   // 默认logo
   logo: '/img/logo.svg',
   // 版本
