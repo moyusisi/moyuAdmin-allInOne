@@ -31,6 +31,9 @@ npm install -g npm-check-updates --registry=https://registry.npmmirror.com
 # 检查更新
 ncu --registry=https://registry.npmmirror.com
 
+# 更新package.json中的指定包的版本号
+ncu package1 package2 -u --registry=https://registry.npmmirror.com
+
 # 更新package.json中的包版本号
 ncu -u --registry=https://registry.npmmirror.com
 
