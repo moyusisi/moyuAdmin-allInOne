@@ -23,6 +23,8 @@ import com.google.common.collect.Multimap;
 import com.moyu.common.enums.ExceptionEnum;
 import com.moyu.common.exception.BaseException;
 import com.moyu.common.model.PageResult;
+import com.moyu.common.security.constant.SecurityConstants;
+import com.moyu.common.security.util.SecurityUtils;
 import com.moyu.system.sys.constant.SysConstants;
 import com.moyu.system.sys.enums.RelationTypeEnum;
 import com.moyu.system.sys.enums.ResourceTypeEnum;
@@ -71,15 +73,15 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     public List<SysRole> list(SysRoleParam roleParam) {
-        QueryWrapper<SysRole> queryWrapper = new QueryWrapper<SysRole>().checkSqlInjection();
-        // 查询条件
-        queryWrapper.lambda()
+        LambdaQueryWrapper<SysRole> queryWrapper = Wrappers.lambdaQuery(SysRole.class)
                 // 关键词搜索
                 .like(StrUtil.isNotBlank(roleParam.getSearchKey()), SysRole::getName, roleParam.getSearchKey())
                 // 指定code集合
                 .in(ObjectUtil.isNotEmpty(roleParam.getCodeSet()), SysRole::getCode, roleParam.getCodeSet())
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(roleParam.getStatus()), SysRole::getStatus, roleParam.getStatus())
+                // 非 ROOT 则排除
+                .ne(!SecurityUtils.isRoot(), SysRole::getCode, SecurityConstants.ROOT_ROLE)
                 .eq(SysRole::getDeleteFlag, 0)
                 .orderByAsc(SysRole::getSortNum);
         // 查询
@@ -95,6 +97,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .like(StrUtil.isNotBlank(roleParam.getSearchKey()), SysRole::getName, roleParam.getSearchKey())
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(roleParam.getStatus()), SysRole::getStatus, roleParam.getStatus())
+                // 非 ROOT 则排除
+                .ne(!SecurityUtils.isRoot(), SysRole::getCode, SecurityConstants.ROOT_ROLE)
                 .eq(SysRole::getDeleteFlag, 0)
                 .orderByAsc(SysRole::getSortNum);
         // 分页查询
