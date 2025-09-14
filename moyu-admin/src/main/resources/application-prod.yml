@@ -1,0 +1,45 @@
+# 监控管理
+management:
+  # 端点控制
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# spring配置
+spring:
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://127.0.0.1/moyu?useSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: moyu
+    password: cTEL2ctLLCBWxWbt
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+
+# 自定义配置
+custom:
+  # 自定义Spring Security配置
+  security:
+    # 是否启用认证，为false时等同于全加白
+    enabled: true
+    # 白名单列表，仅跳过 AuthorizationFilter 过滤器，还是会走其他过滤器(CSRF、CORS等)
+    white-list:
+      # 认证授权类
+      - /api/auth/login/**
+      - /api/auth/captcha/**
+      - /api/auth/refresh-token
+      # 回调、远程调用类
+      - /callback/**
+      - /feign/**
+      # 监控管理类
+      - /actuator/**
+      - /monitor/**
+    # 忽略列表，不经过Security的任何过滤器(如静态资源)
+    ignore-list:
+      - ${springdoc.swagger-ui.path}
+      - /swagger-ui/**
+      - /v3/api-docs/**
+      - /doc.html
+      - /static/**
+      - /public/**
+      - /**/*.ico
