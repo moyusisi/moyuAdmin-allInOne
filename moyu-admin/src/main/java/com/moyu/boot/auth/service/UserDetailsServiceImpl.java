@@ -53,7 +53,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (sysUser == null) {
             log.info("登录用户:{}不存在", username);
             throw new UsernameNotFoundException("用户不存在");
-        } else if (sysUser.getDeleteFlag() == 1) {
+        } else if (sysUser.getDeleted() == 1) {
             log.info("登录用户:{}已被删除", username);
             throw new UsernameNotFoundException("用户不存在");
         } else if (Objects.equals(sysUser.getStatus(), StatusEnum.DISABLE.getCode())) {
@@ -83,6 +83,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orgCode(sysUser.getOrgCode())
                 .dataScope(DataScopeEnum.SELF.getCode())
                 .build();
+        // TODO 应该通过岗位获取权限，无任何岗位则应使用默认岗位
         // 岗位列表
         List<SysGroup> groupList = sysGroupService.userGroupList(sysUser.getAccount());
         SysGroup group = null;

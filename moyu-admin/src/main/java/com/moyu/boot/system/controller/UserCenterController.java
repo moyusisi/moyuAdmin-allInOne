@@ -39,7 +39,7 @@ public class UserCenterController {
     @PostMapping("/userInfo")
     public Result<UserInfo> currentUserInfo() {
         // 当前登陆用户username
-        String username = SecurityUtils.getLoginUser().getUsername();
+        String username = SecurityUtils.getUsername();
         return Result.success(userCenterService.currentUserInfo(username));
     }
 
@@ -49,7 +49,7 @@ public class UserCenterController {
     @RequestMapping("/userMenu")
     public Result<List<Tree<String>>> userMenu() {
         // 当前登陆用户username
-        String username = SecurityUtils.getLoginUser().getUsername();
+        String username = SecurityUtils.getUsername();
         return Result.success(userCenterService.userMenu(username));
     }
 
@@ -60,7 +60,7 @@ public class UserCenterController {
     @PostMapping("/userOrgTree")
     public Result<List<Tree<String>>> userOrgTree() {
         // 当前登陆用户username
-        String username = SecurityUtils.getLoginUser().getUsername();
+        String username = SecurityUtils.getUsername();
         List<Tree<String>> list = userCenterService.userOrgTree(username);
         return Result.success(list);
     }
@@ -71,12 +71,12 @@ public class UserCenterController {
     @PostMapping("/userRoleList")
     public Result<List<SysRole>> userRoleList(@RequestBody SysRoleParam roleParam) {
         // 当前登陆用户username
-        String username = SecurityUtils.getLoginUser().getUsername();
+        String username = SecurityUtils.getUsername();
         return Result.success(userCenterService.userRoleList(username, roleParam.getSearchKey()));
     }
 
     /**
-     * 获取当前用户拥有的角色列表
+     * 当前用户岗位切换
      */
     @PostMapping("/switchUserGroup")
     public Result<String> switchUserGroup(@RequestBody SysGroupParam groupParam) {

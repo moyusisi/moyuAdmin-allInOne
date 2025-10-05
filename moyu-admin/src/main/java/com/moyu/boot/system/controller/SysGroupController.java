@@ -4,8 +4,8 @@ package com.moyu.boot.system.controller;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
 import com.moyu.boot.common.core.annotation.Log;
-import com.moyu.boot.common.core.model.Result;
 import com.moyu.boot.common.core.model.PageData;
+import com.moyu.boot.common.core.model.Result;
 import com.moyu.boot.system.model.entity.SysGroup;
 import com.moyu.boot.system.model.entity.SysRole;
 import com.moyu.boot.system.model.entity.SysUser;
@@ -84,7 +84,7 @@ public class SysGroupController {
     @PostMapping("/edit")
     public Result<String> edit(@Validated @RequestBody SysGroupParam groupParam) {
         Assert.isTrue(!ObjectUtil.isAllEmpty(groupParam.getId(), groupParam.getCode()), "id和code不能同时为空");
-        sysGroupService.edit(groupParam);
+        sysGroupService.update(groupParam);
         return Result.success();
     }
 

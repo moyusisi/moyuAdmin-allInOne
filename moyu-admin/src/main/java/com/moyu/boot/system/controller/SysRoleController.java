@@ -5,8 +5,8 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.util.ObjectUtil;
 import com.moyu.boot.common.core.annotation.Log;
-import com.moyu.boot.common.core.model.Result;
 import com.moyu.boot.common.core.model.PageData;
+import com.moyu.boot.common.core.model.Result;
 import com.moyu.boot.system.model.entity.SysRole;
 import com.moyu.boot.system.model.entity.SysUser;
 import com.moyu.boot.system.model.param.SysRoleParam;
@@ -93,7 +93,7 @@ public class SysRoleController {
     @PostMapping("/edit")
     public Result<String> edit(@Validated @RequestBody SysRoleParam roleParam) {
         Assert.isTrue(!ObjectUtil.isAllEmpty(roleParam.getId(), roleParam.getCode()), "id和code不能同时为空");
-        sysRoleService.edit(roleParam);
+        sysRoleService.update(roleParam);
         return Result.success();
     }
 

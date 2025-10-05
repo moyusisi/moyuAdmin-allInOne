@@ -104,7 +104,7 @@ public class SysOrgController {
     @PostMapping("/edit")
     public Result<String> edit(@Validated @RequestBody SysOrgParam orgParam) {
         Assert.isTrue(!ObjectUtil.isAllEmpty(orgParam.getId(), orgParam.getCode()), "id和code不能同时为空");
-        sysOrgService.edit(orgParam);
+        sysOrgService.update(orgParam);
         return Result.success();
     }
 

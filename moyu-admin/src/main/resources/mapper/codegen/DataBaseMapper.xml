@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moyu.boot.plugin.codegen.mapper.DataBaseMapper">
+
+    <!-- 查询数据库表分页 -->
+    <select id="getTablePage" resultType="com.moyu.boot.plugin.codegen.model.vo.TableMetaData">
+        SELECT
+        t1.TABLE_NAME,
+        t1.TABLE_COMMENT,
+        t1.CREATE_TIME,
+        t1.UPDATE_TIME
+        FROM information_schema.tables t1 LEFT JOIN gen_config t2 on t1.TABLE_NAME = t2.table_name
+        WHERE
+        t1.TABLE_SCHEMA = (SELECT DATABASE())
+        AND t2.id IS NULL
+        AND t1.table_type = 'BASE TABLE'
+        <if test="param.searchKey != null and param.searchKey.trim() neq ''">
+            AND (t1.TABLE_NAME LIKE CONCAT('%',#{param.searchKey},'%') OR t1.TABLE_COMMENT LIKE CONCAT('%',#{param.searchKey},'%'))
+        </if>
+        <!-- 排除的表 -->
+        <if test="param.excludeTables != null and param.excludeTables.size() > 0">
+            AND t1.TABLE_NAME NOT IN
+            <foreach collection="param.excludeTables" item="excludeTable" open="(" close=")" separator=",">
+                #{excludeTable}
+            </foreach>
+        </if>
+        ORDER BY t1.CREATE_TIME DESC
+    </select>
+
+    <select id="getTableListByNames" resultType="com.moyu.boot.plugin.codegen.model.vo.TableMetaData">
+        SELECT TABLE_NAME, TABLE_COMMENT, CREATE_TIME, UPDATE_TIME
+        FROM information_schema.tables
+        WHERE
+            TABLE_SCHEMA = (SELECT DATABASE())
+        AND TABLE_NAME IN
+        <foreach collection="collection" item="name" open="(" separator="," close=")">
+            #{name}
+        </foreach>
+    </select>
+
+    <select id="getTableMetaData" resultType="com.moyu.boot.plugin.codegen.model.vo.TableMetaData">
+        SELECT
+            TABLE_NAME ,
+            TABLE_COMMENT ,
+            TABLE_COLLATION,
+            ENGINE,
+            CREATE_TIME
+        FROM
+            information_schema.tables
+        WHERE
+            TABLE_SCHEMA = (SELECT DATABASE())
+          AND TABLE_NAME = #{tableName}
+    </select>
+
+
+    <select id="getTableColumns" resultType="com.moyu.boot.plugin.codegen.model.bo.ColumnMetaData">
+        SELECT
+            COLUMN_NAME,
+            DATA_TYPE,
+            COLUMN_COMMENT,
+            CASE COLUMN_KEY WHEN 'PRI' THEN 1 ELSE 0 END AS primaryKey,
+            CASE IS_NULLABLE WHEN 'YES' THEN 1 ELSE 0 END AS nullable,
+            CHARACTER_MAXIMUM_LENGTH AS maxLength,
+            CHARACTER_SET_NAME,
+            COLLATION_NAME
+        FROM
+            information_schema.columns
+        WHERE
+            TABLE_SCHEMA = (SELECT DATABASE())
+          AND TABLE_NAME = #{tableName}
+        ORDER BY ORDINAL_POSITION ASC
+    </select>
+</mapper>

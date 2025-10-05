@@ -72,7 +72,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
                 .eq(ObjectUtil.isNotEmpty(orgParam.getParentCode()), SysOrg::getParentCode, orgParam.getParentCode())
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(orgParam.getStatus()), SysOrg::getStatus, orgParam.getStatus())
-                .eq(SysOrg::getDeleteFlag, 0)
+                .eq(SysOrg::getDeleted, 0)
                 .orderByAsc(SysOrg::getSortNum);
         // 查询
         List<SysOrg> orgList = this.list(queryWrapper);
@@ -95,25 +95,25 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
                 .eq(ObjectUtil.isNotEmpty(parentCode), SysOrg::getParentCode, parentCode)
                 // 指定状态
                 .eq(ObjectUtil.isNotEmpty(orgParam.getStatus()), SysOrg::getStatus, orgParam.getStatus())
-                .eq(SysOrg::getDeleteFlag, 0)
+                .eq(SysOrg::getDeleted, 0)
                 .orderByAsc(SysOrg::getSortNum);
         // 非ROOT则限制数据权限
         if (!SecurityUtils.isRoot()) {
             // 指定的列名
-            Integer dataScope = SecurityUtils.getLoginUser().getDataScope();
+            Integer dataScope = SecurityUtils.getDataScope();
             if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
-                String username = SecurityUtils.getLoginUser().getUsername();
+                String username = SecurityUtils.getUsername();
                 queryWrapper.and(e -> e.eq(SysOrg::getCreateBy, username));
             } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getLoginUser().getOrgCode();
+                String orgCode = SecurityUtils.getOrgCode();
                 queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode));
             } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getLoginUser().getOrgCode();
+                String orgCode = SecurityUtils.getOrgCode();
                 // find_in_set函数比like高效
 //                queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode).or().like(SysOrg::getOrgPath, orgCode));
                 queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode).or().apply("find_in_set('" + orgCode + "', org_path)"));
             } else if (DataScopeEnum.ORG_DEFINE.getCode().equals(dataScope)) {
-                Set<String> scopes = SecurityUtils.getLoginUser().getScopes();
+                Set<String> scopes = SecurityUtils.getScopes();
                 queryWrapper.and(e -> e.in(SysOrg::getCode, scopes));
             }
         }
@@ -159,7 +159,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
             // 查询指定code
             SysOrg org = this.getOne(new LambdaQueryWrapper<SysOrg>()
                     .eq(SysOrg::getCode, orgParam.getCode())
-                    .eq(SysOrg::getDeleteFlag, 0));
+                    .eq(SysOrg::getDeleted, 0));
             if (org != null) {
                 throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER, "唯一编码重复，请更换或留空自动生成");
             }
@@ -185,7 +185,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         Set<Long> idSet = orgParam.getIds();
         // 逻辑删除
         UpdateWrapper<SysOrg> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.in("id", idSet).set("delete_flag", 1);
+        updateWrapper.in("id", idSet).set("deleted", 1);
         this.update(updateWrapper);
     }
 
@@ -197,7 +197,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         queryWrapper.lambda()
                 // 查询部分字段
                 .select(SysOrg::getId, SysOrg::getCode, SysOrg::getParentCode)
-                .eq(SysOrg::getDeleteFlag, 0);
+                .eq(SysOrg::getDeleted, 0);
         // 查询所有记录
         List<SysOrg> orgList = this.list(queryWrapper);
         // 待删除节点的code集合
@@ -227,12 +227,12 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         }
         // 逻辑删除
         UpdateWrapper<SysOrg> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.in("id", idSet).set("delete_flag", 1);
+        updateWrapper.in("id", idSet).set("deleted", 1);
         this.update(updateWrapper);
     }
 
     @Override
-    public void edit(SysOrgParam orgParam) {
+    public void update(SysOrgParam orgParam) {
         SysOrg oldOrg = this.detail(orgParam);
         // 不使用beanCopy是为了效率
         SysOrg updateOrg = buildSysOrg(orgParam);
@@ -296,7 +296,7 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         List<SysOrg> orgList = this.list(Wrappers.lambdaQuery(SysOrg.class)
                 // 查询部分字段
                 .select(SysOrg::getCode, SysOrg::getParentCode, SysOrg::getName, SysOrg::getSortNum, SysOrg::getOrgType)
-                .eq(SysOrg::getDeleteFlag, 0)
+                .eq(SysOrg::getDeleted, 0)
                 .orderByAsc(SysOrg::getSortNum)
         );
         // 构建树
