@@ -1,6 +1,6 @@
 <template>
-	<!-- 组织树 -->
-	<a-card size="small" :loading="cardLoading" :bodyStyle="{paddingLeft:'5px', paddingRight:'5px'}" class="admin-ui-main">
+  <!-- 组织树 -->
+  <a-card size="small" :loading="cardLoading" :bodyStyle="{paddingLeft:'5px', paddingRight:'5px'}" class="admin-ui-main">
     <a-tree
         v-if="treeData.length > 0"
         v-model:expandedKeys="defaultExpandedKeys"
@@ -10,13 +10,13 @@
         show-icon
         @select="onSelect"
     >
-			<template #icon="{ orgType, selected }">
-				<span v-if="orgType === 1" style="color:#1980FF;"><ClusterOutlined /></span>
-<!--				<span v-else-if="orgType === 2" style="color:#87D068;"><ApartmentOutlined /></span>-->
-			</template>
-		</a-tree>
-		<a-empty v-else :image="Empty.PRESENTED_IMAGE_SIMPLE" />
-	</a-card>
+      <template #icon="{ orgType, selected }">
+        <span v-if="orgType === 1" style="color:#1980FF;"><ClusterOutlined /></span>
+<!--        <span v-else-if="orgType === 2" style="color:#87D068;"><ApartmentOutlined /></span>-->
+      </template>
+    </a-tree>
+    <a-empty v-else :image="Empty.PRESENTED_IMAGE_SIMPLE" />
+  </a-card>
 </template>
 
 <script setup lang="ts">
@@ -33,38 +33,38 @@ const defaultExpandedKeys = ref([])
 const cardLoading = ref(true)
 
 onMounted(() => {
-	loadTreeData()
+  loadTreeData()
 })
 
 const emit = defineEmits(['onSelect'])
 // 树节点被选中时调用(https://antdv.com/components/tree-select-cn#api)
 const onSelect = (value, node) => {
-	// 传递被选中的节点key
-	emit('onSelect', value, node)
+  // 传递被选中的节点key
+  emit('onSelect', value, node)
 }
 
 // 加载左侧的树
 const loadTreeData = () => {
-	cardLoading.value = true
+  cardLoading.value = true
   // 获取当前登陆者的orgTree 获取所有组织机构可使用orgApi.orgTree
   userCenterApi.loginUserOrgTree().then((res) => {
-		cardLoading.value = false
-		if (res.data !== null) {
-			treeData.value = res.data
-			defaultExpandedKeys.value = [res.data[0]?.code]
-		}
-	}).finally(() => {
-		cardLoading.value = false
-	})
+    cardLoading.value = false
+    if (res.data !== null) {
+      treeData.value = res.data
+      defaultExpandedKeys.value = [res.data[0]?.code]
+    }
+  }).finally(() => {
+    cardLoading.value = false
+  })
 }
 // 重新加载树的数据
 const refresh = () => {
-	loadTreeData()
+  loadTreeData()
 }
 // 暴露子组件的方法
 defineExpose({
-	treeData,
-	refresh
+  treeData,
+  refresh
 })
 </script>
 

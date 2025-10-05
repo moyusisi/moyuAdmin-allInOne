@@ -82,40 +82,40 @@
       </template>
     </STable>
   </a-card>
-	<EditForm ref="editFormRef" @successful="tableRef.refresh()" />
-	<AddForm ref="addFormRef" @successful="tableRef.refresh()" />
-	<GroupRole ref="groupRoleRef" @successful="handleSuccess()" />
-	<GroupUser ref="groupUserRef" @successful="handleSuccess()" />
+  <EditForm ref="editFormRef" @successful="tableRef.refresh()" />
+  <AddForm ref="addFormRef" @successful="tableRef.refresh()" />
+  <GroupRole ref="groupRoleRef" @successful="handleSuccess()" />
+  <GroupUser ref="groupUserRef" @successful="handleSuccess()" />
 </template>
 
 <script setup>
-	import groupApi from '@/api/sys/groupApi'
-	import { onMounted, h } from "vue";
-	import { message } from 'ant-design-vue'
-	import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
-	import AddForm from './addForm.vue'
-	import EditForm from './editForm.vue'
-	import GroupRole from './groupRole.vue'
-	import GroupUser from './groupUser.vue'
-	import OrgTree from "../components/orgTree.vue"
-	import BatchDeleteButton from "@/components/BatchDeleteButton/index.vue"
+  import groupApi from '@/api/sys/groupApi'
+  import { onMounted, h } from "vue";
+  import { message } from 'ant-design-vue'
+  import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
+  import AddForm from './addForm.vue'
+  import EditForm from './editForm.vue'
+  import GroupRole from './groupRole.vue'
+  import GroupUser from './groupUser.vue'
+  import OrgTree from "../components/orgTree.vue"
+  import BatchDeleteButton from "@/components/BatchDeleteButton/index.vue"
   import STable from "@/components/STable/index.vue"
   import OrgTreeSelect from "@/views/sys/components/orgTreeSelect.vue"
 
-	const columns = [
-		{
-			title: '岗位名称',
-			dataIndex: 'name',
-			resizable: true,
-			width: 200
-		},
-		{
-			title: '组织机构',
-			dataIndex: 'orgName',
-			resizable: true,
-			width: 200,
-			ellipsis: true
-		},
+  const columns = [
+    {
+      title: '岗位名称',
+      dataIndex: 'name',
+      resizable: true,
+      width: 200
+    },
+    {
+      title: '组织机构',
+      dataIndex: 'orgName',
+      resizable: true,
+      width: 200,
+      ellipsis: true
+    },
     {
       title: '数据范围',
       dataIndex: 'dataScope',
@@ -135,101 +135,101 @@
       align: 'center',
       width: 80
     },
-		{
-			title: '创建时间',
-			dataIndex: 'createTime',
-			align: 'center',
-			width: 160
-		},
-		{
-			title: '操作',
-			dataIndex: 'action',
-			align: 'center',
-			width: 200,
-		}
-	]
-	const selectedRowKeys = ref([])
-	// 列表选择配置
-	const options = {
-		alert: {
-			show: false,
-			clear: () => {
-				selectedRowKeys.value = ref([])
-			}
-		},
-		rowSelection: {
-			onChange: (selectedRowKey, selectedRows) => {
-				selectedRowKeys.value = selectedRowKey
-			}
-		}
-	}
-	// 使用状态options（0正常 1停用）
-	const statusOptions = [
-		{ label: "正常", value: 0 },
-		{ label: "已停用", value: 1 }
-	]
-	// 定义tableDOM
-	const tableRef = ref()
-	const toolConfig = { refresh: true, height: true, columnSetting: false, striped: false }
-	const addFormRef = ref()
-	const editFormRef = ref()
-	const groupUserRef = ref()
-	const groupRoleRef = ref()
-	const searchFormRef = ref()
-	const searchFormData = ref({})
+    {
+      title: '创建时间',
+      dataIndex: 'createTime',
+      align: 'center',
+      width: 160
+    },
+    {
+      title: '操作',
+      dataIndex: 'action',
+      align: 'center',
+      width: 200,
+    }
+  ]
+  const selectedRowKeys = ref([])
+  // 列表选择配置
+  const options = {
+    alert: {
+      show: false,
+      clear: () => {
+        selectedRowKeys.value = ref([])
+      }
+    },
+    rowSelection: {
+      onChange: (selectedRowKey, selectedRows) => {
+        selectedRowKeys.value = selectedRowKey
+      }
+    }
+  }
+  // 使用状态options（0正常 1停用）
+  const statusOptions = [
+    { label: "正常", value: 0 },
+    { label: "已停用", value: 1 }
+  ]
+  // 定义tableDOM
+  const tableRef = ref()
+  const toolConfig = { refresh: true, height: true, columnSetting: false, striped: false }
+  const addFormRef = ref()
+  const editFormRef = ref()
+  const groupUserRef = ref()
+  const groupRoleRef = ref()
+  const searchFormRef = ref()
+  const searchFormData = ref({})
 
-	// 定义treeRef
-	const treeRef = ref()
+  // 定义treeRef
+  const treeRef = ref()
 
-	// 表格查询 返回 Promise 对象
-	const loadTableData = (parameter) => {
-		return groupApi.groupPage(Object.assign(parameter, searchFormData.value)).then((res) => {
-			return res.data
-		})
-	}
-	// 重置
-	const reset = () => {
-		searchFormRef.value.resetFields()
-		tableRef.value.refresh(true)
-	}
+  // 表格查询 返回 Promise 对象
+  const loadTableData = (parameter) => {
+    return groupApi.groupPage(Object.assign(parameter, searchFormData.value)).then((res) => {
+      return res.data
+    })
+  }
+  // 重置
+  const reset = () => {
+    searchFormRef.value.resetFields()
+    tableRef.value.refresh(true)
+  }
 
   // 组织机构变更
   const orgChange = (value) => {
     searchFormData.value.orgCode = value
   }
-	// 点击树查询
-	const treeSelect = (selectedKeys) => {
-		if (selectedKeys.length > 0) {
-			searchFormData.value.orgCode = selectedKeys.toString()
-		} else {
-			delete searchFormData.value.orgCode
-		}
-		tableRef.value.refresh(true)
-	}
-	// 单个删除
-	const deleteGroup = (record) => {
-		let data = { ids: [record.id] }
-		groupApi.deleteGroup(data).then((res) => {
-			message.success(res.message)
-			tableRef.value.refresh(true)
-		})
-	}
-	// 批量删除
-	const batchDeleteGroup = (params) => {
-		let data = { ids: selectedRowKeys.value }
-		groupApi.deleteGroup(data).then((res) => {
-			message.success(res.message)
-			tableRef.value.clearRefreshSelected()
-		})
-	}
-	// 成功回调
-	const handleSuccess = () => {
-		loadTableData()
-	}
+  // 点击树查询
+  const treeSelect = (selectedKeys) => {
+    if (selectedKeys.length > 0) {
+      searchFormData.value.orgCode = selectedKeys.toString()
+    } else {
+      delete searchFormData.value.orgCode
+    }
+    tableRef.value.refresh(true)
+  }
+  // 单个删除
+  const deleteGroup = (record) => {
+    let data = { ids: [record.id] }
+    groupApi.deleteGroup(data).then((res) => {
+      message.success(res.message)
+      tableRef.value.refresh(true)
+    })
+  }
+  // 批量删除
+  const batchDeleteGroup = (params) => {
+    let data = { ids: selectedRowKeys.value }
+    groupApi.deleteGroup(data).then((res) => {
+      message.success(res.message)
+      tableRef.value.clearRefreshSelected()
+    })
+  }
+  // 成功回调
+  const handleSuccess = () => {
+    loadTableData()
+  }
 </script>
 
 <style scoped>
-	.ant-form-item {
-		margin-bottom: 0 !important;
-	}
+  .ant-form-item {
+    margin-bottom: 0 !important;
+  }
 </style>

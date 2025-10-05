@@ -1,8 +1,8 @@
 <template>
   <!-- 上方模块选择 -->
-	<a-card size="small">
-		<a-form ref="queryFormRef" :model="queryFormData">
-			<a-row :gutter="24">
+  <a-card size="small">
+    <a-form ref="queryFormRef" :model="queryFormData">
+      <a-row :gutter="24">
         <a-col :span="6">
           <a-form-item name="module" label="所属模块">
             <a-select v-model:value="moduleId" @change="onModuleChange" placeholder="请选择模块">
@@ -10,21 +10,21 @@
             </a-select>
           </a-form-item>
         </a-col>
-				<a-col :span="6">
-					<a-form-item name="searchKey" label="名称关键词">
-						<a-input v-model:value="queryFormData.searchKey" placeholder="请输入关键词" allowClear />
-					</a-form-item>
-				</a-col>
-				<a-col :span="8">
-					<a-space>
-						<a-button type="primary" :icon="h(SearchOutlined)" @click="tableRef.refresh(true)">查询</a-button>
-						<a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
-					</a-space>
-				</a-col>
-			</a-row>
-		</a-form>
-	</a-card>
-	<a-card size="small">
+        <a-col :span="6">
+          <a-form-item name="searchKey" label="名称关键词">
+            <a-input v-model:value="queryFormData.searchKey" placeholder="请输入关键词" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-space>
+            <a-button type="primary" :icon="h(SearchOutlined)" @click="tableRef.refresh(true)">查询</a-button>
+            <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+          </a-space>
+        </a-col>
+      </a-row>
+    </a-form>
+  </a-card>
+  <a-card size="small">
     <STable
         ref="tableRef"
         :columns="columns"
@@ -65,30 +65,30 @@
       </template>
     </STable>
   </a-card>
-	<AddForm ref="addFormRef" @successful="tableRef.refresh(true)" />
-	<EditForm ref="editFormRef" @successful="tableRef.refresh(true)" />
+  <AddForm ref="addFormRef" @successful="tableRef.refresh(true)" />
+  <EditForm ref="editFormRef" @successful="tableRef.refresh(true)" />
 </template>
 
 <script setup>
-	import resourceApi from '@/api/sys/resourceApi.js'
-	import { h } from "vue";
-	import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
-	import AddForm from "./addForm.vue";
-	import EditForm from "./editForm.vue";
-	import { message } from "ant-design-vue";
+  import resourceApi from '@/api/sys/resourceApi.js'
+  import { h } from "vue";
+  import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
+  import AddForm from "./addForm.vue";
+  import EditForm from "./editForm.vue";
+  import { message } from "ant-design-vue";
   import BatchDeleteButton from "@/components/BatchDeleteButton/index.vue"
   import STable from "@/components/STable/index.vue"
 
-	// resourceType=6表示按钮
-	const queryFormData = ref({ resourceType: 6 })
-	const addFormRef = ref()
-	const editFormRef = ref()
-	const queryFormRef = ref()
+  // resourceType=6表示按钮
+  const queryFormData = ref({ resourceType: 6 })
+  const addFormRef = ref()
+  const editFormRef = ref()
+  const queryFormRef = ref()
   const moduleId = ref()
   const module = ref()
   const moduleList = ref([])
-	const tableRef = ref()
-	const toolConfig = { refresh: true, height: true, columnSetting: false, striped: false }
+  const tableRef = ref()
+  const toolConfig = { refresh: true, height: true, columnSetting: false, striped: false }
   const columns = [
     {
       title: '显示名称',
@@ -129,21 +129,21 @@
     }
   ]
 
-	let selectedRowKeys = ref([])
-	// 列表选择配置
-	const options = {
-		alert: {
-			show: false,
-			clear: () => {
-				selectedRowKeys = ref([])
-			}
-		},
-		rowSelection: {
-			onChange: (selectedRowKey, selectedRows) => {
-				selectedRowKeys.value = selectedRowKey
-			}
-		}
-	}
+  let selectedRowKeys = ref([])
+  // 列表选择配置
+  const options = {
+    alert: {
+      show: false,
+      clear: () => {
+        selectedRowKeys = ref([])
+      }
+    },
+    rowSelection: {
+      onChange: (selectedRowKey, selectedRows) => {
+        selectedRowKeys.value = selectedRowKey
+      }
+    }
+  }
 
   const loadData = async (parameter) => {
     if (!moduleId.value) {
@@ -170,31 +170,31 @@
     tableRef.value.refresh(true)
   }
 
-	// 重置
-	const reset = () => {
-		queryFormRef.value.resetFields()
-		tableRef.value.refresh(true)
-	}
-	// 删除
-	const deleteButton = (record) => {
-		let data = { ids: [record.id] }
-		resourceApi.deleteResource(data).then((res) => {
-			message.success(res.message)
-			tableRef.value.refresh(true)
-		})
-	}
-	// 批量删除
-	const deleteBatchButton = (params) => {
-		let data = { ids: selectedRowKeys.value }
-		resourceApi.deleteResource(data).then((res) => {
-			message.success(res.message)
-			tableRef.value.clearRefreshSelected()
-		})
-	}
+  // 重置
+  const reset = () => {
+    queryFormRef.value.resetFields()
+    tableRef.value.refresh(true)
+  }
+  // 删除
+  const deleteButton = (record) => {
+    let data = { ids: [record.id] }
+    resourceApi.deleteResource(data).then((res) => {
+      message.success(res.message)
+      tableRef.value.refresh(true)
+    })
+  }
+  // 批量删除
+  const deleteBatchButton = (params) => {
+    let data = { ids: selectedRowKeys.value }
+    resourceApi.deleteResource(data).then((res) => {
+      message.success(res.message)
+      tableRef.value.clearRefreshSelected()
+    })
+  }
 </script>
 
 <style scoped>
 .ant-form-item {
-	margin-bottom: 0 !important;
+  margin-bottom: 0 !important;
 }
 </style>

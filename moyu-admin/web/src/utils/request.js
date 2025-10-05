@@ -34,9 +34,13 @@ service.interceptors.request.use(
 // HTTP response 拦截器
 service.interceptors.response.use(
 	(response) => {
+		// console.log(response)
+		// 二进制数据则直接返回
+		if (response.request.responseType === 'blob') {
+			return response
+		}
 		// 响应数据为二进制流，直接返回
-		// if (response.request.responseType === 'blob') {
-		if (response.data instanceof ArrayBuffer) {
+		if (response.data instanceof Blob || response.data instanceof ArrayBuffer) {
 			return response;
 		}
 
@@ -80,24 +84,34 @@ const reLogin = () => {
 }
 
 // 自定义的通用下载方法
-service.download = function download(config) {
+service.download = function download(url, data, config) {
 	return service({
+		url: url,
+		method: 'post',
+		// data是json，params是查询参数
+		data: data,
+		// 在config中设置 responseType 是下载结果响应处理的关键
 		responseType: 'blob',
 		...config
-	}).then(async response => {
+	}).then((response) => {
 		if (response.data.type === 'application/json') {
-			const resText = await response.data.text()
+			const resText = response.data.text()
 			const res = JSON.parse(resText)
-			message.error(res.message)
+			message.warn(res.message)
 			return
 		}
+		const fileName = decodeURI(
+			// attachment; filename="xxx.zip"
+			response.headers["content-disposition"].split(";")[1].split("=")[1]
+		);
 		// 创建一个链接元素用于下载
 		const url = window.URL.createObjectURL(new Blob([response.data]))
 		const link = document.createElement('a')
+		document.body.appendChild(link)
 		link.href = url
 		// 设置下载文件名
-		link.setAttribute('download', 'moyu.zip')
-		document.body.appendChild(link)
+		link.download = fileName;
+		// link.setAttribute('download', '123.zip')
 		link.click()
 		// 清理并移除链接元素
 		document.body.removeChild(link)

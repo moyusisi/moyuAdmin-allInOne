@@ -292,7 +292,7 @@ const clearSelected = () => {
 // 刷新
 const refresh = (bool = false) => {
   if (bool) {
-    // 分页参数
+    // 重置分页参数
     pagination.value.pageNum = props.pageNum
     pagination.value.pageSize = props.pageSize
   }

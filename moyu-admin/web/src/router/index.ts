@@ -49,7 +49,6 @@ router.beforeEach(async (to, from) => {
         router.addRoute('layout', route)
       });
       // console.log(asyncRoutes)
-      // console.log(menuStore.constRoutes)
       // console.log(router.getRoutes())
       // 由于新增加了路由，所以重新导航
       return { ...to, replace: true }

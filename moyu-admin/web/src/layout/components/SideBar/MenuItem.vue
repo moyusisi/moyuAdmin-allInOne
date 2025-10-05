@@ -59,11 +59,11 @@
 			onlyOneRoute.value = { ...route, noShownChildren: true };
 			return true;
 		}
-		// 如果只有一个子路由, 返回 true
-		if (shownChildren.length === 1) {
-			onlyOneRoute.value = { ...shownChildren[0] };
-			return true;
-		}
+		// 如果只有一个子路由, 返回 true (此处决定了单节点的目录是否显示)
+		// if (shownChildren.length === 1) {
+		// 	onlyOneRoute.value = { ...shownChildren[0] };
+		// 	return true;
+		// }
 		return false;
 	}
 

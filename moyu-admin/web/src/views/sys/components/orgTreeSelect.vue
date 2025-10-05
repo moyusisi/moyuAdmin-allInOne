@@ -1,5 +1,5 @@
 <template>
-	<!-- 组织选择器 -->
+  <!-- 组织选择器 -->
   <a-tree-select
       v-model:value="selectValue"
       v-model:treeExpandedKeys="defaultExpandedKeys"

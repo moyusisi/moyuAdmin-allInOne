@@ -1,22 +1,16 @@
 <template>
-	<a-popconfirm
-		title="确认删除此信息？"
-		:open="deleteVisible"
-		@openChange="deleteVisibleChange"
-		@confirm="batchDelete"
-	>
-		<a-button danger>
-			<template #icon v-if="props.icon">
-				<component :is="props.icon" />
-			</template>
-			{{ props.buttonName }}
-		</a-button>
-	</a-popconfirm>
+  <a-popconfirm title="确定要批量删除吗？" @confirm="batchDelete">
+    <a-button danger :icon="h(DeleteOutlined)" :disabled="props.selectedRowKeys.length < 1">
+      {{ props.buttonName }}
+    </a-button>
+  </a-popconfirm>
 </template>
 
-<script setup name="commonBatchDelete">
-	import { message } from 'ant-design-vue'
-	const deleteVisible = ref(false)
+<script setup>
+  import { h } from "vue";
+  import { DeleteOutlined } from "@ant-design/icons-vue";
+  import { message } from 'ant-design-vue'
+
 	const emit = defineEmits({ batchDelete: null })
 	const props = defineProps({
 		buttonName: {
@@ -32,22 +26,12 @@
 			default: () => []
 		}
 	})
-	// 参数校验
-	const deleteVisibleChange = () => {
-		if (deleteVisible.value) {
-			deleteVisible.value = false
-			return false
-		}
-		if (props.selectedRowKeys.length < 1) {
-			message.warning('请选择一条或多条数据')
-			deleteVisible.value = false
-			return false
-		} else {
-			deleteVisible.value = true
-		}
-	}
 	// 批量删除
 	const batchDelete = () => {
+    if (props.selectedRowKeys.length < 1) {
+      message.warning('请至少选择一条数据')
+      return
+    }
 		const params = props.selectedRowKeys.map((m) => {
 			return {
 				id: m
