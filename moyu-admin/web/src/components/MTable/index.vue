@@ -140,7 +140,7 @@ const paginationRef = ref({
 const localData = reactive({
   // tableProps中的同名属性
   dataSource: [],
-  size: props.size,
+  size: props.size || "middle",
   // 非tableProps的同名属性
   columnsSetting: [],
   // 本地配置, 无props时使用
