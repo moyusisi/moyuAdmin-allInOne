@@ -1,5 +1,5 @@
 <template>
-  <!-- 上方选择区 -->
+  <!-- 上方查询区 -->
   <a-card size="small">
     <a-form ref="queryFormRef" :model="queryFormData">
       <a-row :gutter="24">
@@ -9,7 +9,11 @@
         <a-col :span="6">
           <a-form-item name="${fieldConfig.fieldName}" label="${fieldConfig.fieldRemark[0..*6]}">
       <#if fieldConfig.formType == "INPUT">
-            <a-input v-model:value="queryFormData.${fieldConfig.fieldName}" placeholder="${fieldConfig.fieldRemark}" allowClear />
+        <#if fieldConfig.queryType == "LIKE">
+            <a-input v-model:value="queryFormData.${fieldConfig.fieldName}" placeholder="搜索${fieldConfig.fieldRemark}" allowClear />
+        <#else>
+            <a-input v-model:value="queryFormData.${fieldConfig.fieldName}" placeholder="请输入${fieldConfig.fieldRemark}" allowClear />
+        </#if>
       <#elseif fieldConfig.formType == "INPUT_NUMBER">
             <a-input-number v-model:value="queryFormData.${fieldConfig.fieldName}" placeholder="${fieldConfig.fieldRemark}" allowClear />
       <#elseif fieldConfig.formType == "SELECT" || fieldConfig.formType == "RADIO" || fieldConfig.formType == "CHECK_BOX">
@@ -31,16 +35,18 @@
   </#list>
 </#if>
         <a-col :span="6">
-          <a-flex gap="small">
-            <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
-            <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
-          </a-flex>
+          <a-form-item>
+            <a-flex gap="small">
+              <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
+              <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+            </a-flex>
+          </a-form-item>
         </a-col>
       </a-row>
     </a-form>
   </a-card>
   <a-card size="small">
-    <#--  表格数据区  -->
+    <!--  表格数据区  -->
     <MTable ref="tableRef"
             :columns="columns"
             :loadData="loadData"
@@ -48,9 +54,10 @@
             showRowSelection
             @selectedChange="onSelectedChange"
     >
+      <!--  表格上方左侧操作区  -->
       <template #operator>
         <a-space wrap style="margin-bottom: 6px">
-          <a-button type="primary" :icon="h(PlusOutlined)" @click="editFormRef.onOpen()">新增</a-button>
+          <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen()">新增</a-button>
           <a-popconfirm :title=" '确定要删除这 ' + selectedRowKeys.length + ' 条数据吗？' " :disabled ="selectedRowKeys.length < 1" @confirm="batchDelete">
             <a-button danger :icon="h(DeleteOutlined)" :disabled="selectedRowKeys.length < 1">
               批量删除
@@ -59,19 +66,25 @@
         </a-space>
       </template>
       <template #bodyCell="{ column, record, index, text }">
-        <!-- 长文本省略显示 -->
-        <template v-if="text && text.length > 24">
-          <a-tooltip :title="text">
-            <span class="large-text">{{ text }}</span>
-          </a-tooltip>
-        </template>
         <template v-if="column.dataIndex === 'index'">
           <span>{{ index + 1 }}</span>
         </template>
+<#if fieldList??>
+  <#list fieldList as fieldConfig>
+    <#if fieldConfig.showInList == 1 && fieldConfig.ellipsis == 1>
+        <template v-if="column.dataIndex === '${fieldConfig.fieldName}'">
+          <!-- 长文本省略提示 -->
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
+        </template>
+    </#if>
+  </#list>
+</#if>
         <template v-if="column.dataIndex === 'action'">
           <a-space>
             <a-tooltip title="编辑">
-              <a @click="editFormRef.onOpen(record)">编辑</a>
+              <a @click="formRef.onOpen(record)">编辑</a>
             </a-tooltip>
             <a-tooltip title="删除">
               <a-popconfirm title="确定要删除吗？" @confirm="delete${entityName}(record)">
@@ -83,7 +96,7 @@
       </template>
     </MTable>
   </a-card>
-  <EditForm ref="editFormRef" @successful="tableRef.refresh()" />
+  <Form ref="formRef" @successful="tableRef.refresh()" />
 </template>
 
 <script setup>
@@ -92,7 +105,7 @@
   import { h, ref } from "vue"
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
-  import EditForm from "./editForm.vue"
+  import Form from "./form.vue"
   import MTable from "@/components/MTable/index.vue"
 
   // 查询表单相关对象
@@ -104,7 +117,7 @@
     { label: "选项二", value: 2 }
   ]
   // 其他页面操作
-  const editFormRef = ref()
+  const formRef = ref()
 
   /***** 表格相关对象 start *****/
   const tableRef = ref()
@@ -135,9 +148,12 @@
       dataIndex: "${fieldConfig.fieldName}",
       align: "center",
       resizable: true,
+        <#if fieldConfig.ellipsis == 1>
+      ellipsis: true,
+        </#if>
       width: 150,
     },
-    <#else>
+      <#else>
     {
       title: "${fieldConfig.fieldRemark[0..*8]}",
       dataIndex: "${fieldConfig.fieldName}",
@@ -166,7 +182,7 @@
 
   // 提交查询
   const querySubmit = () => {
-    tableRef.value.refresh()
+    tableRef.value.refresh(true)
   }
   // 重置
   const reset = () => {
@@ -175,8 +191,6 @@
   }
   // 加载数据
   const loadData = (parameter) => {
-    // 重新加载数据时，清空之前以选中的行
-    selectedRowKeys.value = []
     // 分页参数
     let param = Object.assign(parameter, queryFormData.value)
     return ${entityName?uncap_first}Api.${entityName?uncap_first}Page(param).then((res) => {
@@ -201,7 +215,7 @@
     })
   }
   // 批量删除
-  const batchDelete = (record) => {
+  const batchDelete = () => {
     if (selectedRowKeys.value.length < 1) {
       message.warning("请至少选择一条数据")
       return
@@ -232,14 +246,5 @@
     background-color: #79D84B;
     border-color: #79D84B;
     color: #fff;
-  }
-  /** 长文本截断,超过200px省略(约26个字母，15个汉字的长度) **/
-  .large-text {
-    display: inline-block;
-    width: 200px;
-    overflow-x: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    cursor: pointer;
   }
 </style>

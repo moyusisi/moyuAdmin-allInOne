@@ -1,22 +1,24 @@
 package com.moyu.boot.system.model.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 角色信息视图对象
+ * 分组信息视图对象
  *
  * @author moyusisi
  * @since 2025-10-06
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SysRoleVO {
+public class SysGroupVO {
 
     /**
      * 主键id
@@ -33,11 +35,31 @@ public class SysRoleVO {
      */
     private String code;
     /**
+     * 直属组织编码
+     */
+    private String orgCode;
+    /**
+     * 直属组织名称
+     */
+    private String orgName;
+    /**
+     * 数据范围(字典 0无限制 1本人数据 2本机构 3本机构及以下 4自定义)
+     */
+    private Integer dataScope;
+    /**
+     * 自定义scope集合,逗号分隔
+     */
+    private String scopeSet;
+    /**
+     * 组织机构层级路径,逗号分隔,父节点在后
+     */
+    private String orgPath;
+    /**
      * 排序顺序
      */
     private Integer sortNum;
     /**
-     * 使用状态（0正常 1停用）
+     * 状态（0正常 1停用）
      */
     private Integer status;
     /**

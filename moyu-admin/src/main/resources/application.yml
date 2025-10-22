@@ -9,9 +9,9 @@ server:
 # spring配置
 spring:
   application:
-    name: moyu-admin
+    name: moyu-boot
   profiles:
-    active: prod
+    active: local
   config:
     import: classpath:codegen.yml
   # mvc配置

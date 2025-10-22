@@ -3,8 +3,7 @@ package ${packageName}.${moduleName}.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -43,7 +42,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
 <#if fieldList??>
     <#list fieldList as fieldConfig>
         <#if fieldConfig.showInQuery == 1>
-        // 指定${fieldConfig.fieldName}查询条件
+        // 指定${fieldConfig.fieldName}查询
             <#if fieldConfig.queryType == "LIKE">
         queryWrapper.like(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
             <#elseif fieldConfig.queryType == 'EQ'>
@@ -72,7 +71,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         </#if>
     </#list>
 </#if>
-        // TODO 是否需要排序
+        // TODO 指定排序
         queryWrapper.orderByDesc(${entityName}::getUpdateTime);
         // 查询
         List<${entityName}> ${entityName?uncap_first}List = this.list(queryWrapper);
@@ -88,7 +87,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
 <#if fieldList??>
     <#list fieldList as fieldConfig>
         <#if fieldConfig.showInQuery == 1>
-        // 指定${fieldConfig.fieldName}查询条件
+        // 指定${fieldConfig.fieldName}查询
             <#if fieldConfig.queryType == "LIKE">
         queryWrapper.like(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
             <#elseif fieldConfig.queryType == 'EQ'>
@@ -117,7 +116,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         </#if>
     </#list>
 </#if>
-        // TODO 是否需要排序
+        // TODO 指定排序
         queryWrapper.orderByDesc(${entityName}::getUpdateTime);
         // 分页查询
         Page<${entityName}> page = new Page<>(param.getPageNum(), param.getPageSize());
@@ -172,20 +171,6 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
     }
 
     /**
-     * 实体对象生成展示对象 entity -> vo
-     */
-    private ${entityName}VO build${entityName}VO(${entityName} entity) {
-        if (entity == null) {
-            return null;
-        }
-        ${entityName}VO vo = new ${entityName}VO();
-    <#list fieldList as fieldConfig>
-        vo.set${fieldConfig.fieldName?cap_first}(entity.get${fieldConfig.fieldName?cap_first}());
-    </#list>
-        return vo;
-    }
-
-    /**
      * 实体对象生成展示对象 entityList -> voList
      */
     private List<${entityName}VO> build${entityName}VOList(List<${entityName}> entityList) {
@@ -194,7 +179,8 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
             return voList;
         }
         for (${entityName} entity : entityList) {
-            voList.add(build${entityName}VO(entity));
+            ${entityName}VO vo = BeanUtil.copyProperties(entity, ${entityName}VO.class);
+            voList.add(vo);
         }
         return voList;
     }

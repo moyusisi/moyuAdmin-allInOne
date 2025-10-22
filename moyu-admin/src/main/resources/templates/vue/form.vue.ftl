@@ -8,14 +8,14 @@
       :destroy-on-close="true"
       @close="onClose"
   >
-    <#--  上方操作区  -->
+    <!--  上方操作区  -->
     <template #extra>
         <a-button type="primary" size="small" @click="onClose"><CloseOutlined /></a-button>
     </template>
-    <#--  数据区  -->
+    <!--  数据区  -->
     <a-spin :spinning="dataLoading">
-      <a-card title="基本信息">
-        <a-form ref="formRef" :model="formData" :label-col="{span: 6}">
+      <a-form ref="formRef" :model="formData" :label-col="{span: 6}">
+        <a-card title="基本信息">
           <a-row :gutter="24">
 <#if fieldList??>
   <#list fieldList as fieldConfig>
@@ -25,7 +25,7 @@
       <#if fieldConfig.formType == "INPUT">
                 <a-input v-model:value="formData.${fieldConfig.fieldName}" placeholder="${fieldConfig.fieldRemark}" allowClear />
       <#elseif fieldConfig.formType == "INPUT_NUMBER">
-                <a-input-number v-model:value="formData.${fieldConfig.fieldName}" placeholder="${fieldConfig.fieldRemark}" allowClear />
+                <a-input-number v-model:value="formData.${fieldConfig.fieldName}" placeholder="${fieldConfig.fieldRemark}" :max="100" />
       <#elseif fieldConfig.formType == "SELECT">
                 <a-select v-model:value="formData.${fieldConfig.fieldName}" placeholder="${fieldConfig.fieldRemark}" :options="exampleOptions" allowClear />
       <#elseif fieldConfig.formType == "RADIO">
@@ -48,10 +48,10 @@
   </#list>
 </#if>
           </a-row>
-        </a-form>
-      </a-card>
+        </a-card>
+      </a-form>
     </a-spin>
-    <#--  底部操作区  -->
+    <!--  底部操作区  -->
     <template #footer>
       <a-flex gap="small" justify="flex-end">
         <a-button type="primary" danger @click="onClose"> 关闭</a-button>
@@ -64,8 +64,8 @@
   import ${entityName?uncap_first}Api from '@/api/${moduleName}/${entityName?uncap_first}Api.js'
 
   import { required } from '@/utils/formRules'
-  import { useSettingsStore } from "@/store";
   import { message } from "ant-design-vue"
+  import { useSettingsStore } from "@/store"
 
   // store
   const settingsStore = useSettingsStore()
@@ -79,30 +79,36 @@
     return settingsStore.menuCollapsed ? `calc(100% - 80px)` : `calc(100% - 210px)`
   })
 
+  // 是否为编辑
+  const edit = ref(false)
   // 表单数据
   const formRef = ref()
   const formData = ref({})
-  const edit = ref(false)
   const dataLoading = ref(false)
   const submitLoading = ref(false)
+  // 下拉框选项
+  const exampleOptions = [
+    { label: "选项一", value: 1 },
+    { label: "选项二", value: 2 }
+  ]
 
   // 打开抽屉
   const onOpen = (row) => {
-    visible.value = true
     if (row) {
       edit.value = true
-    }
-    if (edit.value) {
       title.value = "编辑${entityDesc}"
       // 表单数据赋值
       loadData(row)
     } else {
+      edit.value = false
       title.value = "新增${entityDesc}"
+      // 数据就绪之后显示
+      visible.value = true
     }
   }
   // 关闭抽屉
   const onClose = () => {
-    formRef.value = {}
+    formRef.value.resetFields()
     visible.value = false
   }
   // 加载数据
@@ -113,8 +119,9 @@
     ${entityName?uncap_first}Api.${entityName?uncap_first}Detail(param).then((res) => {
       formData.value = res.data
     }).finally(() => {
-      submitLoading.value = false
       dataLoading.value = false
+      // 数据就绪之后显示
+      visible.value = true
     })
   }
 
@@ -122,12 +129,12 @@
   const onSubmit = () => {
     formRef.value.validate().then(() => {
       submitLoading.value = true
-      // formData.value 加工处理 TODO add edit
+      // formData.value 加工处理 add/edit
       let fun = ${entityName?uncap_first}Api.add${entityName}
-      if (formData.value.id) {
-        // 编辑
+      if (edit.value) {
         fun = ${entityName?uncap_first}Api.edit${entityName}
       }
+      // add/edit 发送不同请求
       fun(formData.value).then((res) => {
         message.success(res.message)
         emit('successful')

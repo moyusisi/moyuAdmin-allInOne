@@ -11,6 +11,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.moyu.boot.common.core.enums.DataScopeEnum;
@@ -32,6 +33,7 @@ import com.moyu.boot.system.model.param.SysRoleParam;
 import com.moyu.boot.system.model.param.SysUserParam;
 import com.moyu.boot.system.model.vo.GroupInfo;
 import com.moyu.boot.system.model.vo.Meta;
+import com.moyu.boot.system.model.vo.SysRoleVO;
 import com.moyu.boot.system.model.vo.UserInfo;
 import com.moyu.boot.system.service.*;
 import lombok.extern.slf4j.Slf4j;
@@ -174,16 +176,20 @@ public class UserCenterServiceImpl implements UserCenterService {
     }
 
     @Override
-    public List<SysRole> userRoleList(String username, String searchKey) {
+    public List<SysRoleVO> userRoleList(String username, String searchKey) {
         // 查询用户所有的角色列表
         Set<String> codeSet = sysRoleService.userAllRoles(username);
-        return sysRoleService.list(SysRoleParam.builder().codeSet(codeSet).searchKey(searchKey).build());
+        return sysRoleService.list(SysRoleParam.builder().codeSet(codeSet).name(searchKey).build());
     }
 
     @Override
     public String switchUserGroup(String groupCode) {
         String username = SecurityUtils.getUsername();
-        SysGroup group = sysGroupService.detail(SysGroupParam.builder().code(groupCode).build());
+        // 通过唯一标识code查询group
+        SysGroup group = sysGroupService.getOne(Wrappers.lambdaQuery(SysGroup.class).eq(SysGroup::getCode, groupCode));
+        if (group == null) {
+            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER, "未查到指定数据");
+        }
         // 角色集
         Set<String> roleSet = sysRoleService.userAllRoles(username);
         // 添加group中的角色
