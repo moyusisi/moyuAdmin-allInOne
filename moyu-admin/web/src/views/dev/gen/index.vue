@@ -46,17 +46,16 @@
              :pagination="paginationRef"
              @change="onChange"
              @resizeColumn="onResizeColumn"
-             :scroll="{ x: 'max-content' }"
+             :scroll="{ x: tableWidth }"
              bordered>
       <template #bodyCell="{ text, record, index, column }">
-        <!-- 长文本省略显示 -->
-        <template v-if="text && text.length > 24">
-          <a-tooltip :title="text">
-            <span class="large-text">{{ text }}</span>
-          </a-tooltip>
-        </template>
         <template v-if="column.dataIndex === 'index'">
           <span>{{ index + 1 }}</span>
+        </template>
+        <template v-if="column.dataIndex === 'entityDesc'">
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'sourceType'">
           <a-tag v-if="record.sourceType === 'TABLE'" color="blue">{{ record.sourceType }}</a-tag>
@@ -98,10 +97,19 @@
   import { h } from "vue"
   import { PlusOutlined, DeleteOutlined, CloudUploadOutlined, CloudDownloadOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
+  import { useSettingsStore } from "@/store"
   import ConfigForm from "./configForm.vue"
   import ImportForm from "./importForm.vue"
   import SqlForm from "./sqlForm.vue"
   import previewCode from "./preview.vue"
+
+  // store
+  const settingsStore = useSettingsStore()
+
+  // 计算属性 表格宽度 超过宽度则会出现x轴上的scroll
+  const tableWidth = computed(() => {
+    return settingsStore.menuCollapsed ? `calc(100% - 80px -24px)` : `calc(100% - 210px -24px)`
+  })
 
   // 查询表单相关对象
   const queryFormRef = ref()
@@ -175,6 +183,7 @@
       dataIndex: 'entityDesc',
       align: 'center',
       resizable: true,
+      ellipsis: true,
       width: 160,
     },
     {
@@ -314,14 +323,5 @@
     background-color: #79D84B;
     border-color: #79D84B;
     color: #fff;
-  }
-  /** 长文本截断,超过200px省略(约26个字母，15个汉字的长度) **/
-  .large-text {
-    display: inline-block;
-    width: 200px;
-    overflow-x: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    cursor: pointer;
   }
 </style>

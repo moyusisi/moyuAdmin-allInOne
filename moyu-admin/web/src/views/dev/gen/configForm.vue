@@ -105,6 +105,9 @@
               <template v-if="column.dataIndex === 'showInList'">
                 <a-checkbox v-model:checked="record.showInList"/>
               </template>
+              <template v-if="column.dataIndex === 'ellipsis'">
+                <a-checkbox v-model:checked="record.ellipsis"/>
+              </template>
               <template v-if="column.dataIndex === 'showInForm'">
                 <a-checkbox v-model:checked="record.showInForm"/>
               </template>
@@ -228,27 +231,33 @@ const columns = [
     width: 50
   },
   {
+    title: '省略提示',
+    align: 'center',
+    dataIndex: 'ellipsis',
+    width: 50
+  },
+  {
     title: '表单填写',
     align: 'center',
     dataIndex: 'showInForm',
     width: 50
   },
   {
-    title: '必填',
+    title: '是否必填',
     align: 'center',
     dataIndex: 'required',
     width: 50
   },
   {
-    title: '查询方式',
-    align: 'center',
-    dataIndex: 'queryType',
-    width: 130
-  },
-  {
     title: '表单类型',
     align: 'center',
     dataIndex: 'formType',
+    width: 130
+  },
+  {
+    title: '查询方式',
+    align: 'center',
+    dataIndex: 'queryType',
     width: 130
   },
   {

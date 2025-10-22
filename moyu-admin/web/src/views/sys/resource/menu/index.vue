@@ -1,35 +1,39 @@
 <template>
   <!-- 上方模块选择 -->
   <a-card size="small">
-    <a-space>
+    <a-flex>
       <a-radio-group v-model:value="moduleId" button-style="solid">
         <a-radio-button v-for="module in moduleList" :key="module.code" :value="module.code" @click="moduleClick(module)">
           <component :is="module.icon" /> {{ module.name }}
         </a-radio-button>
       </a-radio-group>
-    </a-space>
+    </a-flex>
   </a-card>
   <!-- 内容区域 -->
   <a-card size="small">
-    <STable
-      ref="tableRef"
-      :columns="columns"
-      :data="loadData"
-      :alert="options.alert.show"
-      bordered
-      :row-key="(node) => node.code"
-      :show-pagination="false"
-      :tool-config="toolConfig"
-      :row-selection="options.rowSelection"
-      :scroll="{ x: 'max-content' }"
+    <!--  表格数据区  -->
+    <MTable ref="tableRef"
+            :columns="columns"
+            :loadData="loadData"
+            :row-key="(row) => row.id"
+            :pagination="false"
+            showRowSelection
+            @selectedChange="onSelectedChange"
     >
       <template #operator>
-        <a-space>
-          <a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(module, 2, module.code)">新增菜单</a-button>
-          <BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDeleteMenu" />
+        <a-space wrap style="margin-bottom: 6px">
+          <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen(null, module, 2, module.code)">新增菜单</a-button>
+          <BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDelete" />
         </a-space>
       </template>
-      <template #bodyCell="{ column, record : node }">
+      <!--  每行的记录重命名为node,node不一定有id  -->
+      <template #bodyCell="{ column, record : node, index, text }">
+        <template v-if="column.dataIndex === 'name'">
+          <!-- 长文本省略提示 -->
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
+        </template>
         <template v-if="column.dataIndex === 'resourceType'">
           <a-tag v-if="node.resourceType === 1" color="orange">模块</a-tag>
           <a-tag v-if="node.resourceType === 2" color="cyan">目录</a-tag>
@@ -39,16 +43,25 @@
           <a-tag v-if="node.resourceType === 6" color="purple">按钮</a-tag>
         </template>
         <template v-if="column.dataIndex === 'code'">
-          <a-tag v-if="node.code" :bordered="false">{{ node.code }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="node.code" :bordered="false">{{ node.code }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'path'">
-          <a-tag v-if="node.path" :bordered="false">{{ node.path }}</a-tag>
+          <!-- 长文本省略提示 -->
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="node.path" :bordered="false">{{ node.path }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'component'">
-          <a-tag v-if="node.path" :bordered="false">{{ node.component }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="node.component" :bordered="false">{{ node.component }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'permission'">
-          <a-tag v-if="node.permission" :bordered="false">{{ node.permission }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="node.permission" :bordered="false">{{ node.permission }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'icon'">
           <span v-if="node.icon && node.icon !== '#'" >
@@ -66,15 +79,15 @@
         <template v-if="column.dataIndex === 'action'">
           <a-space>
             <a-tooltip v-if="node.resourceType === 2" title="添加菜单">
-              <a style="color:#53C61D;" @click="addFormRef.onOpen(module, 3, node.code)"><PlusSquareOutlined /></a>
+              <a style="color:#53C61D;" @click="formRef.onOpen(null, module, 3, node.code)"><PlusSquareOutlined /></a>
               <a-divider type="vertical" />
             </a-tooltip>
             <a-tooltip v-else-if="node.resourceType === 3" title="添加按钮">
-              <a style="color:#53C61D;" @click="addFormRef.onOpen(module, 6, node.code)"><PlusSquareOutlined /></a>
+              <a style="color:#53C61D;" @click="formRef.onOpen(null, module, 6, node.code)"><PlusSquareOutlined /></a>
               <a-divider type="vertical" />
             </a-tooltip>
             <a-tooltip title="编辑">
-              <a @click="editFormRef.onOpen(node, module)"><FormOutlined /></a>
+              <a @click="formRef.onOpen(node, module)"><FormOutlined /></a>
             </a-tooltip>
             <a-divider type="vertical" />
             <a-tooltip title="删除">
@@ -85,92 +98,32 @@
           </a-space>
         </template>
       </template>
-    </STable>
+    </MTable>
   </a-card>
-  <AddForm ref="addFormRef" @successful="handleSuccess" />
-  <EditForm ref="editFormRef" @successful="handleSuccess" />
+  <Form ref="formRef" @successful="handleSuccess" />
 </template>
 
 <script setup>
   import resourceApi from '@/api/sys/resourceApi.js'
 
-  import { h } from 'vue'
-  import { PlusOutlined } from '@ant-design/icons-vue'
-  import AddForm from './addForm.vue'
-  import EditForm from './editForm.vue'
+  import { h, ref } from "vue"
+  import { PlusOutlined, DeleteOutlined } from "@ant-design/icons-vue"
+  import { message } from "ant-design-vue"
   import { useMenuStore } from '@/store/menu'
-  import { message } from "ant-design-vue";
+  import Form from './form.vue'
   import BatchDeleteButton from '@/components/BatchDeleteButton/index.vue'
-  import STable from "@/components/STable/index.vue"
+  import MTable from "@/components/MTable/index.vue"
 
-  const queryForm = ref({})
-  const tableRef = ref()
-  const addFormRef = ref()
-  const editFormRef = ref()
-  const moduleId = ref()
-  const module = ref()
+  // 查询表单相关对象
   const moduleList = ref([])
-  const toolConfig = { refresh: true, height: true, columnSetting: false, striped: false }
-  const columns = [
-    {
-      title: '显示名称',
-      dataIndex: 'name',
-    },
-    {
-      title: '类型',
-      dataIndex: 'resourceType',
-      align: 'center',
-      width: 80
-    },
-    {
-      title: '图标',
-      dataIndex: 'icon',
-      align: 'center',
-      width: 80
-    },
-    {
-      title: '唯一编码',
-      dataIndex: 'code',
-      width: 200
-    },
-    {
-      title: '地址',
-      dataIndex: 'path',
-      ellipsis: true,
-      width: 150
-    },
-    {
-      title: '组件',
-      dataIndex: 'component',
-      ellipsis: true,
-      width: 150
-    },
-    {
-      title: '权限',
-      dataIndex: 'permission',
-      ellipsis: true,
-      width: 150
-    },
-    {
-      title: '是否可见',
-      dataIndex: 'visible',
-      align: 'center',
-      width: 100
-    },
-    {
-      title: '排序',
-      dataIndex: 'sortNum',
-      sorter: true,
-      align: 'center',
-      width: 80
-    },
-    {
-      title: '操作',
-      dataIndex: 'action',
-      align: 'center',
-      width: 150
-    }
-  ]
+  const module = ref()
+  const moduleId = ref()
+  // 其他页面操作
+  const formRef = ref()
+
+  /***** 表格相关对象 start *****/
+  const tableRef = ref()
+  // 已选中的行
   let selectedRowKeys = ref([])
   // 列表选择配置
   const options = {
@@ -186,26 +139,110 @@
       }
     }
   }
-  const loadData = async (parameter) => {
+  // 表格列配置
+  const columns = [
+    {
+      title: '显示名称',
+      dataIndex: 'name',
+      resizable: true,
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: '类型',
+      dataIndex: 'resourceType',
+      align: 'center',
+      width: 80
+    },
+    {
+      title: '图标',
+      dataIndex: 'icon',
+      align: 'center',
+      width: 50
+    },
+    {
+      title: '唯一编码',
+      dataIndex: 'code',
+      resizable: true,
+      ellipsis: true,
+      width: 150
+    },
+    {
+      title: '地址',
+      dataIndex: 'path',
+      resizable: true,
+      ellipsis: true,
+      width: 150
+    },
+    {
+      title: '组件',
+      dataIndex: 'component',
+      resizable: true,
+      ellipsis: true,
+      width: 150
+    },
+    {
+      title: '权限',
+      dataIndex: 'permission',
+      resizable: true,
+      ellipsis: true,
+      width: 150
+    },
+    {
+      title: '是否可见',
+      dataIndex: 'visible',
+      align: 'center',
+      width: 80
+    },
+    {
+      title: '排序',
+      dataIndex: 'sortNum',
+      align: 'center',
+      width: 80
+    },
+    {
+      title: '操作',
+      dataIndex: 'action',
+      align: 'center',
+      width: 150
+    }
+  ]
+
+  // 初始化
+  const init = async () => {
     if (!moduleId.value) {
       // 若无moduleId, 则查询module列表第一个module的code作为默认moduleId
-      const res = await resourceApi.moduleList()
-      moduleList.value = res.data
-      module.value = res.data.length > 0 ? res.data[0] : null
+      const moduleRes = await resourceApi.moduleList()
+      moduleList.value = moduleRes.data
+      module.value = moduleRes.data.length > 0 ? moduleRes.data[0] : null
       moduleId.value = module.value.code
-      queryForm.value.module = moduleId.value
-      const treeRes = await resourceApi.menuTree(Object.assign(parameter, queryForm.value))
+    }
+  }
+  // 加载数据
+  const loadData = async (parameter) => {
+    // 分页参数
+    let param = Object.assign({}, parameter)
+    if (!moduleId.value) {
+      await init()
+      param.module = moduleId.value
+      const treeRes = await resourceApi.menuTree(param)
       return treeRes.data ? treeRes.data : []
     } else {
+      param.module = moduleId.value
       // menuTree获取到的data中的id和parentId均为code
-      const treeRes = await resourceApi.menuTree(Object.assign(parameter, queryForm.value))
+      const treeRes = await resourceApi.menuTree(param)
       return treeRes.data ? treeRes.data : []
     }
+  }
+  // 选中行发生变化
+  const onSelectedChange = (selectedKeys, selectedRows) => {
+    selectedRowKeys.value = selectedKeys
+    // console.log('onSelectedChange,selectedKeys:', selectedKeys);
   }
   // 切换应用标签查询菜单列表
   const moduleClick = (value) => {
     module.value = value
-    queryForm.value.module = module.value.code
+    moduleId.value = module.value.code
     tableRef.value.refresh(true)
   }
   // 单个删除
@@ -213,16 +250,20 @@
     let data = { codes: [node.code] }
     resourceApi.deleteMenuTree(data).then((res) => {
       message.success(res.message)
-      tableRef.value.refresh(true)
+      tableRef.value.refresh()
       refreshCacheMenu()
     })
   }
   // 批量删除
-  const batchDeleteMenu = (params) => {
+  const batchDelete = () => {
+    if (selectedRowKeys.value.length < 1) {
+      message.warning("请至少选择一条数据")
+      return
+    }
     let data = { codes: selectedRowKeys.value }
     resourceApi.deleteMenuTree(data).then((res) => {
       message.success(res.message)
-      tableRef.value.clearRefreshSelected()
+      tableRef.value.refresh()
       refreshCacheMenu()
     })
   }
@@ -239,7 +280,11 @@
 </script>
 
 <style scoped>
+/** 后代选择器 **/
+.ant-card .ant-form {
+  margin-bottom: -12px !important;
+}
 .ant-form-item {
-  margin-bottom: 0 !important;
+  margin-bottom: 12px !important;
 }
 </style>

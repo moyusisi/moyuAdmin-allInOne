@@ -48,6 +48,7 @@ router.beforeEach(async (to, from) => {
         // router.addRoute(route);
         router.addRoute('layout', route)
       });
+      // console.log("加载异步路由...")
       // console.log(asyncRoutes)
       // console.log(router.getRoutes())
       // 由于新增加了路由，所以重新导航

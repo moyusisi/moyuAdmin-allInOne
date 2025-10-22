@@ -11,48 +11,72 @@
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="searchKey" label="名称关键词">
-            <a-input v-model:value="queryFormData.searchKey" placeholder="请输入关键词" allowClear />
+          <a-form-item name="name" label="显示名称">
+            <a-input v-model:value="queryFormData.name" placeholder="搜索显示名称" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="8">
-          <a-space>
-            <a-button type="primary" :icon="h(SearchOutlined)" @click="tableRef.refresh(true)">查询</a-button>
-            <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
-          </a-space>
+          <a-form-item>
+            <a-flex gap="small">
+              <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
+              <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+            </a-flex>
+          </a-form-item>
         </a-col>
       </a-row>
     </a-form>
   </a-card>
   <a-card size="small">
-    <STable
+    <!--  表格数据区  -->
+    <MTable
         ref="tableRef"
         :columns="columns"
-        :data="loadData"
-        :alert="options.alert.show"
-        bordered
-        :row-key="(record) => record.id"
-        :tool-config="toolConfig"
-        :row-selection="options.rowSelection"
-        :scroll="{ x: 'max-content' }"
+        :loadData="loadData"
+        :row-key="(row) => row.id"
+        showRowSelection
+        @selectedChange="onSelectedChange"
     >
+      <!--  表格上方左侧操作区  -->
       <template #operator>
-        <a-space>
-          <a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(module)">新增按钮</a-button>
-          <BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="deleteBatchButton" />
+        <a-space wrap style="margin-bottom: 6px">
+          <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen(null, module)">新增按钮</a-button>
+          <a-popconfirm :title=" '确定要删除这 ' + selectedRowKeys.length + ' 条数据吗？' " :disabled ="selectedRowKeys.length < 1" @confirm="batchDelete">
+            <a-button danger :icon="h(DeleteOutlined)" :disabled="selectedRowKeys.length < 1">
+              批量删除
+            </a-button>
+          </a-popconfirm>
         </a-space>
       </template>
-      <template #bodyCell="{ column, record }">
+      <template #bodyCell="{ column, record, index, text }">
+        <template v-if="column.dataIndex === 'name'">
+          <!-- 长文本省略提示 -->
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
+        </template>
         <template v-if="column.dataIndex === 'path'">
-          <a-tag v-if="record.path" :bordered="false">{{ record.path }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="record.path" :bordered="false">{{ record.path }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'permission'">
-          <a-tag v-if="record.permission" :bordered="false">{{ record.permission }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="record.permission" :bordered="false">{{ record.permission }}</a-tag>
+          </a-tooltip>
+        </template>
+        <template v-if="column.dataIndex === 'status'">
+          <a-tag v-if="record.status === 0" color="green">正常</a-tag>
+          <a-tag v-else>已停用</a-tag>
+        </template>
+        <template v-if="column.dataIndex === 'remark'">
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'action'">
           <a-space>
             <a-tooltip title="编辑">
-              <a @click="editFormRef.onOpen(record, module)"><FormOutlined /></a>
+              <a @click="formRef.onOpen(record, module)"><FormOutlined /></a>
             </a-tooltip>
             <a-divider type="vertical" />
             <a-tooltip title="删除">
@@ -63,57 +87,77 @@
           </a-space>
         </template>
       </template>
-    </STable>
+    </MTable>
   </a-card>
-  <AddForm ref="addFormRef" @successful="tableRef.refresh(true)" />
-  <EditForm ref="editFormRef" @successful="tableRef.refresh(true)" />
+  <Form ref="formRef" @successful="tableRef.refresh(true)" />
 </template>
 
 <script setup>
   import resourceApi from '@/api/sys/resourceApi.js'
-  import { h } from "vue";
-  import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
-  import AddForm from "./addForm.vue";
-  import EditForm from "./editForm.vue";
-  import { message } from "ant-design-vue";
-  import BatchDeleteButton from "@/components/BatchDeleteButton/index.vue"
-  import STable from "@/components/STable/index.vue"
 
+  import { h, ref } from "vue"
+  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
+  import { message } from "ant-design-vue"
+  import Form from "./form.vue"
+  import MTable from "@/components/MTable/index.vue"
+
+  // 查询表单相关对象
+  const queryFormRef = ref()
   // resourceType=6表示按钮
   const queryFormData = ref({ resourceType: 6 })
-  const addFormRef = ref()
-  const editFormRef = ref()
-  const queryFormRef = ref()
   const moduleId = ref()
   const module = ref()
   const moduleList = ref([])
+  // 其他页面操作
+  const formRef = ref()
+
+  /***** 表格相关对象 start *****/
   const tableRef = ref()
-  const toolConfig = { refresh: true, height: true, columnSetting: false, striped: false }
+  // 已选中的行
+  const selectedRowKeys = ref([])
+  // 表格列配置
   const columns = [
     {
-      title: '显示名称',
-      dataIndex: 'name',
+      title: "显示名称",
+      dataIndex: "name",
       resizable: true,
-      width: 180
-    },
-    {
-      title: '接口地址',
-      dataIndex: 'path',
       ellipsis: true,
-      width: 150
+      width: 150,
     },
     {
-      title: '权限',
-      dataIndex: 'permission',
+      title: "接口地址",
+      dataIndex: "path",
+      resizable: true,
       ellipsis: true,
-      width: 150
+      width: 150,
     },
     {
-      title: '排序',
-      dataIndex: 'sortNum',
-      sorter: true,
-      align: 'center',
-      width: 80
+      title: "权限",
+      dataIndex: "permission",
+      resizable: true,
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: "状态",
+      dataIndex: "status",
+      align: "center",
+      resizable: true,
+      width: 100,
+    },
+    {
+      title: "排序顺序",
+      dataIndex: "sortNum",
+      align: "center",
+      width: 100
+    },
+    {
+      title: "备注",
+      dataIndex: "remark",
+      align: "center",
+      resizable: true,
+      ellipsis: true,
+      width: 150,
     },
     {
       title: '变更时间',
@@ -128,41 +172,56 @@
       width: 150
     }
   ]
+  /***** 表格相关对象 end *****/
 
-  let selectedRowKeys = ref([])
-  // 列表选择配置
-  const options = {
-    alert: {
-      show: false,
-      clear: () => {
-        selectedRowKeys = ref([])
-      }
-    },
-    rowSelection: {
-      onChange: (selectedRowKey, selectedRows) => {
-        selectedRowKeys.value = selectedRowKey
-      }
-    }
-  }
+  // 加载完毕调用
+  onMounted(() => {
 
-  const loadData = async (parameter) => {
+  })
+
+  // 初始化
+  const init = async () => {
     if (!moduleId.value) {
       // 若无moduleId, 则查询module列表第一个module的code作为默认moduleId
       const moduleRes = await resourceApi.moduleList()
       moduleList.value = moduleRes.data
       module.value = moduleRes.data.length > 0 ? moduleRes.data[0] : null
       moduleId.value = module.value.code
-      queryFormData.value.module = moduleId.value
-      return resourceApi.resourcePage(Object.assign(parameter, queryFormData.value)).then((res) => {
+    }
+  }
+
+  // 提交查询
+  const querySubmit = () => {
+    tableRef.value.refresh(true)
+  }
+  // 重置
+  const reset = () => {
+    queryFormRef.value.resetFields()
+    tableRef.value.refresh(true)
+  }
+  const loadData = async (parameter) => {
+    // 分页参数
+    let param = Object.assign(parameter, queryFormData.value)
+    if (!moduleId.value) {
+      await init()
+      param.module = moduleId.value
+      return resourceApi.resourcePage(param).then((res) => {
+        // res.data 为 {total, records}
         return res.data
       })
     } else {
-      return resourceApi.resourcePage(Object.assign(parameter, queryFormData.value)).then((res) => {
+      param.module = moduleId.value
+      return resourceApi.resourcePage(param).then((res) => {
+        // res.data 为 {total, records}
         return res.data
       })
     }
   }
-
+  // 选中行发生变化
+  const onSelectedChange = (selectedKeys, selectedRows) => {
+    selectedRowKeys.value = selectedKeys
+    // console.log('onSelectedChange,selectedKeys:', selectedKeys);
+  }
   // 模块选择发生变更
   const onModuleChange = (value) => {
     queryFormData.value.module = value
@@ -170,31 +229,30 @@
     tableRef.value.refresh(true)
   }
 
-  // 重置
-  const reset = () => {
-    queryFormRef.value.resetFields()
-    tableRef.value.refresh(true)
-  }
   // 删除
   const deleteButton = (record) => {
     let data = { ids: [record.id] }
     resourceApi.deleteResource(data).then((res) => {
       message.success(res.message)
-      tableRef.value.refresh(true)
+      tableRef.value.refresh()
     })
   }
   // 批量删除
-  const deleteBatchButton = (params) => {
+  const batchDelete = () => {
     let data = { ids: selectedRowKeys.value }
     resourceApi.deleteResource(data).then((res) => {
       message.success(res.message)
-      tableRef.value.clearRefreshSelected()
+      tableRef.value.refresh()
     })
   }
 </script>
 
 <style scoped>
-.ant-form-item {
-  margin-bottom: 0 !important;
-}
+  /** 后代选择器 **/
+  .ant-card .ant-form {
+    margin-bottom: -12px !important;
+  }
+  .ant-form-item {
+    margin-bottom: 12px !important;
+  }
 </style>

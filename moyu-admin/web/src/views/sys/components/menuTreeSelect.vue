@@ -3,9 +3,9 @@
   <a-tree-select
       v-model:value="selectValue"
       v-model:treeExpandedKeys="defaultExpandedKeys"
+      listHeight="400"
       placeholder="请选择"
       allow-clear
-      :listHeight="400"
       :tree-data="treeData"
       :field-names="{ children: 'children', label: 'name', value: 'code' }"
       :tree-line="{ showLeafIcon:false }"
@@ -16,9 +16,9 @@
 </template>
 
 <script setup lang="ts">
+import resourceApi from "@/api/sys/resourceApi"
 
 import { TreeSelect } from "ant-design-vue"
-import userCenterApi from "@/api/sys/userCenterApi"
 
 const props = defineProps({
   // 是否多选
@@ -29,10 +29,9 @@ const props = defineProps({
   defaultValue: {
     type: [String, Array]
   },
-  // 树的节点数据
-  treeData: {
-    type: Array,
-    default: []
+  // 模块编码
+  moduleCode: {
+    type: String,
   }
 })
 
@@ -49,25 +48,30 @@ const selectValue = ref()
 const treeData = ref()
 
 onMounted(() => {
-  // 若传了treeData则以传递的为准,否则内部加载
-  if (props.treeData && props.treeData.length > 0) {
-    treeData.value = props.treeData
-    defaultExpandedKeys.value = [treeData.value[0]?.code]
-  } else {
-    loadTreeData()
-  }
+  loadTreeData()
   selectValue.value = props.defaultValue
+  console.log(selectValue.value)
 })
 
 // 加载左侧的树
 const loadTreeData = () => {
   // 获取当前登陆者的orgTree 获取所有组织机构可使用orgApi.orgTree
-  userCenterApi.loginUserOrgTree().then((res) => {
+  resourceApi.menuTreeSelector({}).then((res) => {
     if (res.data !== null) {
-      treeData.value = res.data
-      defaultExpandedKeys.value = [res.data[0]?.code]
+      const moduleList = res.data
+      if (props.moduleCode) {
+        // 指定了模块的情况
+        const moduleMenu = moduleList.find((e) => e.code === props.moduleCode)
+        treeData.value = [moduleMenu]
+        defaultExpandedKeys.value = [moduleMenu.code]
+      } else {
+        // 未指定模块的情况
+        treeData.value = moduleList
+        defaultExpandedKeys.value = [moduleList[0]?.code]
+      }
     }
   })
+
 }
 
 // 重新加载树的数据
@@ -76,7 +80,6 @@ const refresh = () => {
 }
 // 暴露子组件的方法
 defineExpose({
-  treeData,
   refresh
 })
 </script>

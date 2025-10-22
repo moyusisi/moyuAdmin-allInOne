@@ -1,8 +1,7 @@
 <template>
   <a-config-provider :locale="locale" :theme="{token: { borderRadius: 2 }}">
     <a-app id="app" class="app">
-      <a-watermark :content="watermarkEnabled && userInfo ? [userInfo.name, userInfo.account] : undefined"
-                   class="admin-ui-main">
+      <a-watermark :content="watermarkEnabled && userInfo ? [userInfo.name, userInfo.account] : undefined" class="admin-ui">
         <router-view/>
       </a-watermark>
     </a-app>

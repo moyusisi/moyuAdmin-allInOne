@@ -1,7 +1,7 @@
 <template>
   <!-- 经典布局 -->
   <a-layout>
-    <!-- 左侧侧边栏 -->
+    <!-- 左侧侧边栏 a-layout-sider -->
     <SideBar />
     <!-- 右侧布局 -->
     <a-layout>

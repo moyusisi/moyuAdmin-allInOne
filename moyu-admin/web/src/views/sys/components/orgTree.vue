@@ -1,6 +1,6 @@
 <template>
   <!-- 组织树 -->
-  <a-card size="small" :loading="cardLoading" :bodyStyle="{paddingLeft:'5px', paddingRight:'5px'}" class="admin-ui-main">
+  <a-card size="small" :loading="cardLoading" :bodyStyle="{paddingLeft:'5px', paddingRight:'5px'}" style="min-width:200px; height: 100%;">
     <a-tree
         v-if="treeData.length > 0"
         v-model:expandedKeys="defaultExpandedKeys"
@@ -13,6 +13,12 @@
       <template #icon="{ orgType, selected }">
         <span v-if="orgType === 1" style="color:#1980FF;"><ClusterOutlined /></span>
 <!--        <span v-else-if="orgType === 2" style="color:#87D068;"><ApartmentOutlined /></span>-->
+      </template>
+      <template #title="{ name, key }">
+        <!-- 长文本省略提示 -->
+        <a-tooltip :title="name" placement="topLeft">
+          <span>{{ name }}</span>
+        </a-tooltip>
       </template>
     </a-tree>
     <a-empty v-else :image="Empty.PRESENTED_IMAGE_SIMPLE" />

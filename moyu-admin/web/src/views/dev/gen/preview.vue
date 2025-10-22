@@ -70,7 +70,7 @@
     </a-spin>
     <template #footer>
       <a-flex gap="small" justify="flex-end">
-        <a-button :disabled="writeRunning" @click="onCancel">取消</a-button>
+        <a-button :disabled="writeRunning" @click="onCancel">关闭</a-button>
         <a-button type="primary" :disabled="!canWriteToLocal || writeRunning" @click="onOk">写入</a-button>
       </a-flex>
     </template>

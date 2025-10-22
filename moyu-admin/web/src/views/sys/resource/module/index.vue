@@ -1,67 +1,88 @@
 <template>
   <a-card size="small">
-    <a-form ref="searchFormRef" :model="searchFormData">
+    <a-form ref="queryFormRef" :model="queryFormData">
       <a-row :gutter="24">
-        <a-col :span="8">
-          <a-form-item name="searchKey" label="名称关键词">
-            <a-input v-model:value="searchFormData.searchKey" placeholder="请输入关键词" allowClear />
+        <a-col :span="6">
+          <a-form-item name="name" label="模块名称">
+            <a-input v-model:value="queryFormData.name" placeholder="搜索模块名称" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
           <a-form-item name="status" label="使用状态">
-            <a-select v-model:value="searchFormData.status" placeholder="请选择状态" :options="statusOptions" allowClear />
+            <a-select v-model:value="queryFormData.status" placeholder="请选择状态" :options="statusOptions" allowClear />
           </a-form-item>
         </a-col>
-        <a-col :span="8">
-          <a-space>
-            <a-button type="primary" :icon="h(SearchOutlined)" @click="tableRef.refresh(true)">查询</a-button>
-            <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
-          </a-space>
+        <a-col :span="6">
+          <a-form-item>
+            <a-flex gap="small">
+              <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
+              <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+            </a-flex>
+          </a-form-item>
         </a-col>
       </a-row>
     </a-form>
   </a-card>
   <a-card size="small">
-    <STable
-      ref="tableRef"
-      :columns="columns"
-      :data="loadData"
-      :alert="options.alert.show"
-      bordered
-      :row-key="(record) => record.id"
-      :tool-config="toolConfig"
-      :row-selection="options.rowSelection"
+    <MTable ref="tableRef"
+            :columns="columns"
+            :loadData="loadData"
+            :row-key="(row) => row.id"
+            showRowSelection
+            @selectedChange="onSelectedChange"
     >
+      <!--  表格上方左侧操作区  -->
       <template #operator>
-        <a-space>
-          <a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen()">新增模块</a-button>
-          <BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="deleteBatchModule" />
+        <a-space wrap style="margin-bottom: 6px">
+          <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen()">新增模块</a-button>
+          <a-popconfirm :title=" '确定要删除这 ' + selectedRowKeys.length + ' 条数据吗？' " :disabled ="selectedRowKeys.length < 1" @confirm="batchDelete">
+            <a-button danger :icon="h(DeleteOutlined)" :disabled="selectedRowKeys.length < 1">
+              批量删除
+            </a-button>
+          </a-popconfirm>
         </a-space>
       </template>
-      <template #bodyCell="{ column, record }">
+      <template #bodyCell="{ column, record, index, text }">
         <template v-if="column.dataIndex === 'icon'">
           <span v-if="record.icon && record.icon !== '#'" >
             <component :is="record.icon"/>
           </span>
           <span v-else />
         </template>
+        <template v-if="column.dataIndex === 'name'">
+          <!-- 长文本省略提示 -->
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
+        </template>
         <template v-if="column.dataIndex === 'code'">
-          <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'path'">
-          <a-tag v-if="record.path" :bordered="false">{{ record.path }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="record.path" :bordered="false">{{ record.path }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'link'">
-          <a-tag v-if="record.link" :bordered="false">{{ record.link }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="record.link" :bordered="false">{{ record.link }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'status'">
           <a-tag v-if="record.status === 0" color="green">正常</a-tag>
           <a-tag v-else>已停用</a-tag>
         </template>
+        <template v-if="column.dataIndex === 'remark'">
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
+        </template>
         <template v-if="column.dataIndex === 'action'">
           <a-space>
             <a-tooltip title="编辑">
-              <a @click="editFormRef.onOpen(record)"><FormOutlined /></a>
+              <a @click="formRef.onOpen(record)"><FormOutlined /></a>
             </a-tooltip>
             <a-divider type="vertical" />
             <a-tooltip title="删除">
@@ -72,30 +93,35 @@
           </a-space>
         </template>
       </template>
-    </STable>
+    </MTable>
   </a-card>
-  <AddForm ref="addFormRef" @successful="tableRef.refresh(true)" />
-  <EditForm ref="editFormRef" @successful="tableRef.refresh(true)" />
+  <Form ref="formRef" @successful="tableRef.refresh(true)" />
 </template>
 
 <script setup>
   import resourceApi from '@/api/sys/resourceApi.js'
-  import { h } from "vue";
-  import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
-  import AddForm from "@/views/sys/resource/module/addForm.vue";
-  import EditForm from "@/views/sys/resource/module/editForm.vue";
-  import { message } from "ant-design-vue";
-  import BatchDeleteButton from "@/components/BatchDeleteButton/index.vue"
-  import STable from "@/components/STable/index.vue"
+
+  import { h, ref } from "vue"
+  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
+  import { message } from "ant-design-vue"
+  import Form from "@/views/sys/resource/module/form.vue"
+  import MTable from "@/components/MTable/index.vue"
 
   // resourceType=1标识模块
-  const searchFormData = ref({ resourceType: 1 })
-  const addFormRef = ref()
-  const editFormRef = ref()
-  const searchFormRef = ref()
+  const queryFormRef = ref()
+  const queryFormData = ref({ resourceType: 1 })
+  // 使用状态options（0正常 1停用）
+  const statusOptions = [
+    { label: "正常", value: 0 },
+    { label: "已停用", value: 1 }
+  ]
+  // 其他页面操作
+  const formRef = ref()
+
+  /***** 表格相关对象 start *****/
   const tableRef = ref()
-  const toolConfig = { refresh: true, height: true, columnSetting: false, striped: false }
-  const columns = [
+  let selectedRowKeys = ref([])
+  const columns = ref([
     {
       title: '图标',
       dataIndex: 'icon',
@@ -103,37 +129,55 @@
       width: 50
     },
     {
-      title: '模块名称',
-      dataIndex: 'name',
-      width: 100
+      title: "模块名称",
+      dataIndex: "name",
+      align: "center",
+      resizable: true,
+      ellipsis: true,
+      width: 100,
     },
     {
-      title: '模块编码',
-      dataIndex: 'code',
-      width: 100
+      title: "唯一编码",
+      dataIndex: "code",
+      align: "center",
+      resizable: true,
+      width: 100,
     },
     {
-      title: '路径地址',
-      dataIndex: 'path',
-      width: 100
+      title: "路径地址",
+      dataIndex: "path",
+      align: "center",
+      resizable: true,
+      width: 150,
     },
     {
-      title: '模块主页',
-      dataIndex: 'link',
-      width: 200
+      title: "模块主页",
+      dataIndex: "link",
+      align: "center",
+      resizable: true,
+      width: 200,
     },
     {
-      title: '排序',
-      dataIndex: 'sortNum',
-      sorter: true,
-      align: 'center',
-      width: 80
+      title: "状态",
+      dataIndex: "status",
+      align: "center",
+      resizable: true,
+      width: 100,
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      align: 'center',
-      width: 100
+      title: "排序顺序",
+      dataIndex: "sortNum",
+      align: "center",
+      resizable: true,
+      width: 100,
+    },
+    {
+      title: "备注",
+      dataIndex: "remark",
+      align: "center",
+      resizable: true,
+      ellipsis: true,
+      width: 150,
     },
     {
       title: '操作',
@@ -141,57 +185,62 @@
       align: 'center',
       width: 100
     }
-  ]
-  let selectedRowKeys = ref([])
-  // 使用状态options（0正常 1停用）
-  const statusOptions = [
-    { label: "正常", value: 0 },
-    { label: "已停用", value: 1 }
-  ]
-  // 列表选择配置
-  const options = {
-    alert: {
-      show: false,
-      clear: () => {
-        selectedRowKeys = ref([])
+  ])
+  /***** 表格相关对象 end *****/
+
+      // 提交查询
+  const querySubmit = () => {
+        tableRef.value.refresh(true)
       }
-    },
-    rowSelection: {
-      onChange: (selectedRowKey, selectedRows) => {
-        selectedRowKeys.value = selectedRowKey
-      }
-    }
-  }
-  const loadData = (parameter) => {
-    return resourceApi.resourcePage(Object.assign(parameter, searchFormData.value)).then((res) => {
-      return res.data
-    })
-  }
   // 重置
   const reset = () => {
-    searchFormRef.value.resetFields()
+    queryFormRef.value.resetFields()
     tableRef.value.refresh(true)
+  }
+  // 加载数据
+  const loadData = (parameter) => {
+    // 分页参数
+    let param = Object.assign(parameter, queryFormData.value)
+    return resourceApi.resourcePage(param).then((res) => {
+      // res.data 为 {total, records}
+      return res.data
+    }).catch((err) => {
+      console.error(err)
+    })
+  }
+  // 选中行发生变化
+  const onSelectedChange = (selectedKeys, selectedRows) => {
+    selectedRowKeys.value = selectedKeys
+    // console.log('onSelectedChange,selectedKeys:', selectedKeys);
   }
   // 删除
   const deleteModule = (record) => {
     let data = { ids: [record.id] }
     resourceApi.deleteResource(data).then((res) => {
       message.success(res.message)
-      tableRef.value.refresh(true)
+      tableRef.value.refresh()
     })
   }
   // 批量删除
-  const deleteBatchModule = (params) => {
+  const batchDelete = () => {
+    if (selectedRowKeys.value.length < 1) {
+      message.warning("请至少选择一条数据")
+      return
+    }
     let data = { ids: selectedRowKeys.value }
     resourceApi.deleteResource(data).then((res) => {
       message.success(res.message)
-      tableRef.value.clearRefreshSelected()
+      tableRef.value.refresh()
     })
   }
 </script>
 
 <style scoped>
+/** 后代选择器 **/
+.ant-card .ant-form {
+  margin-bottom: -12px !important;
+}
 .ant-form-item {
-  margin-bottom: 0 !important;
+  margin-bottom: 12px !important;
 }
 </style>

@@ -32,7 +32,7 @@
       <template #operator>
         <!-- 操作区 -->
         <a-space wrap style="padding-bottom: 16px">
-          <a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen(module)">新增</a-button>
+          <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen(null, module)">新增</a-button>
           <a-button type="primary" danger :disabled="selectedRowKeys.length!==1" :icon="h(MinusOutlined)" @click="deleteBatchButton">删除</a-button>
           <a-button type="dashed" danger :disabled="selectedRowKeys.length<2" :icon="h(DeleteOutlined)" @click="deleteBatchButton">批量删除</a-button>
           <!--      <a-button type="dashed" @click="null" :icon="h(PlusOutlined)" style="color: #52C41AFF; border-color: #52C41AFF">添加</a-button>-->
@@ -41,8 +41,7 @@
       <!--      <ListColumn field="null" title="插槽传入"/>-->
     </SVTable>
   </a-card>
-  <AddForm ref="addFormRef" @successful="tableRef.refresh(true)"/>
-  <EditForm ref="editFormRef" @successful="tableRef.refresh(true)"/>
+  <Form ref="formRef" @successful="tableRef.refresh(true)"/>
 </template>
 
 <script setup>
@@ -56,8 +55,7 @@ import {
   RedoOutlined,
   SearchOutlined
 } from "@ant-design/icons-vue";
-import AddForm from "./addForm.vue";
-import EditForm from "./editForm.vue";
+import Form from "./form.vue";
 import { message, Modal } from "ant-design-vue";
 import SVTable from "@/components/SVTable/index.vue"
 
@@ -100,8 +98,7 @@ const opConfig = { show: true, opList: ['add', 'delete', { name: "other", text: 
 
 // resourceType=6表示按钮
 const queryFormData = ref({ resourceType: 6 })
-const addFormRef = ref()
-const editFormRef = ref()
+const formRef = ref()
 const queryFormRef = ref()
 const moduleId = ref()
 const module = ref()
@@ -139,7 +136,7 @@ const onModuleChange = (value) => {
 const onOpClick = (name, record) => {
   console.log("操作点击的事件名字", name, record.name)
   if (name === "add") {
-    addFormRef.value.onOpen(module)
+    formRef.value.onOpen(null, module)
   } else if (name === "delete") {
     deleteButton(record)
   } else if (name === "other") {

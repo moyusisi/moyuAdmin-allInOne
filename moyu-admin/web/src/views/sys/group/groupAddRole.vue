@@ -20,7 +20,7 @@
             <a-row :gutter="16">
               <a-col :span="8">
                 <a-form-item name="searchKey">
-                  <a-input v-model:value="searchFormData.searchKey" placeholder="请输入关键词" allowClear />
+                  <a-input v-model:value="searchFormData.searchKey" placeholder="搜索角色名称" allowClear />
                 </a-form-item>
               </a-col>
               <a-col :span="8">
@@ -41,6 +41,7 @@
                :data-source="tableData"
                :row-key="(record) => record.code"
                :row-selection="rowSelection"
+               :pagination="false"
                bordered>
             <template #bodyCell="{ column, record }">
               <template v-if="column.dataIndex === 'code'">

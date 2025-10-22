@@ -14,6 +14,8 @@ const routes = [
 		children: [
 			{
 				path: '/index',
+				// 用于 keep-alive 功能，需要与 SFC 中自动推导或显式声明的组件名称一致
+				// 参考文档: https://cn.vuejs.org/guide/built-ins/keep-alive.html#include-exclude
 				name: 'Index',
 				component: () => import('@/views/home/index.vue'),
 				meta: { title: '首页', icon: 'home-outlined', affix: true }

@@ -40,7 +40,7 @@ export default {
 	editResource(data) {
 		return service.postJson('/api/sys/resource/edit', data)
 	},
-	// 获取菜单树选择器
+	// 获取菜单树选择器(不包括按钮)
 	menuTreeSelector(data) {
 		return service.postJson('/api/sys/resource/menuTreeSelector', data)
 	},

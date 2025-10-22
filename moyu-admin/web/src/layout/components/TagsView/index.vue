@@ -39,10 +39,9 @@ const route = useRoute()
 const router = useRouter()
 const tagsViewStore = useTagsViewStore()
 const menuStore = useMenuStore()
+// 解构 store中的属性
+const { visitedViews } = toRefs(tagsViewStore)
 
-const visitedViews = computed(() => {
-  return tagsViewStore.visitedViews
-})
 const tagList = computed(() => {
   return visitedViews.value
 })
@@ -132,7 +131,7 @@ const closeSelectedTag = (tag, autoPushLatestView = true) => {
   tagsViewStore.removeView(tag)
   if (autoPushLatestView && isActive(tag)) {
     const latestView = tagList.value.slice(-1)[0]
-    console.log('isActive', latestView)
+    // console.log('isActive', latestView)
     if (latestView) {
       router.push(latestView.path)
     } else {

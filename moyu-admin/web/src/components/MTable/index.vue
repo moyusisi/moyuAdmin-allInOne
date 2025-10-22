@@ -45,7 +45,7 @@
            @expand="onExpand"
            @resizeColumn="onResizeColumn"
            @expandedRowsChange="onExpandedRowsChange"
-           :scroll="{ x: 'max-content' }"
+           :scroll="{ x: tableWidth }"
            bordered
   >
     <template v-for="slotKey in slotKeys" #[slotKey]="scope" >
@@ -58,16 +58,24 @@
 import { ref, onMounted, useSlots, h } from 'vue'
 import { tableProps } from 'ant-design-vue/es/table/Table.js'
 import { DeleteOutlined, PlusOutlined, SyncOutlined } from "@ant-design/icons-vue"
+import { useSettingsStore } from "@/store"
 import columnSetting from "@/components/MTable/columnSetting.vue"
 
+// store
+const settingsStore = useSettingsStore()
 // 自动获取父组件传递过来的插槽
 const slots = useSlots()
 // 所有的事件均参考官方文档 https://www.antdv.com/components/table-cn#api
 const emit = defineEmits(['selectedChange', 'change', 'expand', 'expandedRowsChange'])
-// 获取父组件过来的插槽数量，便于循环
+// 计算属性 获取父组件过来的插槽数量，便于循环
 const slotKeys = computed(() => {
   return Object.keys(slots)
 })
+// 计算属性 表格宽度 超过宽度则会出现x轴上的scroll
+const tableWidth = computed(() => {
+  return settingsStore.menuCollapsed ? `calc(100% - 80px -24px)` : `calc(100% - 210px -24px)`
+})
+
 // 组件props 通过tableProps()支持Table原属性
 const props = defineProps(
     Object.assign({}, tableProps(), {
@@ -136,16 +144,18 @@ const paginationRef = ref({
 })
 
 
-// 本地数据,用于向tableProps赋值
+// 本地数据, 同名属性会赋值renderTableProps并重新渲染
 const localData = reactive({
-  // tableProps中的同名属性
+  /***** tableProps的同名属性 *****/
   dataSource: [],
   size: props.size || "middle",
-  // 非tableProps的同名属性
+  // 不设置分页时，默认配置分页。支持pagination设置为false，所以必须使用null判断
+  pagination: props.pagination == null ? paginationRef.value : props.pagination,
+
+  /***** 非tableProps的同名属性 *****/
   columnsSetting: [],
   // 本地配置, 无props时使用
   localRowSelection: rowSelection.value,
-  localPagination: paginationRef.value,
 })
 
 // 加载完毕调用
@@ -163,13 +173,16 @@ const loadTableData = () => {
   dataLoading.value = true
   // 重新加载数据时，清空之前选中的行
   clearSelected()
-  // 分页器优选 props 其次 local
-  let pagination = props.pagination || localData.localPagination
-  // 分页参数
-  let param = { pageNum: pagination.current, pageSize: pagination.pageSize }
+  let param = { }
+  // 若有分页，设置分页参数
+  if (localData.pagination) {
+    param = { pageNum: localData.pagination.current, pageSize: localData.pagination.pageSize }
+  }
   props.loadData(param).then((data) => {
-    pagination.total = data.total
-    localData.dataSource = data.records ? data.records : []
+    if (localData.pagination) {
+      localData.pagination.total = data.total
+    }
+    localData.dataSource = data instanceof Array ? data : data.records
     dataLoading.value = false
     getTableProps()
   }).catch((err) => {
@@ -193,13 +206,11 @@ const getTableProps = () => {
   // 非同名属性的处理及赋值
   // @ts-ignore
   renderProps.columns = localData.columnsSetting.filter((value) => value.checked === undefined || value.checked)
-  // 展示 rowSelection 时, 优选 props 其次 local
+  // 不设置 rowSelection 时, 使用props。设置 rowSelection 时 优选 props 其次 local
   if (props.showRowSelection) {
     // @ts-ignore 优选 props 其次 local
     renderProps.rowSelection = props.rowSelection || localData.localRowSelection
   }
-  // @ts-ignore 分页器优选 props 其次 local
-  renderProps.pagination = props.pagination || localData.localPagination
   renderProps = {
     ...renderProps,
     // @ts-ignore
@@ -252,6 +263,7 @@ const columnChange = (v) => {
 const clearSelected = () => {
   if (props.rowSelection) {
     props.rowSelection.selectedRowKeys = []
+    // @ts-ignore
     props.rowSelection.onChange([], [])
   } else {
     localData.localRowSelection.onChange([], [])

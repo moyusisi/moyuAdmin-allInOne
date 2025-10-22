@@ -27,18 +27,12 @@ a, button, input, textarea {
 	flex: 1;
 }
 
-/* 大布局样式 */
+/* 布局样式 */
 .admin-ui {
 	overflow: hidden;
 	height: 100%;
 	display: flex;
 	flex-flow: column;
-}
-
-.admin-ui-wrapper {
-	display: flex;
-	flex: 1;
-	overflow: auto;
 }
 
 .admin-ui-main {
@@ -63,17 +57,6 @@ a, button, input, textarea {
 	align-items: flex-end;
 	justify-content: center;
 	padding-bottom: 25px;
-}
-
-.ant-layout-sider-collapsed{
-	.logo-bar>span{
-		display: none;
-	}
-}
-.ant-layout-sider-dark{
-	.header-logo{
-		color: #fff;
-	}
 }
 
 /* 设置抽屉样式 */
@@ -143,54 +126,13 @@ a, button, input, textarea {
 .panel-item:hover {
 	background: var(--header-color-split);
 }
-.contextmenu {
-	position: fixed;
-	width: 200px;
-	margin:0;
-	border-radius: 0px;
-	background: @body-background;
-	border: 1px solid var(--border-color-split);
-	box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
-	z-index: 3000;
-	list-style-type: none;
-	padding: 10px 0;
-}
-.contextmenu hr {
-	margin:5px 0;
-	border: none;
-	height: 1px;
-	font-size: 0px;
-	background-color: var(--border-color-split)
-}
-.contextmenu li {
-	display: flex;
-	align-items: center;
-	margin:0;
-	cursor: pointer;
-	line-height: 30px;
-	padding: 0 17px;
-	color: @text-color;
-}
-.contextmenu li i {
-	font-size: 14px;
-	margin-right: 10px;
-}
-.contextmenu li:hover {
-	background-color: @component-background;
-	color: #66b1ff;
-}
-.contextmenu li.disabled {
-	cursor: not-allowed;
-	color: #bbb;
-	background: transparent;
-}
 
 /*页面最大化*/
 .app-main.main-maximize {
 	.main-maximize-exit {
 		display: block;
 	}
-	.ant-layout-sider, .ant-layout-sider-dark, .layout-setting .admin-ui-breadcrumb {
+	.ant-layout-sider, .layout-setting .admin-ui-breadcrumb {
 		display: none;
 	}
 	.main-content-wrapper {
@@ -224,19 +166,10 @@ a, button, input, textarea {
 }
 
 /* 重写antdv的一些样式，定义到全局 */
-//.ant-card-head-title {
-//	padding: 12px 0!important;
-//}
-//.ant-tabs-large > .ant-tabs-nav .ant-tabs-tab {
-//	padding: 12px 0!important;
-//}
-//.ant-card-extra {
-//	padding: 12px 0!important;
-//}
-//.ant-card-head {
-//	border-bottom: 0px !important;
-//	min-height: 50px !important;
-//}
+.ant-layout {
+	// 默认为白烟颜色
+	//background-color: #f6f8f9;
+}
 
 /* 重写antdv的表格滚动条 */
 .ant-table-body, .ant-table-content{
@@ -269,7 +202,6 @@ body,
 .ant-scrolling-effect,
 .ant-drawer-wrapper-body,
 .ant-drawer-body,
-.admin-ui,
 .ant-modal-wrap,
 .ant-transfer-list-content,
 .ant-card,
@@ -335,15 +267,6 @@ body,
 }
 .ant-modal-close-x .anticon {
 	padding: 2px !important;
-}
-.wd {
-	width: 100%;
-}
-.wdcalc-70 {
-	width: calc(100% - 70px);
-}
-.odd {
-	background-color: var(--table-row-hover-bg);
 }
 
 // 解决浏览器F12爆红aria-hidden问题

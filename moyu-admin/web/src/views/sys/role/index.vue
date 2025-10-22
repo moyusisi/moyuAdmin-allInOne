@@ -3,20 +3,22 @@
     <a-form ref="queryFormRef" :model="queryFormData">
       <a-row :gutter="24">
         <a-col :span="8">
-          <a-form-item name="searchKey" label="名称关键词">
-            <a-input v-model:value="queryFormData.searchKey" placeholder="请输入关键词" allowClear />
+          <a-form-item name="name" label="名称">
+            <a-input v-model:value="queryFormData.name" placeholder="搜索名称" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item label="使用状态" name="status">
+          <a-form-item label="状态" name="status">
             <a-select v-model:value="queryFormData.status" placeholder="请选择状态" :options="statusOptions" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-flex gap="small">
-            <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
-            <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
-          </a-flex>
+          <a-form-item>
+            <a-flex gap="small">
+              <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
+              <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+            </a-flex>
+          </a-form-item>
         </a-col>
       </a-row>
     </a-form>
@@ -31,7 +33,7 @@
     >
       <template #operator>
         <a-space wrap style="margin-bottom: 6px">
-          <a-button type="primary" :icon="h(PlusOutlined)" @click="addFormRef.onOpen()">新增角色</a-button>
+          <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen()">新增角色</a-button>
           <a-popconfirm :title=" '确定要删除这 ' + selectedRowKeys.length + ' 条数据吗？' " :disabled ="selectedRowKeys.length < 1" @confirm="deleteBatchRole">
             <a-button danger :icon="h(DeleteOutlined)" :disabled="selectedRowKeys.length < 1">
               批量删除
@@ -39,13 +41,26 @@
           </a-popconfirm>
         </a-space>
       </template>
-      <template #bodyCell="{ column, record }">
+      <template #bodyCell="{ column, record, index, text }">
+        <template v-if="column.dataIndex === 'name'">
+          <!-- 长文本省略提示 -->
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
+        </template>
         <template v-if="column.dataIndex === 'code'">
-          <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+          <a-tooltip :title="text" placement="topLeft">
+            <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'status'">
           <a-tag v-if="record.status === 0" color="green">正常</a-tag>
           <a-tag v-else>已停用</a-tag>
+        </template>
+        <template v-if="column.dataIndex === 'remark'">
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
+          </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'action'">
           <a-space>
@@ -59,7 +74,7 @@
               <a style="color:#53C61D;" @click="roleUserRef.onOpen(record)"><UserAddOutlined /></a>
             </a-tooltip>
             <a-tooltip title="编辑">
-              <a @click="editFormRef.onOpen(record)"><FormOutlined /></a>
+              <a @click="formRef.onOpen(record)"><FormOutlined /></a>
             </a-tooltip>
             <a-tooltip title="删除">
               <a-popconfirm title="确定要删除吗？" @confirm="deleteRole(record)">
@@ -72,53 +87,59 @@
     </MTable>
   </a-card>
   <grant-menu-form ref="grantMenuFormRef" @successful="tableRef.refresh()" />
-  <AddForm ref="addFormRef" @successful="tableRef.refresh()" />
-  <EditForm ref="editFormRef" @successful="tableRef.refresh()" />
+  <Form ref="formRef" @successful="tableRef.refresh()" />
   <RoleUser ref="roleUserRef" />
 </template>
 
 <script setup>
   import roleApi from '@/api/sys/roleApi'
 
-  import { h } from "vue"
-  import { PlusOutlined, DeleteOutlined, SearchOutlined, RedoOutlined } from "@ant-design/icons-vue"
-  import AddForm from "./addForm.vue";
-  import EditForm from "./editForm.vue";
-  import GrantMenuForm from "./grantMenuForm.vue";
-  import { message } from "ant-design-vue";
+  import { h, ref } from "vue"
+  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
+  import { message } from "ant-design-vue"
+  import Form from "./form.vue"
   import MTable from "@/components/MTable/index.vue"
-  import RoleUser from "./roleUser.vue";
+  import GrantMenuForm from "./grantMenuForm.vue"
+  import RoleUser from "./roleUser.vue"
 
   const columns = [
     {
       title: '角色名称',
       dataIndex: 'name',
+      align: "center",
       resizable: true,
+      ellipsis: true,
       width: 150
     },
     {
       title: '唯一编码',
       dataIndex: 'code',
+      align: "center",
       resizable: true,
+      ellipsis: true,
       width: 200
-    },
-    {
-      title: '排序',
-      dataIndex: 'sortNum',
-      align: 'center',
-      width: 100
     },
     {
       title: '状态',
       dataIndex: 'status',
       align: 'center',
+      resizable: true,
       width: 100
     },
     {
-      title: '创建时间',
-      dataIndex: 'createTime',
-      align: 'center',
-      width: 160
+      title: "排序顺序",
+      dataIndex: "sortNum",
+      align: "center",
+      resizable: true,
+      width: 100,
+    },
+    {
+      title: "备注",
+      dataIndex: "remark",
+      align: "center",
+      resizable: true,
+      ellipsis: true,
+      width: 150,
     },
     {
       title: '更新时间',
@@ -143,8 +164,6 @@
   // 定义tableDOM
   const tableRef = ref()
   const formRef = ref()
-  const addFormRef = ref()
-  const editFormRef = ref()
   const module = ref()
   const grantMenuFormRef = ref()
   const roleUserRef = ref()
