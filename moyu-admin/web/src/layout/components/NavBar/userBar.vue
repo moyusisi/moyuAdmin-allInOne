@@ -43,72 +43,77 @@
 </template>
 
 <script setup>
-	import { h, createVNode } from 'vue'
+  import { h, createVNode } from 'vue'
   import { ExclamationCircleOutlined, UserSwitchOutlined } from '@ant-design/icons-vue'
-	import { Modal } from 'ant-design-vue'
-	import screenFull from 'screenfull'
-	import { message } from 'ant-design-vue'
-	import Setting from '../setting.vue'
-	import router from '@/router'
-	import loginApi from '@/api/auth/loginApi'
+  import { Modal } from 'ant-design-vue'
+  import screenFull from 'screenfull'
+  import { message } from 'ant-design-vue'
+  import Setting from '../setting.vue'
   import { useMenuStore, useUserStore } from '@/store'
+  import { useRoute, useRouter } from 'vue-router'
 
-	const settingDialog = ref(false)
   const userStore = useUserStore()
   const menuStore = useMenuStore()
-	const isMobile = ref(false)
-	const userInfo = computed(() => {
-		return userStore.userInfo
-	})
+  const route = useRoute()
+  const router = useRouter()
+
+  const settingDialog = ref(false)
+  const isMobile = ref(false)
+  const userInfo = computed(() => {
+    return userStore.userInfo
+  })
 
   // 切换用户岗位
   const switchUserGroup = async (groupCode) => {
+    if (userInfo.value.groupCode === groupCode) {
+      message.success('当前已是所选岗位')
+      return
+    }
     try {
       await userStore.switchUserGroup(groupCode)
-      // await router.reloadRoutes()
       message.loading('切换中...', 0.5)
-      window.location.href = '/index'
+      await menuStore.reloadRoutes()
+      router.push({ path: '/' })
+      // window.location.href = '/index'
       message.success('切换成功')
     } catch (err) {
       message.error('切换失败')
       console.log(err)
     }
   }
-	// 退出登陆
-	const userLogout = () => {
+  // 退出登陆
+  const userLogout = () => {
     Modal.confirm({
-				title: '提示',
-				content: '确认退出当前用户？',
-				icon: createVNode(ExclamationCircleOutlined),
-				maskClosable: false,
-				onOk() {
-					message.loading('退出中...', 0.5)
-					loginApi.logout().then(() => {
-						// 清理掉个人的一些信息
-            localStorage.clear()
-						router.replace({ path: '/login' })
-            userStore.$reset()
-            menuStore.$reset()
-					}).catch(() => {
-            localStorage.clear()
-						router.replace({ path: '/login' })
-						location.reload()
-					})
-				},
-				onCancel() {}
-			})
-	}
-	// 设置抽屉
-	const openSetting = () => {
-		settingDialog.value = true
-	}
-	// 全屏
-	const fullscreen = () => {
-		const element = document.documentElement
-		if (screenFull.isEnabled) {
-			screenFull.toggle(element)
-		}
-	}
+      title: '提示',
+      content: '确认退出当前用户？',
+      icon: createVNode(ExclamationCircleOutlined),
+      maskClosable: false,
+      onOk() {
+        message.loading('退出中...', 0.5)
+        userStore.logout().then(() => {
+          menuStore.clear()
+          router.push(`/login?redirect=${route.fullPath}`);
+          // router.push({ path: '/login' })
+        }).catch((err) => {
+          localStorage.clear()
+          router.push({ path: '/login' })
+        })
+      },
+      onCancel() {
+      }
+    })
+  }
+  // 设置抽屉
+  const openSetting = () => {
+    settingDialog.value = true
+  }
+  // 全屏
+  const fullscreen = () => {
+    const element = document.documentElement
+    if (screenFull.isEnabled) {
+      screenFull.toggle(element)
+    }
+  }
 </script>
 
 <style lang="less">

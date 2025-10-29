@@ -30,7 +30,7 @@
         <a-input v-model:value="formData.permission" placeholder="请输入权限标识" allow-clear/>
       </a-form-item>
       <a-form-item name="sortNum" label="排序顺序" tooltip="排序顺序" required>
-        <a-input-number v-model:value="formData.sortNum" :max="100" style="width: 100%"/>
+        <a-input-number v-model:value="formData.sortNum" style="width: 100%"/>
       </a-form-item>
       <a-form-item name="remark" label="备注" tooltip="备注" >
         <a-textarea v-model:value="formData.remark" placeholder="备注" allowClear showCount :maxlength="100" />
@@ -73,29 +73,22 @@
   const formRef = ref()
   const formData = ref({
     resourceType: 6,
-    sortNum: 99,
-    visible: 1,
-    status: 0
+    sortNum: 99
   })
   const dataLoading = ref(false)
   const submitLoading = ref(false)
-  // 使用状态options（0正常 1停用）
-  const statusOptions = [
-    { label: "正常", value: 0 },
-    { label: "已停用", value: 1 }
-  ]
   const treeData = ref([])
 
   // 打开抽屉
   const onOpen = (row, module) => {
     if (row) {
       edit.value = true
-      title.value = "编辑按钮"
+      title.value = "编辑接口"
       // 表单数据赋值
       loadData(row)
     } else {
       edit.value = false
-      title.value = "新增按钮"
+      title.value = "新增接口"
       // 菜单树默认值,无法异步赋值
       formData.value.module = module.code
       formData.value.parentCode = module.code

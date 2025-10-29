@@ -20,10 +20,10 @@ export const useSearchStore = defineStore('search', () => {
 	const init = (menus) => {
 		const poolList = []
 		const getFullName = function (meta) {
-			if (meta.breadcrumb) {
+			if (meta.fullTitlePath) {
 				let list = []
-				meta.breadcrumb.forEach((item) => {
-					list.push(item.meta.title)
+				meta.fullTitlePath.forEach((item) => {
+					list.push(item.title)
 				})
 				return list.join(' / ')
 			}

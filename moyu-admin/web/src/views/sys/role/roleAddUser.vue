@@ -18,7 +18,7 @@
         <OrgTree ref="treeRef" @onSelect="treeSelect"></OrgTree>
       </a-col>
       <a-col :span="19">
-        <a-alert message="角色授权的用户，仅有对应的功能权限，数据权限需在岗位中控制。" type="error" />
+        <a-alert message="角色直接授权的用户，数据权限为仅限本人数据。一旦拥有岗位权限，则将优先使用岗位权限。" type="error" />
         <a-card size="small">
           <a-form ref="searchFormRef" :model="searchFormData">
             <a-row :gutter="16">
@@ -77,7 +77,7 @@
   import roleApi from '@/api/sys/roleApi'
 
   import { useSettingsStore } from "@/store";
-  import { Empty, message } from "ant-design-vue";
+  import { message } from "ant-design-vue";
   import { h } from "vue";
   import { PlusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import userApi from "@/api/sys/userApi"

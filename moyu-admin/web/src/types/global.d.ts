@@ -43,7 +43,7 @@ export interface TagView {
   title: string;
   /** 页签路由路径 */
   path: string;
-  /** 页签路由完整路径 */
+  /** 包括 路径、查询参数和哈希值的完整地址 */
   fullPath: string;
   /** 页签图标 */
   icon?: string;

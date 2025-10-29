@@ -43,7 +43,7 @@
           </a-col>
           <a-col :span="12">
             <a-form-item name="sortNum" label="排序顺序" tooltip="排序顺序" required>
-              <a-input-number v-model:value="formData.sortNum" :max="100" style="width: 100%"/>
+              <a-input-number v-model:value="formData.sortNum" style="width: 100%"/>
             </a-form-item>
           </a-col>
         </a-row>
@@ -60,7 +60,7 @@
           <!-- 菜单:组件地址 -->
           <a-col :span="12" v-if="formData.resourceType === 3">
             <a-form-item name="component" label="组件地址" tooltip="前端组件(不带.vue)" required>
-              <a-input v-model:value="formData.component" addon-before="src/views/" placeholder="请输入组件地址" allow-clear/>
+              <a-input v-model:value="formData.component" addon-before="src/views/" addon-after=".vue" placeholder="请输入组件地址" allow-clear/>
             </a-form-item>
           </a-col>
           <!-- 内链、外链:链接地址 -->
@@ -143,16 +143,10 @@
   const formData = ref({
     resourceType: 3,
     sortNum: 99,
-    visible: 1,
-    status: 0
+    visible: 1
   })
   const dataLoading = ref(false)
   const submitLoading = ref(false)
-  // 使用状态options（0正常 1停用）
-  const statusOptions = [
-    { label: "正常", value: 0 },
-    { label: "已停用", value: 1 }
-  ]
   const treeData = ref([])
   const iconSelector = ref()
 

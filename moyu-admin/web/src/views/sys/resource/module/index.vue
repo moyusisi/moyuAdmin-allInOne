@@ -8,8 +8,8 @@
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="status" label="使用状态">
-            <a-select v-model:value="queryFormData.status" placeholder="请选择状态" :options="statusOptions" allowClear />
+          <a-form-item name="code" label="唯一编码">
+            <a-input v-model:value="queryFormData.code" placeholder="查询唯一编码" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
@@ -70,10 +70,6 @@
             <a-tag v-if="record.link" :bordered="false">{{ record.link }}</a-tag>
           </a-tooltip>
         </template>
-        <template v-if="column.dataIndex === 'status'">
-          <a-tag v-if="record.status === 0" color="green">正常</a-tag>
-          <a-tag v-else>已停用</a-tag>
-        </template>
         <template v-if="column.dataIndex === 'remark'">
           <a-tooltip :title="text" placement="topLeft">
             <span>{{ text }}</span>
@@ -110,11 +106,6 @@
   // resourceType=1标识模块
   const queryFormRef = ref()
   const queryFormData = ref({ resourceType: 1 })
-  // 使用状态options（0正常 1停用）
-  const statusOptions = [
-    { label: "正常", value: 0 },
-    { label: "已停用", value: 1 }
-  ]
   // 其他页面操作
   const formRef = ref()
 
@@ -156,13 +147,6 @@
       align: "center",
       resizable: true,
       width: 200,
-    },
-    {
-      title: "状态",
-      dataIndex: "status",
-      align: "center",
-      resizable: true,
-      width: 100,
     },
     {
       title: "排序顺序",

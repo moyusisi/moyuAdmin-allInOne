@@ -46,12 +46,12 @@ export const useTagsViewStore = defineStore('tagsView', () => {
   // 添加视图到已缓存列表中
   function addCachedView(view: TagView) {
     // 如果缓存视图名称已经存在于缓存视图列表中，则不再添加
-    if (cachedViews.value.includes(view.name)) {
+    if (cachedViews.value.includes(view.fullPath)) {
       return;
     }
     // 如果视图需要缓存（keepAlive），则将其路由名称添加到缓存视图列表中
     if (view.keepAlive) {
-      cachedViews.value.push(view.name);
+      cachedViews.value.push(view.fullPath);
     }
   }
 
@@ -70,7 +70,7 @@ export const useTagsViewStore = defineStore('tagsView', () => {
   // 从已访问视图列表中删除指定的视图
   function removeCachedView(view: TagView) {
     // cacheView中移除
-    const index = cachedViews.value.indexOf(view.name);
+    const index = cachedViews.value.indexOf(view.fullPath);
     if (index > -1) {
       cachedViews.value.splice(index, 1);
     }

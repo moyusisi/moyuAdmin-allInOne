@@ -3,14 +3,14 @@
     <router-view v-slot="{ Component, route }">
       <!--  TODO keep-alive还有点问题，被缓存的页面，激活时onMounted和onActivated都会触发，导致多次请求    -->
       <keep-alive :include="cachedViews">
-        <component :is="currentComponent(Component, route)" :key="route.name"/>
+        <component :is="currentComponent(Component, route)" :key="route.fullPath"/>
       </keep-alive>
     </router-view>
     <iframe-view/>
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import IframeView from "./iframeView.vue"
 import Error404 from "@/views/other/404.vue"
 import { useTagsViewStore } from "@/store"
@@ -19,11 +19,11 @@ import { useTagsViewStore } from "@/store"
 const { cachedViews } = toRefs(useTagsViewStore());
 
 // 当前组件 keep-alive通过组件的name匹配,而不是route的name
-const wrapperMap = new Map<string, Component>();
-const currentComponent = (component: Component, route: RouteLocationNormalized) => {
+const wrapperMap = new Map();
+const currentComponent = (component, route) => {
   if (!component) return;
-  // 使用路由的name作为组件名称
-  const { name: componentName } = route;
+  // 使用路由的fullPath作为组件名称
+  const { fullPath: componentName } = route;
   let wrapper = wrapperMap.get(componentName);
   // 对组件进行包装
   if (!wrapper) {

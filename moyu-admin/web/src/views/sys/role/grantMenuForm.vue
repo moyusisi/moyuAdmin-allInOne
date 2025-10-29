@@ -175,7 +175,6 @@
   }
   // 关闭抽屉
   const onClose = () => {
-    refreshCache()
     // 将这些缓存的给清空
     moduleId.value = ''
     moduleDataList.value = []
@@ -250,14 +249,15 @@
     submitLoading.value = true
     roleApi.roleGrantMenu(param).then((res) => {
       message.success(res.message)
+      refreshCache()
     }).finally(() => {
       submitLoading.value = false
     })
   }
   // 刷新缓存
   const refreshCache = () => {
-    menuStore.refreshModuleMenu()
     userStore.refreshUserInfo()
+    menuStore.reloadRoutes()
   }
   // 调用这个函数将子组件的一些数据和方法暴露出去
   defineExpose({

@@ -57,14 +57,15 @@
 	</div>
 </template>
 <script setup>
-	import loginApi from '@/api/auth/loginApi'
 	import settings from '@/config/settings'
-  import router from "@/router"
   import { useUserStore } from "@/store"
-
+  import { useRoute, useRouter } from 'vue-router'
   import { message } from "ant-design-vue"
 
   const userStore = useUserStore()
+  const route = useRoute()
+  const router = useRouter()
+
 	const activeKey = ref('userAccount')
 	const loading = ref(false)
 
@@ -78,32 +79,33 @@
 
 	//登陆
 	const loginForm = ref()
-	const login = async () => {
-		loginForm.value.validate().then(async () => {
-				loading.value = true
-				const loginData = {
-					account: formData.value.account,
-					password: formData.value.password,
-					validCode: formData.value.validCode,
-					validCodeReqNo: formData.value.validCodeReqNo
-				}
-				// 获取token
-				try {
-					const res = await loginApi.login(loginData)
-					localStorage.setItem('TOKEN', res.data)
-          // 初始化用户信息
-          await userStore.initUserInfo()
-          message.success('登录成功')
-          await router.push({ path: "/" })
-				} catch (err) {
-          message.error('登陆失败')
-          console.log(err)
-					loading.value = false
-				}
-			}).catch((err) => {
+  const login = async () => {
+    loginForm.value.validate().then(async () => {
+      loading.value = true
+      const loginData = {
+        account: formData.value.account,
+        password: formData.value.password,
+        validCode: formData.value.validCode,
+        validCodeReqNo: formData.value.validCodeReqNo
+      }
+      // 获取token
+      try {
+        // 登录
+        await userStore.login(loginData)
+        // 初始化用户信息
+        await userStore.initUserInfo()
+        message.success('登录成功')
+        const redirectPath = (route.query.redirect) || "/"
+        await router.push(redirectPath)
+      } catch (err) {
+        message.error('登陆失败')
         console.log(err)
+        loading.value = false
+      }
+    }).catch((err) => {
+      console.log(err)
     })
-	}
+  }
 
 </script>
 <style >

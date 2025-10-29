@@ -251,7 +251,6 @@
     resourceApi.deleteMenuTree(data).then((res) => {
       message.success(res.message)
       tableRef.value.refresh()
-      refreshCacheMenu()
     })
   }
   // 批量删除
@@ -264,18 +263,11 @@
     resourceApi.deleteMenuTree(data).then((res) => {
       message.success(res.message)
       tableRef.value.refresh()
-      refreshCacheMenu()
     })
   }
   // 成功回调
   const handleSuccess = () => {
     tableRef.value.refresh(true)
-    refreshCacheMenu()
-  }
-  // 刷新缓存的菜单
-  const refreshCacheMenu = () => {
-    const menuStore = useMenuStore()
-    menuStore.refreshModuleMenu()
   }
 </script>
 

@@ -12,11 +12,16 @@
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="searchKey" label="名称关键词">
-            <a-input v-model:value="queryFormData.searchKey" placeholder="请输入关键词" allowClear/>
+          <a-form-item name="name" label="名称">
+            <a-input v-model:value="queryFormData.name" placeholder="搜索名称" allowClear/>
           </a-form-item>
         </a-col>
-        <a-col :span="8">
+        <a-col :span="6">
+          <a-form-item name="path" label="接口地址">
+            <a-input v-model:value="queryFormData.path" placeholder="搜索接口地址" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6">
           <a-space>
             <a-button type="primary" :icon="h(SearchOutlined)" @click="tableRef.refresh(true)">查询</a-button>
             <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
@@ -67,7 +72,12 @@ const records = ref([])
 const columns = [
   {
     field: 'name',
-    title: '显示名称',
+    title: '名称',
+    width: "auto"
+  },
+  {
+    field: 'code',
+    title: '唯一编码',
     width: "auto"
   },
   {
@@ -82,7 +92,7 @@ const columns = [
   },
   {
     field: 'sortNum',
-    title: '排序',
+    title: '排序顺序',
     sort: true,
     width: 'auto',
   },
