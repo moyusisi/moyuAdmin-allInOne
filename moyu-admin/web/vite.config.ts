@@ -55,7 +55,7 @@ export default defineConfig(({ mode }): UserConfig => {
           }
         }
       },
-      chunkSizeWarningLimit: 1000
+      chunkSizeWarningLimit: 3000
     },
     plugins: [
       vue(),
