@@ -12,8 +12,8 @@
 
 <script setup>
 import IframeView from "./iframeView.vue"
-import Error404 from "@/views/other/404.vue"
 import { useTagsViewStore } from "@/store"
+const Error404  = () => import('@/views/other/404.vue')
 
 // 缓存页面集合, 直接解构store中的同名字段
 const { cachedViews } = toRefs(useTagsViewStore());
