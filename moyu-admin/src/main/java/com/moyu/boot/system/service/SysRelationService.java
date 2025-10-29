@@ -20,36 +20,43 @@ public interface SysRelationService extends IService<SysRelation> {
     List<SysRelation> list(SysRelationParam param);
 
     /**
-     * 通过(分组-用户、分组-角色)关系查询指定用户的所有角色，即:用户->分组->角色
-     */
-    Set<String> userGroupRole(String account);
-
-    /**
-     * 通过(分组-用户、分组-角色)关系查询指定角色的所有用户，即:角色->分组->用户
-     * 特别注意，group与org有关联
-     */
-    Set<String> roleGroupUser(String roleCode);
-
-    /**
-     * 通过(用户-角色)关系查询指定用户的所有角色，即:用户->角色
-     * 特别注意，role与org无关
-     */
-    Set<String> userRole(String account);
-
-    /**
-     * 通过(用户-角色)关系查询指定角色的所有用户，即:角色->用户
-     * 特别注意，role与org无关
+     * ROLE_HAS_USER 关系, role查user
      */
     Set<String> roleUser(String roleCode);
 
     /**
-     * 通过(用户->分组、分组->角色、角色->权限)关系查询 用户->权限
+     * ROLE_HAS_USER 关系, user查role
      */
-    Set<String> userMenu(String account);
+    Set<String> userRole(String username);
 
     /**
-     * 查询指定角色的所有资源菜单
+     * ROLE_HAS_PERM关系, role查perm
      */
-    Set<String> roleMenu(Set<String> roleSet);
+    Set<String> rolePerm(String roleCode);
+
+    /**
+     * ROLE_HAS_PERM关系, roleSet查perm
+     */
+    Set<String> rolePerm(Set<String> roleSet);
+
+    /**
+     * GROUP_HAS_USER关系, group查询user
+     */
+    Set<String> groupUser(String groupCode);
+
+    /**
+     * GROUP_HAS_USER关系, user查询group
+     */
+    Set<String> userGroup(String username);
+
+    /**
+     * GROUP_HAS_ROLE关系, group查询role
+     */
+    Set<String> groupRole(String groupCode);
+
+    /**
+     * GROUP_HAS_ROLE关系, role查询group
+     */
+    Set<String> roleGroup(String roleCode);
 
 }

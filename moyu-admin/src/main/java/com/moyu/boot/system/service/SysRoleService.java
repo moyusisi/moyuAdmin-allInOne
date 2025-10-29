@@ -20,12 +20,19 @@ import java.util.Set;
 public interface SysRoleService extends IService<SysRole> {
 
     /**
-     * 获取记录列表(不分页，通过条件自行控制数量)
+     * 所有人都拥有的默认角色
+     */
+    default String defaultRole() {
+        return "r_default";
+    }
+
+    /**
+     * 获取记录列表(不分页，不限制数据权限)
      */
     List<SysRoleVO> list(SysRoleParam param);
 
     /**
-     * 分页获取记录列表
+     * 分页获取记录列表(角色无需限制数据权限)
      */
     PageData<SysRoleVO> pageList(SysRoleParam param);
 
@@ -81,11 +88,6 @@ public interface SysRoleService extends IService<SysRole> {
      * @param param 角色code，用户集合 codeSet
      */
     void roleDeleteUser(SysRoleParam param);
-
-    /**
-     * 获取指定用户所有的角色，包括 userRole + userGroupRole
-     */
-    Set<String> userAllRoles(String account);
 
     /**
      * 获取指定角色的权限标识

@@ -19,7 +19,7 @@ public interface UserCenterService {
     UserInfo currentUserInfo(String username);
 
     /**
-     * 获取用户菜单树
+     * 获取用户菜单树(不含按钮)
      */
     List<Tree<String>> userMenu(String username);
 
@@ -29,9 +29,9 @@ public interface UserCenterService {
     List<Tree<String>> userOrgTree(String username);
 
     /**
-     * 获取用户所有的角色列表
+     * 当前用户拥有的岗位角色列表
      */
-    List<SysRoleVO> userRoleList(String username, String searchKey);
+    List<SysRoleVO> userRoleList(String roleName);
 
     /**
      * 当前用户切换岗位重新生成token

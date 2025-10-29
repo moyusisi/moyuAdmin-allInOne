@@ -10,7 +10,6 @@ import cn.hutool.core.lang.tree.parser.DefaultNodeParser;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -23,12 +22,9 @@ import com.moyu.boot.common.security.util.SecurityUtils;
 import com.moyu.boot.system.constant.SysConstants;
 import com.moyu.boot.system.enums.OrgTypeEnum;
 import com.moyu.boot.system.enums.ResourceTypeEnum;
-import com.moyu.boot.system.enums.StatusEnum;
 import com.moyu.boot.system.model.entity.SysGroup;
 import com.moyu.boot.system.model.entity.SysResource;
-import com.moyu.boot.system.model.entity.SysRole;
 import com.moyu.boot.system.model.entity.SysUser;
-import com.moyu.boot.system.model.param.SysGroupParam;
 import com.moyu.boot.system.model.param.SysRoleParam;
 import com.moyu.boot.system.model.param.SysUserParam;
 import com.moyu.boot.system.model.vo.GroupInfo;
@@ -107,13 +103,16 @@ public class UserCenterServiceImpl implements UserCenterService {
 
     @Override
     public List<Tree<String>> userMenu(String username) {
+        Optional<LoginUser> optUser = SecurityUtils.getLoginUser();
+        if (!optUser.isPresent()) {
+            throw new BusinessException(ResultCodeEnum.BUSINESS_ERROR, "用户未登录");
+        }
+        Set<String> roleSet = SecurityUtils.getRoles();
         // 用户有权限的资源code集合(含按钮)
-        Set<String> permSet = sysRelationService.userMenu(username);
+        Set<String> permSet = sysRelationService.rolePerm(roleSet);
 
-        // 查询所有可用的菜单(不含按钮)
-        List<SysResource> allMenuList = sysResourceService.list(new LambdaQueryWrapper<SysResource>()
-                // 不能已停用
-                .ne(SysResource::getStatus, StatusEnum.DISABLE.getCode())
+        // 查询所有的菜单(不含按钮)
+        List<SysResource> menuList = sysResourceService.list(Wrappers.lambdaQuery(SysResource.class)
                 // 不能是按钮
                 .ne(SysResource::getResourceType, ResourceTypeEnum.BUTTON.getCode())
                 .eq(SysResource::getDeleted, 0)
@@ -121,7 +120,7 @@ public class UserCenterServiceImpl implements UserCenterService {
         );
         // 用户有权限的菜单(不含按钮) + 所有模块、目录
         List<SysResource> userMenuList = CollectionUtil.newArrayList();
-        allMenuList.forEach(sysMenu -> {
+        menuList.forEach(sysMenu -> {
             if (ResourceTypeEnum.MODULE.getCode().equals(sysMenu.getResourceType())) {
                 // path为空则设置为随机字符串
                 if (ObjectUtil.isEmpty(sysMenu.getPath())) {
@@ -131,8 +130,8 @@ public class UserCenterServiceImpl implements UserCenterService {
             } else if (ResourceTypeEnum.DIR.getCode().equals(sysMenu.getResourceType())) {
                 userMenuList.add(sysMenu);
             } else {
-                // 菜单，有权限才添加
-                if (permSet.contains(sysMenu.getCode())) {
+                // 叶子结点有权限才添加(菜单、内链、外链等)
+                if (SecurityUtils.isRoot() || permSet.contains(sysMenu.getCode())) {
                     userMenuList.add(sysMenu);
                 }
             }
@@ -149,10 +148,11 @@ public class UserCenterServiceImpl implements UserCenterService {
             if (ObjectUtil.isNotEmpty(tree.get("meta"))) {
                 Meta meta = (Meta) tree.get("meta");
                 String metaType = meta.getType();
-                // 不是目录
+                // 叶子结点不是目录
                 boolean notDir = !ResourceTypeEnum.DIR.name().equalsIgnoreCase(metaType) && !ResourceTypeEnum.MODULE.name().equalsIgnoreCase(metaType);
                 // 有权限的菜单叶子节点才符合要求
-                return notDir && permSet.contains(tree.getId());
+//                return notDir && permSet.contains(tree.getId());
+                return notDir;
             } else {
                 return false;
             }
@@ -176,32 +176,43 @@ public class UserCenterServiceImpl implements UserCenterService {
     }
 
     @Override
-    public List<SysRoleVO> userRoleList(String username, String searchKey) {
-        // 查询用户所有的角色列表
-        Set<String> codeSet = sysRoleService.userAllRoles(username);
-        return sysRoleService.list(SysRoleParam.builder().codeSet(codeSet).name(searchKey).build());
+    public List<SysRoleVO> userRoleList(String roleName) {
+        if (SecurityUtils.isRoot()) {
+            // root拥有所有角色
+            return sysRoleService.list(SysRoleParam.builder().name(roleName).build());
+        }
+        // 当前登陆用户
+        Optional<LoginUser> optUser = SecurityUtils.getLoginUser();
+        if (!optUser.isPresent()) {
+            throw new BusinessException(ResultCodeEnum.BUSINESS_ERROR, "用户未登录");
+        }
+        // 当前用户的角色
+        Set<String> roleSet = SecurityUtils.getRoles();
+        return sysRoleService.list(SysRoleParam.builder().codeSet(roleSet).name(roleName).build());
     }
 
     @Override
     public String switchUserGroup(String groupCode) {
         String username = SecurityUtils.getUsername();
         // 通过唯一标识code查询group
-        SysGroup group = sysGroupService.getOne(Wrappers.lambdaQuery(SysGroup.class).eq(SysGroup::getCode, groupCode));
+        SysGroup group = sysGroupService.getOne(Wrappers.lambdaQuery(SysGroup.class).eq(SysGroup::getCode, groupCode).eq(SysGroup::getDeleted, 0));
         if (group == null) {
-            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER, "未查到指定数据");
+            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER, "切换失败，未查到岗位数据");
         }
-        // 角色集
-        Set<String> roleSet = sysRoleService.userAllRoles(username);
-        // 添加group中的角色
-        sysGroupService.groupRoleList(SysGroupParam.builder().code(group.getCode()).build())
-                .forEach(e -> roleSet.add(e.getCode()));
-        // 权限集
-        Set<String> permSet = sysRoleService.rolePerms(roleSet);
+        // 岗位角色 group-role
+        Set<String> roleSet = sysRelationService.groupRole(group.getCode());
         // 组装LoginUser
         LoginUser loginUser = LoginUser.builder().enabled(true)
-                .username(username).roles(roleSet).perms(permSet)
-                .orgCode(group.getOrgCode()).groupCode(group.getCode())
-                .dataScope(group.getDataScope()).build();
+                .username(username).groupCode(group.getCode())
+                // orgCode随岗位变化
+                .orgCode(group.getOrgCode())
+                // 岗位关联的角色
+                .roles(roleSet)
+                // 岗位权限 权限标识集合(仅接口,无菜单)
+                .perms(sysRoleService.rolePerms(roleSet))
+                // 岗位关联的数据权限
+                .dataScope(group.getDataScope())
+                .build();
         // 自定义数据权限集合
         if (DataScopeEnum.ORG_DEFINE.getCode().equals(group.getDataScope())) {
             loginUser.setScopes(new HashSet<>(SysConstants.COMMA_SPLITTER.splitToList(group.getScopeSet())));
@@ -240,6 +251,7 @@ public class UserCenterServiceImpl implements UserCenterService {
                     meta.setTitle(menu.getName());
                     // metaType 使用字符串
                     meta.setType(resourceType.name().toLowerCase());
+                    meta.setKeepAlive(true);
                     // 如果设置了不可见，那么设置hidden
                     if (ObjectUtil.equal(menu.getVisible(), 0)) {
                         meta.setHidden(true);
