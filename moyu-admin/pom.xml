@@ -214,7 +214,7 @@
                         </goals>
                         <configuration>
                             <!-- 把前端资源复制到springboot默认的静态资源路径 -->
-                            <outputDirectory>${project.basedir}/target/classes/public</outputDirectory>
+                            <outputDirectory>${project.basedir}/target/classes/static</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
                                 <resource>
