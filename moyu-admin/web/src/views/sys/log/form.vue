@@ -181,7 +181,3 @@
     onOpen
   })
 </script>
-<style scoped>
-  .ant-form-item {
-  }
-</style>

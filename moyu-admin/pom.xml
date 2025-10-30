@@ -132,7 +132,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <!--该插件主要用途：打包前端资源 -->
+            <!--该插件主要用途：编译构建打包前端资源 -->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
@@ -213,6 +213,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
+                            <!-- 把前端资源复制到springboot默认的静态资源路径 -->
                             <outputDirectory>${project.basedir}/target/classes/public</outputDirectory>
                             <overwrite>true</overwrite>
                             <resources>
