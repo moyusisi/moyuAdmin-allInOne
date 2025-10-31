@@ -15,15 +15,17 @@ values  (2001, '0', 'MY集团', '10000000', 1, 1, '0', 1, 0, null, null, 0, null
 -- 用户
 insert into moyu.sys_user (id, account, password, nick_name, avatar, name, gender, birthday, email, phone, id_no, address, staff_code, entry_date, org_code, org_name, org_path, login_ip, login_time, last_login_ip, last_login_time, pwd_update_time, status, remark, deleted, create_time, create_by, update_time, update_by)
 values  (101, 'superAdmin', '$2a$10$ZxsW23u3p2wdnEpPTkT5zuOU.rs.TqyWAAa5eFTgxbQfbQggZ2Y3C', null, null, '超管', 1, null, null, null, null, null, null, null, '11000000', '集团总部', '11000000,10000000,0', null, null, null, null, null, 0, null, 0, null, null, null, null),
-        (102, 'bjAdmin', '$2a$10$ZxsW23u3p2wdnEpPTkT5zuOU.rs.TqyWAAa5eFTgxbQfbQggZ2Y3C', null, null, 'bjAdmin', 1, null, null, null, null, null, null, null, '12000000', '北京公司', '12000000,10000000,0', null, null, null, null, null, 0, null, 0, null, null, null, null),
-        (103, 'auditor', '$2a$10$ZxsW23u3p2wdnEpPTkT5zuOU.rs.TqyWAAa5eFTgxbQfbQggZ2Y3C', null, null, '审计员小王', 1, null, null, null, null, null, null, null, '11000000', '集团总部', '11000000,10000000,0', null, null, null, null, null, 0, null, 0, null, null, null, null);
+        (102, 'rAdmin', '$2a$10$ZxsW23u3p2wdnEpPTkT5zuOU.rs.TqyWAAa5eFTgxbQfbQggZ2Y3C', null, null, '超管', 1, null, null, null, null, null, null, null, '12000000', '北京公司', '12000000,10000000,0', null, null, null, null, null, 0, null, 0, null, null, null, null),
+        (103, 'bjAdmin', '$2a$10$ZxsW23u3p2wdnEpPTkT5zuOU.rs.TqyWAAa5eFTgxbQfbQggZ2Y3C', null, null, 'bjAdmin', 1, null, null, null, null, null, null, null, '12000000', '北京公司', '12000000,10000000,0', null, null, null, null, null, 0, null, 0, null, null, null, null),
+        (104, 'auditor', '$2a$10$ZxsW23u3p2wdnEpPTkT5zuOU.rs.TqyWAAa5eFTgxbQfbQggZ2Y3C', null, null, '审计员小王', 1, null, null, null, null, null, null, null, '11000000', '集团总部', '11000000,10000000,0', null, null, null, null, null, 0, null, 0, null, null, null, null);
 
 -- 角色
 insert into moyu.sys_role (id, name, code, sort_num, status, ext_json, remark, deleted, create_time, create_by, update_time, update_by)
 values  (100, '默认角色', 'r_default', 1, 0, null, '', 0, null, null, null, null),
         (110, 'ROOT管理员', 'ROOT', 1, 0, null, '', 0, null, null, null, null),
         (120, '超级管理员', 'r_superAdmin', 2, 0, null, null, 0, null, null, null, null),
-        (130, '审计员', 'r_auditor', 4, 0, null, '', 0, null, null, null, null);
+        (130, '角色管理员', 'r_roleAdmin', 3, 0, null, '', 0, null, null, null, null),
+        (140, '审计员', 'r_auditor', 4, 0, null, '', 0, null, null, null, null);
 
 -- 功能权限组
 insert into moyu.sys_group (id, name, code, org_code, org_name, data_scope, scope_set, org_path, sort_num, status, ext_json, remark, deleted, create_time, create_by, update_time, update_by)
@@ -33,8 +35,8 @@ values  (1894925631903645700, '总部兼职岗', 'g_zongbu', '11000000', '集团
 
 -- 菜单数据
 insert into moyu.sys_resource (id, parent_code, name, code, resource_type, path, component, icon, permission, visible, link, module, sort_num, ext_json, remark, deleted, create_time, create_by, update_time, update_by)
-values  (2001, '0', '系统模块', 'sys_module', 1, '/sysModule', null, 'appstore-add-outlined', '', 1, null, 'sys_module', 1, null, '', 0, null, null, null, null),
-        (2002, '0', '业务模块', 'biz_module', 1, '/bizModule', null, 'profile-outlined', '', 1, null, null, 2, null, '', 0, null, null, null, null),
+values  (2001, '0', '系统模块', 'sys_module', 1, '/sysModule', 'Layout', 'appstore-add-outlined', '', 1, null, 'sys_module', 1, null, '', 0, null, null, null, null),
+        (2002, '0', '业务模块', 'biz_module', 1, '/bizModule', 'Layout', 'profile-outlined', '', 1, null, null, 2, null, '', 0, null, null, null, null),
 
         (2003, 'sys_module', '组织架构', 'dir_sys_org', 2, '/org', null, 'apartment-outlined', '', 1, null, 'sys_module', 10, null, '', 0, null, null, null, null),
         (2004, 'sys_module', '权限控制', 'dir_sys_perm', 2, '/perm', null, 'user-switch-outlined', '', 1, null, 'sys_module', 20, null, '', 0, null, null, null, null),
@@ -132,7 +134,7 @@ values  (2001, '0', '系统模块', 'sys_module', 1, '/sysModule', null, 'appsto
 
 -- 关系
 insert into moyu.sys_relation (id, object_id, target_id, relation_type, deleted, create_time, create_by, update_time, update_by)
-values  (1, 'ROOT', 'superAdmin', 1, 0, null, null, null, null),
+values  (1, 'ROOT', 'rAdmin', 1, 0, null, null, null, null),
         (2, 'r_superAdmin', 'superAdmin', 1, 0, null, null, null, null),
 
         (3, 'r_superAdmin', 'menu_sys_org', 2, 0, null, null, null, null),
@@ -149,6 +151,17 @@ values  (1, 'ROOT', 'superAdmin', 1, 0, null, null, null, null),
         (14, 'r_superAdmin', 'menu_sys_log_visit', 2, 0, null, null, null, null),
         (15, 'r_superAdmin', 'menu_sys_log_op', 2, 0, null, null, null, null),
         (16, 'r_superAdmin', 'menu_biz_pos', 2, 0, null, null, null, null),
+
+        (21, 'r_roleAdmin', 'menu_sys_role', 2, 0, null, null, null, null),
+        (22, 'r_roleAdmin', 'btn_sys_role_add', 2, 0, null, null, null, null),
+        (23, 'r_roleAdmin', 'btn_sys_role_delete', 2, 0, null, null, null, null),
+        (24, 'r_roleAdmin', 'btn_sys_role_edit', 2, 0, null, null, null, null),
+        (25, 'r_roleAdmin', 'btn_sys_role_list', 2, 0, null, null, null, null),
+        (26, 'r_roleAdmin', 'btn_sys_role_detail', 2, 0, null, null, null, null),
+        (27, 'r_roleAdmin', 'btn_sys_role_userList', 2, 0, null, null, null, null),
+        (28, 'r_roleAdmin', 'btn_sys_role_addUser', 2, 0, null, null, null, null),
+        (29, 'r_roleAdmin', 'btn_sys_role_deleteUser', 2, 0, null, null, null, null),
+        (30, 'r_roleAdmin', 'btn_sys_role_grantMenu', 2, 0, null, null, null, null),
 
         (31, 'r_auditor', 'menu_sys_org', 2, 0, null, null, null, null),
         (32, 'r_auditor', 'menu_sys_user', 2, 0, null, null, null, null),
