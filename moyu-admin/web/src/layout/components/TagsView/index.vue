@@ -47,12 +47,11 @@ const tagList = computed(() => {
 })
 
 const activeKey = ref()
-const affixTags = ref<TagView[]>([]);
 
 // 首次加载会调用onMounted但route不会改变
 onMounted(() => {
   // console.log('onMounted')
-  initTags()
+  tagsViewStore.initTags()
   addView(route)
   activeKey.value = route.fullPath
 })
@@ -63,45 +62,6 @@ watch(route, (to) => {
   addView(to)
   activeKey.value = to.fullPath
 })
-
-
-function initTags() {
-  const tags = filterAffixTags(menuStore.routes);
-  affixTags.value = tags;
-  for (const tag of tags) {
-    // Must have tag name
-    if (tag.name) {
-      tagsViewStore.addView(tag)
-    }
-  }
-}
-
-/**
- * 过滤出需要固定的标签
- */
-function filterAffixTags(routes) {
-  let tags: TagView[] = [];
-  routes.forEach((route) => {
-    const tagPath = route.path;
-    if (route.meta?.affix) {
-      tags.push({
-        path: tagPath,
-        fullPath: tagPath,
-        name: String(route.name),
-        title: route.meta?.title || "no-name",
-        affix: route.meta?.affix,
-        keepAlive: route.meta?.keepAlive,
-      });
-    }
-    if (route.children) {
-      const tempTags = filterAffixTags(route.children)
-      if (tempTags.length >= 1) {
-        tags = [...tags, ...tempTags]
-      }
-    }
-  });
-  return tags;
-}
 
 // 增加tagsView
 const addView = (to) => {

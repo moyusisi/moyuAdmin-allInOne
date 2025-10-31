@@ -5,11 +5,12 @@
       :trigger="null"
       collapsible
       :theme="sideTheme"
+      class="side-menu"
       width="210"
       @collapse="onCollapse"
   >
     <!-- 左侧菜单上方标题LOGO区域 -->
-    <header class="header-logo">
+    <header class="side-menu-header">
       <div class="header-left">
         <div class="logo-bar">
           <img class="logo" :src="defaultSettings.logo"/>
@@ -17,18 +18,29 @@
         </div>
       </div>
     </header>
-    <!-- sideBarMenu -->
-    <a-menu
-        mode="inline"
-        :inline-indent="16"
-        :theme="sideTheme"
-        v-bind:openKeys="openKeys"
-        v-bind:selectedKeys="selectedKeys"
-        @select="onSelect"
-        @openChange="onOpenChange"
-    >
-      <MenuItem v-for="route in menuList" :key="route.path" :item="route"/>
-    </a-menu>
+    <div class="side-menu-body">
+      <!-- sideBarMenu -->
+      <a-menu
+          mode="inline"
+          :inline-indent="16"
+          :theme="sideTheme"
+          v-bind:openKeys="openKeys"
+          v-bind:selectedKeys="selectedKeys"
+          @select="onSelect"
+          @openChange="onOpenChange"
+      >
+        <MenuItem v-for="route in menuList" :key="route.path" :item="route"/>
+      </a-menu>
+    </div>
+    <div class="side-menu-footer">
+      <div class="item">
+        <SettingBar/>
+      </div>
+      <span class="foot-label">MY管理系统</span>
+      <div class="item">
+        <Hamburger/>
+      </div>
+    </div>
   </a-layout-sider>
 </template>
 
@@ -38,6 +50,9 @@ import defaultSettings from '@/config/settings';
 
 import { useRoute, useRouter } from "vue-router";
 import MenuItem from "@/layout/components/SideBar/MenuItem.vue";
+import Hamburger from "@/layout/components/NavBar/Hamburger/index.vue";
+import SettingBar from "@/layout/components/NavBar/SettingBar/index.vue";
+import UserBar from "@/layout/components/NavBar/UserBar/index.vue";
 
 const settingsStore = useSettingsStore()
 const menuStore = useMenuStore()
@@ -181,4 +196,10 @@ const traverse = (array, key) => {
 
 <style scoped>
 
+.foot-label {
+  font-size: 12px;
+}
+.item {
+  height: 100%;
+}
 </style>

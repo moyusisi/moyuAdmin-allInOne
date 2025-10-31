@@ -1,15 +1,12 @@
 <template>
 	<div class="user-bar">
-		<!-- 搜索面板 -->
-		<div v-if="!isMobile" class="screen panel-item hidden-sm-and-down" @click="fullscreen">
+		<!-- 全屏 -->
+		<div v-if="!isMobile" class="bar-item hidden-sm-and-down" @click="fullscreen">
 			<fullscreen-outlined />
 		</div>
-		<a-dropdown class="user panel-item">
+		<a-dropdown class="panel-item">
 			<div class="user-avatar">
-<!--        <a-avatar :src="userInfo ? userInfo.avatar : undefined" />-->
-        <a-avatar>
-          <template #icon><UserOutlined /></template>
-        </a-avatar>
+        <a-avatar :src="userInfo.avatar ? userInfo.avatar : avatarImg">Me</a-avatar>
 				<label>{{ userInfo.name }}</label>
 			</div>
 			<template #overlay>
@@ -31,15 +28,8 @@
 				</a-menu>
 			</template>
 		</a-dropdown>
-		<div class="setting panel-item" @click="openSetting">
-			<layout-outlined />
-		</div>
 	</div>
 
-	<!-- 整体风格设置抽屉 -->
-	<a-drawer v-model:open="settingDialog" :closable="false" width="300">
-		<setting />
-	</a-drawer>
 </template>
 
 <script setup>
@@ -48,16 +38,16 @@
   import { Modal } from 'ant-design-vue'
   import screenFull from 'screenfull'
   import { message } from 'ant-design-vue'
-  import Setting from '../setting.vue'
-  import { useMenuStore, useUserStore } from '@/store'
+  import { useMenuStore, useTagsViewStore, useUserStore } from '@/store/index.js'
   import { useRoute, useRouter } from 'vue-router'
 
   const userStore = useUserStore()
   const menuStore = useMenuStore()
+  const tagsViewStore = useTagsViewStore()
   const route = useRoute()
   const router = useRouter()
+  const avatarImg = '/img/avatar.gif?' +new Date()
 
-  const settingDialog = ref(false)
   const isMobile = ref(false)
   const userInfo = computed(() => {
     return userStore.userInfo
@@ -73,6 +63,7 @@
       await userStore.switchUserGroup(groupCode)
       message.loading('切换中...', 0.5)
       await menuStore.reloadRoutes()
+      tagsViewStore.initTags()
       router.push({ path: '/' })
       // window.location.href = '/index'
       message.success('切换成功')
@@ -92,6 +83,7 @@
         message.loading('退出中...', 0.5)
         userStore.logout().then(() => {
           menuStore.clear()
+          tagsViewStore.initTags()
           router.push(`/login?redirect=${route.fullPath}`);
           // router.push({ path: '/login' })
         }).catch((err) => {
@@ -102,10 +94,6 @@
       onCancel() {
       }
     })
-  }
-  // 设置抽屉
-  const openSetting = () => {
-    settingDialog.value = true
   }
   // 全屏
   const fullscreen = () => {

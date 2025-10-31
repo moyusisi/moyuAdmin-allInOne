@@ -42,6 +42,10 @@ export const useMenuStore = defineStore('menuStore', () => {
    */
   const refreshModuleMenu = async () => {
     const res = await userCenterApi.loginUserMenu()
+    if (!res.data) {
+      console.log("无任何菜单权限", res.data)
+      res.data = []
+    }
     localStorage.setItem('MENU', JSON.stringify(res.data))
     menuList.value = res.data
   };

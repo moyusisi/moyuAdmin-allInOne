@@ -1,6 +1,6 @@
 <template>
 	<!-- Hamburger -->
-	<div class="panel-item" @click="onClick">
+	<div class="bar-item" @click="onClick">
 		<MenuUnfoldOutlined v-if="menuCollapsed" />
 		<MenuFoldOutlined v-else />
 	</div>
@@ -21,16 +21,4 @@
 </script>
 
 <style scoped>
-	.panel-item {
-		padding: 0 10px;
-		cursor: pointer;
-		height: 100%;
-		display: flex;
-		align-items: center;
-		/*color: var(--font-color);*/
-	}
-
-	.panel-item:hover {
-		background: var(--header-color-split);
-	}
 </style>

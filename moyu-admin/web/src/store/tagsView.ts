@@ -1,5 +1,6 @@
 import { defineStore } from "pinia"
 import { TagView } from "@/types/global";
+import { useMenuStore } from "@/store/menu.ts";
 
 export const useTagsViewStore = defineStore('tagsView', () => {
   // 定义state
@@ -76,9 +77,50 @@ export const useTagsViewStore = defineStore('tagsView', () => {
     }
   }
 
+  // 根据菜单路由初始化标签,添加affix的页面
+  function initTags() {
+    visitedViews.value = []
+    cachedViews.value = []
+    const menuStore = useMenuStore()
+    const tags = filterAffixTags(menuStore.routes);
+    for (const tag of tags) {
+      if (tag.name) {
+        addView(tag)
+      }
+    }
+  }
+
+  /**
+   * 过滤出需要固定的标签
+   */
+  function filterAffixTags(routes) {
+    let tags: TagView[] = [];
+    routes.forEach((route) => {
+      const tagPath = route.path;
+      if (route.meta?.affix) {
+        tags.push({
+          path: tagPath,
+          fullPath: tagPath,
+          name: String(route.name),
+          title: route.meta?.title || "no-name",
+          affix: route.meta?.affix,
+          keepAlive: route.meta?.keepAlive,
+        });
+      }
+      if (route.children) {
+        const tempTags = filterAffixTags(route.children)
+        if (tempTags.length >= 1) {
+          tags = [...tags, ...tempTags]
+        }
+      }
+    });
+    return tags;
+  }
+
   return {
     visitedViews,
     cachedViews,
+    initTags,
     addView,
     removeView,
   }
