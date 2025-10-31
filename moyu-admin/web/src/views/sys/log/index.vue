@@ -10,7 +10,7 @@
         </a-col>
         <a-col :span="6">
           <a-form-item name="business" label="业务">
-            <a-input v-model:value="queryFormData.business" placeholder="搜索业务" allowClear />
+            <a-input v-model:value="queryFormData.business" placeholder="搜索业务名称" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
@@ -19,36 +19,38 @@
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="content" label="内容">
-            <a-input v-model:value="queryFormData.content" placeholder="搜索内容" allowClear />
-          </a-form-item>
-        </a-col>
-        <a-col :span="6">
-          <a-form-item name="requestUrl" label="接口地址">
-            <a-input v-model:value="queryFormData.requestUrl" placeholder="搜索接口地址" allowClear />
-          </a-form-item>
-        </a-col>
-        <a-col :span="6">
-          <a-form-item name="requestContent" label="请求参数">
-            <a-input v-model:value="queryFormData.requestContent" placeholder="搜索请求参数" allowClear />
-          </a-form-item>
-        </a-col>
-        <a-col :span="6">
-          <a-form-item name="createBy" label="操作人ID">
-            <a-input v-model:value="queryFormData.createBy" placeholder="请输入操作人ID" allowClear />
-          </a-form-item>
-        </a-col>
-        <a-col :span="6">
-          <a-form-item name="createTime" label="记录时间">
-            <a-range-picker v-model:value="queryFormData.createTimeRange" valueFormat="YYYY-MM-DD"/>
-          </a-form-item>
-        </a-col>
-        <a-col :span="6">
           <a-form-item>
             <a-flex gap="small">
               <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
               <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+              <a-button v-if="!showMore" type="link" @click="showMore = !showMore">更多条件<DownOutlined /></a-button>
+              <a-button v-else type="link"  @click="showMore = !showMore">收起<UpOutlined /></a-button>
             </a-flex>
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="content" label="内容">
+            <a-input v-model:value="queryFormData.content" placeholder="搜索内容" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="requestUrl" label="接口地址">
+            <a-input v-model:value="queryFormData.requestUrl" placeholder="搜索接口地址" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="requestContent" label="请求参数">
+            <a-input v-model:value="queryFormData.requestContent" placeholder="搜索请求参数" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="createBy" label="操作人ID">
+            <a-input v-model:value="queryFormData.createBy" placeholder="请输入操作人ID" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="createTime" label="记录时间">
+            <a-range-picker v-model:value="queryFormData.createTimeRange" valueFormat="YYYY-MM-DD"/>
           </a-form-item>
         </a-col>
       </a-row>
@@ -141,7 +143,7 @@
   import logApi from '@/api/sys/logApi.js'
 
   import { h, ref } from "vue"
-  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
+  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined, DownOutlined, UpOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import Form from "./form.vue"
   import MTable from "@/components/MTable/index.vue"
@@ -149,11 +151,9 @@
   // 查询表单相关对象
   const queryFormRef = ref()
   const queryFormData = ref({})
-  // 下拉框选项
-  const exampleOptions = [
-    { label: "选项一", value: 1 },
-    { label: "选项二", value: 2 }
-  ]
+  // 是否展示更多搜索条件
+  const showMore = ref(false)
+
   // 其他页面操作
   const formRef = ref()
 
