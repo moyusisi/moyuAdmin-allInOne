@@ -1,46 +1,25 @@
 <template>
   <!-- 左侧侧边栏 -->
-  <a-layout-sider
-      :collapsed="menuCollapsed"
-      :trigger="null"
-      collapsible
-      :theme="sideTheme"
-      class="side-menu"
-      width="210"
-      @collapse="onCollapse"
-  >
-    <!-- 左侧菜单上方标题LOGO区域 -->
-    <header class="side-menu-header">
-      <div class="header-left">
-        <div class="logo-bar">
-          <img class="logo" :src="defaultSettings.logo"/>
-          <span>{{ defaultSettings.title }}</span>
-        </div>
-      </div>
-    </header>
+  <a-layout-sider class="side-menu" :collapsed="menuCollapsed" :theme="sideTheme" collapsible width="210" @collapse="onCollapse">
+    <!-- 侧边栏logo标题 -->
+    <a-layout-header class="side-menu-header">
+        <img class="logo" :src="defaultSettings.logo"/>
+        <span class="title">{{ defaultSettings.title }}</span>
+    </a-layout-header>
     <div class="side-menu-body">
-      <!-- sideBarMenu -->
-      <a-menu
-          mode="inline"
-          :inline-indent="16"
-          :theme="sideTheme"
-          v-bind:openKeys="openKeys"
-          v-bind:selectedKeys="selectedKeys"
-          @select="onSelect"
-          @openChange="onOpenChange"
-      >
+      <!-- 侧边栏菜单 -->
+      <a-menu mode="inline" :inline-indent="16" :theme="sideTheme" :openKeys="openKeys" :selectedKeys="selectedKeys"
+              @select="onSelect" @openChange="onOpenChange">
         <MenuItem v-for="route in menuList" :key="route.path" :item="route"/>
       </a-menu>
     </div>
-    <div class="side-menu-footer">
-      <div class="item">
+    <template #trigger>
+      <div class="side-menu-footer">
         <SettingBar/>
-      </div>
-      <span class="foot-label">MY管理系统</span>
-      <div class="item">
+        <span>MY管理系统</span>
         <Hamburger/>
       </div>
-    </div>
+    </template>
   </a-layout-sider>
 </template>
 
@@ -52,7 +31,6 @@ import { useRoute, useRouter } from "vue-router";
 import MenuItem from "@/layout/components/SideBar/MenuItem.vue";
 import Hamburger from "@/layout/components/NavBar/Hamburger/index.vue";
 import SettingBar from "@/layout/components/NavBar/SettingBar/index.vue";
-import UserBar from "@/layout/components/NavBar/UserBar/index.vue";
 
 const settingsStore = useSettingsStore()
 const menuStore = useMenuStore()
@@ -196,10 +174,72 @@ const traverse = (array, key) => {
 
 <style scoped>
 
-.foot-label {
-  font-size: 12px;
+.side-menu {
+  height: 100vh;
+  overflow: auto;
 }
-.item {
+
+.side-menu-header {
+  padding: 0;
+  /** a-layout-header默认高度为64,此处改为50 */
+  height: 50px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: #ffffff;
+  border-bottom: 1px solid rgba(246, 246, 246, 0.85);
+}
+
+.side-menu-header .logo {
+  width: 40px;
+  height: 40px;
+  margin-left: 20px;
+  margin-right: 10px;
+}
+.side-menu-header .title {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.side-menu-body {
+  /** 高度为 页面100% - header高度 - trigger(footer)高度 */
+  height: calc(100vh - 50px - 48px);
+  /** scroll在body中,注释掉则出现在side-menu，即header也会滑动 */
+  overflow: auto;
+}
+
+.side-menu-footer {
+  /** trigger高度默认为48 */
   height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(246, 246, 246, 0.85);
+}
+
+/* a-sider折叠时的class */
+.ant-layout-sider-collapsed {
+  /* 嵌套选择器，等效于后代选择器 */
+  .side-menu-header > span {
+    display: none;
+  }
+  .side-menu-footer > span {
+    display: none;
+  }
+}
+
+/* a-sider暗色时的class */
+.ant-layout-sider-dark {
+  .side-menu-header {
+    background: #001529;
+    border: 0;
+    color: #fff;
+  }
+  .side-menu-footer {
+    border: 0;
+    color: #fff;
+  }
 }
 </style>

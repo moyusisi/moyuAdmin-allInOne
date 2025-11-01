@@ -120,7 +120,7 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style scoped>
 	.xn-icon-select-radio {
 		padding-left: 5px;
 		padding-bottom: 10px;
@@ -146,7 +146,7 @@
 			margin: 5px;
 			border-radius: 2px;
 			vertical-align: top;
-			box-shadow: 0 0 0 1px var(--border-color-split);
+			box-shadow: 0 0 0 1px #F0F0F0;
 			transition: all 0.1s;
 			position: relative;
 
@@ -154,7 +154,7 @@
 			&.active {
 				cursor: pointer;
 				color: #ffffff;
-				background-color: var(--primary-color);
+				background-color: #1677FF;
 			}
 		}
 	}

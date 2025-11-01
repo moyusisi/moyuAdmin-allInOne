@@ -123,5 +123,6 @@ export const useTagsViewStore = defineStore('tagsView', () => {
     initTags,
     addView,
     removeView,
+    removeCachedView,
   }
 })

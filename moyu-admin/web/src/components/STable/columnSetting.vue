@@ -89,7 +89,7 @@
 		emit('columnChange', columnsSetting.value)
 	}
 </script>
-<style lang="less" scoped>
+<style scoped>
 	.s-tool-column-item {
 		display: flex;
 		align-items: center;

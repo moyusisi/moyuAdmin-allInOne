@@ -1,8 +1,7 @@
 <template>
 	<template v-if="!isHidden(item)">
-		<!-- 显示具有单个子路由的菜单项或没有子路由的父路由 -->
-		<a-menu-item v-if="hasOnlyOneShownRoute(item) && (!onlyOneRoute.children || onlyOneRoute.noShownChildren) && !item.meta?.alwaysShow"
-					 :key="onlyOneRoute.path">
+		<a-menu-item v-if="hasOnlyOneShownRoute(item) && (!onlyOneRoute.children || onlyOneRoute.noShownChildren) && !item.meta?.alwaysShow" :key="onlyOneRoute.path">
+      <!-- 显示具有单个子路由的菜单项或没有子路由的父路由 -->
 			<template v-if="onlyOneRoute.meta.icon" #icon>
 				<component :is="onlyOneRoute.meta.icon" />
 			</template>
@@ -12,8 +11,8 @@
 			</a>
 			<a v-else>{{ onlyOneRoute.meta?.title }}</a>
 		</a-menu-item>
-		<!-- 显示具有多个子路由的父菜单项 -->
 		<a-sub-menu v-else :key="item.path" :title="item.meta?.title">
+      <!-- 显示具有多个子路由的父菜单项 -->
 			<template v-if="item.meta?.icon" #icon>
 				<component :is="item.meta.icon" />
 			</template>

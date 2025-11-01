@@ -26,7 +26,7 @@
 	display: flex;
 	justify-content: space-between;
 	background: #FFFFFF;
-	border-bottom: 1px solid var(--header-bottom);
+  border-bottom: 1px solid rgba(246, 246, 246, 0.85);
 	box-shadow: 0 0.4px 0.5px rgb(0 21 41 / 12%);
 }
 .admin-ui-navbar .left-panel {

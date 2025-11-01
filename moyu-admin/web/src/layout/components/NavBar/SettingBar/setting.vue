@@ -1,43 +1,41 @@
 <template>
-	<div class="setting-drawer-index-content">
-		<div class="scrollbar">
-			<a-divider>
-				<h3 class="setting-item-title">整体风格设置</h3>
-			</a-divider>
-			<div class="setting-checkbox">
-				<a-tooltip v-for="(a, i) in sideStyleList" :key="i" placement="top">
-					<template #title>
-						<span>{{ a.tips }}</span>
-					</template>
-					<div :class="['setting-checkbox-item', a.style]" @click="setSideStyle(a.value)">
-						<check-outlined v-if="theme === a.value" class="setting-checkbox-item-select-icon" />
-					</div>
-				</a-tooltip>
-			</div>
-			<a-divider />
-			<a-form ref="formRef" class="text-right">
-				<a-form-item label="面包屑">
-					<a-switch :checked="breadcrumbView" @change="toggleState('breadcrumbView')" />
-				</a-form-item>
-				<a-form-item label="多标签">
-					<a-switch :checked="tagsView" @change="toggleState('tagsView')" />
-				</a-form-item>
-				<a-form-item label="折叠菜单">
-					<a-switch :checked="menuCollapsed" @change="toggleState('menuCollapsed')"/>
-				</a-form-item>
-				<a-form-item label="菜单排他展开">
-					<a-switch :checked="sideUniqueOpen" @change="toggleState('sideUniqueOpen')"/>
-				</a-form-item>
-				<a-form-item label="登录用户水印">
-					<a-switch :checked="watermarkEnabled" @change="toggleState('watermarkEnabled')" />
-				</a-form-item>
-			</a-form>
-			<a-alert
-				message="以上配置可实时预览，开发者可在 config/settings.js 中配置默认值，不建议在生产环境下开放布局设置"
-				type="warning"
-			/>
-		</div>
-	</div>
+  <div class="scrollbar">
+    <a-divider>
+      <h3 class="setting-item-title">整体风格设置</h3>
+    </a-divider>
+    <div class="setting-checkbox">
+      <a-tooltip v-for="(a, i) in sideStyleList" :key="i" placement="top">
+        <template #title>
+          <span>{{ a.tips }}</span>
+        </template>
+        <div :class="['setting-checkbox-item', a.style]" @click="setSideStyle(a.value)">
+          <check-outlined v-if="theme === a.value" class="setting-checkbox-item-select-icon"/>
+        </div>
+      </a-tooltip>
+    </div>
+    <a-divider/>
+    <a-form ref="formRef" class="text-right">
+      <a-form-item label="面包屑">
+        <a-switch :checked="breadcrumbView" @change="toggleState('breadcrumbView')"/>
+      </a-form-item>
+      <a-form-item label="多标签">
+        <a-switch :checked="tagsView" @change="toggleState('tagsView')"/>
+      </a-form-item>
+      <a-form-item label="折叠菜单">
+        <a-switch :checked="menuCollapsed" @change="toggleState('menuCollapsed')"/>
+      </a-form-item>
+      <a-form-item label="菜单排他展开">
+        <a-switch :checked="sideUniqueOpen" @change="toggleState('sideUniqueOpen')"/>
+      </a-form-item>
+      <a-form-item label="登录用户水印">
+        <a-switch :checked="watermarkEnabled" @change="toggleState('watermarkEnabled')"/>
+      </a-form-item>
+    </a-form>
+    <a-alert
+        message="以上配置可实时预览，开发者可在 config/settings.js 中配置默认值，不建议在生产环境下开放布局设置"
+        type="warning"
+    />
+  </div>
 </template>
 <script setup>
 	import { useSettingsStore } from '@/store'
@@ -84,7 +82,7 @@
 	})
 </script>
 
-<style lang="less" scoped>
+<style scoped>
 	.setting-checkbox {
 		display: flex;
 		margin-bottom: 20px;
@@ -255,7 +253,7 @@
 		margin: 0 auto;
 	}
 	.setting-item-title {
-		color: var(--font-color);
+		color: rgba(0, 0, 0, 0.88);
 	}
 	:deep(.ant-form-item) {
 		margin-bottom: 12px !important;

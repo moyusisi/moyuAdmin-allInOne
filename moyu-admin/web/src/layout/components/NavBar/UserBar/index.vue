@@ -1,10 +1,10 @@
 <template>
 	<div class="user-bar">
 		<!-- 全屏 -->
-		<div v-if="!isMobile" class="bar-item hidden-sm-and-down" @click="fullscreen">
-			<fullscreen-outlined />
+		<div v-if="!isMobile" class="bar-item" @click="fullscreen">
+			<FullscreenOutlined />
 		</div>
-		<a-dropdown class="panel-item">
+		<a-dropdown class="user-bar-item">
 			<div class="user-avatar">
         <a-avatar :src="userInfo.avatar ? userInfo.avatar : avatarImg">Me</a-avatar>
 				<label>{{ userInfo.name }}</label>
@@ -34,7 +34,7 @@
 
 <script setup>
   import { h, createVNode } from 'vue'
-  import { ExclamationCircleOutlined, UserSwitchOutlined } from '@ant-design/icons-vue'
+  import { ExclamationCircleOutlined, FullscreenOutlined, UserSwitchOutlined } from '@ant-design/icons-vue'
   import { Modal } from 'ant-design-vue'
   import screenFull from 'screenfull'
   import { message } from 'ant-design-vue'
@@ -104,18 +104,22 @@
   }
 </script>
 
-<style lang="less">
-	:deep(.ant-modal) {
-		top: 20px;
-	}
-	:deep(.ant-modal-content) {
-		border-radius: 10px;
-	}
+<style>
 	.user-bar {
 		display: flex;
 		align-items: center;
 		height: 100%;
 	}
+  .user-bar .user-bar-item {
+    padding: 0 10px;
+    cursor: pointer;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .user-bar .user-bar-item:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
 	.user-bar .user-avatar {
 		height: 49px;
 		display: flex;
@@ -134,9 +138,9 @@
   }
   .item-sub-title {
     font-size: 12px;
-    color: var(--text-color-secondary);
+    color: #737373;
   }
   .item-selected {
-    background-color: var(--primary-1);
+    background-color: #e6f7ff;
   }
 </style>

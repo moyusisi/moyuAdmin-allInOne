@@ -7,7 +7,7 @@ import App from './App.vue'
 
 // style
 import 'ant-design-vue/dist/reset.css'
-import '@/style/index.less'
+import '@/style/index.css'
 import * as antdvIcons from '@ant-design/icons-vue'
 // 代码高亮风格，选择更多风格需导入 node_modules/hightlight.js/styles/ 目录下其它css文件
 import 'highlight.js/styles/github-dark.min.css'

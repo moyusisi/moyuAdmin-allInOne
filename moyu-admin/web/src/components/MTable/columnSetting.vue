@@ -86,7 +86,7 @@
 		emit('columnChange', columnsSetting.value)
 	}
 </script>
-<style lang="less" scoped>
+<style scoped>
 	.tool-column {
 		.ant-divider {
 			margin: 0;
