@@ -151,8 +151,8 @@ import codegenApi from '@/api/dev/codegenApi'
 import { message, TreeSelect } from 'ant-design-vue'
 import { required } from "@/utils/formRules.js";
 import { useSettingsStore } from "@/store/index.js";
-import resourceApi from "@/api/sys/resourceApi.js";
-import OrgTreeSelect from "@/views/sys/components/orgTreeSelect.vue";
+import resourceApi from "@/api/system/resourceApi.js";
+import OrgTreeSelect from "@/views/system/components/orgTreeSelect.vue";
 
 const settingsStore = useSettingsStore()
 
@@ -377,13 +377,11 @@ const onSubmit = () => {
   // 保存所有配置
   submitLoading.value = true
   codegenApi.saveConfig(configFormData.value).then((res) => {
-    if (res.code === 0) {
-      message.success(res.message)
-      emit('successful')
-      onClose()
-    } else {
-      message.error(res.message)
-    }
+    message.success(res.message)
+    emit('successful')
+    onClose()
+  }).catch((res) => {
+    message.error(res.message)
   }).finally(() => {
     submitLoading.value = false
   })

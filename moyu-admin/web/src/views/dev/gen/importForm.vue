@@ -69,7 +69,7 @@
   import { message } from "ant-design-vue";
   import { h } from "vue";
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
-  import userApi from "@/api/sys/userApi"
+  import userApi from "@/api/system/userApi"
   import codegenApi from "@/api/dev/codegenApi.js";
 
   const settingsStore = useSettingsStore()

@@ -58,6 +58,26 @@ export interface TagView {
 }
 
 /**
+ * 搜索条目对象
+ */
+export interface SearchItem {
+  /** 图标 */
+  icon?: string;
+  /** 菜单路由 */
+  path: string;
+  /** 包括 路径、查询参数和哈希值的完整地址 */
+  fullPath: string;
+  /** 菜单名称 */
+  name: string;
+  /** 菜单全名(包含父目录) */
+  fullName: string;
+  /** 菜单拼音 */
+  namePinyin?: string,
+  /** 菜单首字母拼音 */
+  namePinyinFirst?: string,
+}
+
+/**
  * VTable中使用的行内操作对象
  */
 export interface OpText {

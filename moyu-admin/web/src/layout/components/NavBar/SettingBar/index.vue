@@ -4,7 +4,7 @@
     <SettingOutlined />
   </div>
   <!-- 系统设置抽屉 -->
-  <a-drawer v-model:open="settingDialog" :closable="false" width="300">
+  <a-drawer v-model:open="settingsOpen" :closable="false" width="300">
     <setting />
   </a-drawer>
 </template>
@@ -12,11 +12,11 @@
 	import { SettingOutlined } from "@ant-design/icons-vue"
   import Setting from "@/layout/components/NavBar/SettingBar/setting.vue"
 
-  const settingDialog = ref(false)
+  const settingsOpen = ref(false)
 
   // 设置抽屉
   const openSetting = () => {
-    settingDialog.value = true
+    settingsOpen.value = true
   }
 </script>
 

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import loginApi from '@/api/auth/loginApi'
-import userCenterApi from '@/api/sys/userCenterApi'
-import { UserInfo } from "@/api/sys/types.ts";
+import userCenterApi from '@/api/system/userCenterApi'
+import { UserInfo } from "@/api/system/types.ts";
 
 export const useUserStore = defineStore('userStore', () => {
   // 定义state

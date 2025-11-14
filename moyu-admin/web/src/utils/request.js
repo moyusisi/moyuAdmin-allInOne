@@ -2,6 +2,7 @@
 import axios from 'axios'
 import { Modal, message } from 'ant-design-vue'
 import settings from '@/config/settings'
+import router from "@/router"
 
 // 创建 axios 实例
 const service = axios.create({
@@ -47,13 +48,13 @@ service.interceptors.response.use(
 		// 返回的报文内容
 		const res = response.data
 		// 特殊错误码处理
-		if (res.code === 50001) {
-			message.error(res.message || "登陆已失效，请重新登陆")
+		if (res.code === "A0230") {
+			// message.error(res.message || "登陆已失效，请重新登陆")
 			reLogin()
-			return Promise.reject(res.message || "登陆已失效");
+			return Promise.reject(res);
 		}
 		// 成功直接返回数据
-		if (res.code === 0) {
+		if (res.code === "00000") {
 			return Promise.resolve(res)
 		}
 
@@ -63,22 +64,28 @@ service.interceptors.response.use(
 	},
 	(error) => {
 		console.error('系统错误', error)
-		message.error('网络连接失败，请检查网络设置')
+		message.error('网络请求失败，请检查网络设置')
 		return Promise.reject(error.message);
 	}
 )
 
 // 保持重新登录Modal的唯一性
+const reLoginShow = ref(false)
 const reLogin = () => {
+	// 防止多个请求时重复弹框
+	if (reLoginShow.value) {
+		return
+	}
+	reLoginShow.value = true
 	Modal.error({
 		title: '提示：',
 		okText: '重新登录',
 		content: '登录已失效， 请重新登录',
 		onOk: () => {
-			localStorage.remove('TOKEN')
-			localStorage.remove('USER_INFO')
-			localStorage.remove('MENU')
-			window.location.reload()
+			localStorage.clear()
+			// 跳转到登录页
+			router.push({ path: '/login' })
+			reLoginShow.value = false
 		}
 	})
 }

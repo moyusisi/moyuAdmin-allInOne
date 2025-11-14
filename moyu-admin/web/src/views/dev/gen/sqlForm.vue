@@ -46,7 +46,7 @@
     SearchOutlined,
     CloudUploadOutlined, CloudDownloadOutlined
   } from "@ant-design/icons-vue"
-  import userApi from "@/api/sys/userApi"
+  import userApi from "@/api/system/userApi"
   import codegenApi from "@/api/dev/codegenApi.js";
 
   const settingsStore = useSettingsStore()

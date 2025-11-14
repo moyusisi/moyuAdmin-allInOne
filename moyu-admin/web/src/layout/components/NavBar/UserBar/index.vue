@@ -1,9 +1,5 @@
 <template>
 	<div class="user-bar">
-		<!-- 全屏 -->
-		<div v-if="!isMobile" class="bar-item" @click="fullscreen">
-			<FullscreenOutlined />
-		</div>
 		<a-dropdown class="user-bar-item">
 			<div class="user-avatar">
         <a-avatar :src="userInfo.avatar ? userInfo.avatar : avatarImg">Me</a-avatar>
@@ -48,7 +44,6 @@
   const router = useRouter()
   const avatarImg = '/img/avatar.gif?' +new Date()
 
-  const isMobile = ref(false)
   const userInfo = computed(() => {
     return userStore.userInfo
   })
@@ -94,13 +89,6 @@
       onCancel() {
       }
     })
-  }
-  // 全屏
-  const fullscreen = () => {
-    const element = document.documentElement
-    if (screenFull.isEnabled) {
-      screenFull.toggle(element)
-    }
   }
 </script>
 
