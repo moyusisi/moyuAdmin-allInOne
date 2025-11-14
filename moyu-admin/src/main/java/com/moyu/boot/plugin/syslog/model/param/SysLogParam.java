@@ -9,7 +9,6 @@ import lombok.Data;
 
 import javax.validation.constraints.*;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -82,10 +81,15 @@ public class SysLogParam extends BasePageParam {
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private Date startTime;
     /**
-     * 时间范围(startTime的范围)
+     * 开始时间-起始
      */
-    @JsonFormat(pattern="yyyy-MM-dd")
-    private List<Date> startTimeRange;
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private Date startTime1;
+    /**
+     * 开始时间-截止
+     */
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private Date startTime2;
     /**
     * 结束时间
     */
