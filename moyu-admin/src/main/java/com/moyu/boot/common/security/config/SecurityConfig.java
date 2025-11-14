@@ -1,9 +1,10 @@
 package com.moyu.boot.common.security.config;
 
 
-import com.moyu.boot.common.security.filter.JwtTokenAuthenticationFilter;
-import com.moyu.boot.common.security.handler.AuthExceptionEntryPoint;
+import com.moyu.boot.common.security.filter.TokenAuthenticationFilter;
 import com.moyu.boot.common.security.handler.CustomAccessDeniedHandler;
+import com.moyu.boot.common.security.handler.CustomAuthenticationEntryPoint;
+import com.moyu.boot.common.security.service.TokenService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,6 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * WebSecurityConfigurerAdapter已废弃，替代方案如下:
+ * 使用 SecurityFilterChain Bean 配置 HttpSecurity
+ * 使用 WebSecurityCustomizer Bean 来配置 WebSecurity
+ *
  * @author shisong
  * @since 2025-01-24
  */
@@ -29,6 +34,9 @@ public class SecurityConfig {
 
     @Resource
     private SecurityProperties properties;
+
+    @Resource
+    private TokenService tokenService;
 
     /**
      * 跨域过滤器配置
@@ -80,20 +88,22 @@ public class SecurityConfig {
         http.headers().cacheControl().disable();
         // 禁用 X-Frame-Options 响应头，允许页面被嵌套到 iframe 中
         http.headers().frameOptions().disable();
-        // 禁用Spring Security默认自带的表单登录功能
+        // 禁用Spring Security默认自带的表单登录功能()
         http.formLogin().disable();
+        // 禁用Spring Security默认注销功能
+        http.logout().disable();
         // 禁用 HTTP Basic 认证，避免弹窗式登录
         http.httpBasic().disable();
 
         // 添加Token认证解析过滤器
-        http.addFilterBefore(new JwtTokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new TokenAuthenticationFilter(tokenService), UsernamePasswordAuthenticationFilter.class);
         // 添加CORS filter
-        http.addFilterBefore(corsFilter(), JwtTokenAuthenticationFilter.class);
+        http.addFilterBefore(corsFilter(), TokenAuthenticationFilter.class);
 
-        // 异常处理。若有@ExceptionHandler处理AccessDeniedException和AuthenticationException此处配置不会起到作用
+        // 异常处理。filter层，在HttpSecurity中设置的authenticated()或hasAuthority()会触发此异常处理机制
         http.exceptionHandling()
                 // 认证异常处理，未认证访问的情况处理(不设置默认处理端点为：LoginUrlAuthenticationEntryPoint("/login"))
-                .authenticationEntryPoint(new AuthExceptionEntryPoint())
+                .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
                 // 授权异常处理，访问权限不足时的处理
                 .accessDeniedHandler(new CustomAccessDeniedHandler());
         return http.build();

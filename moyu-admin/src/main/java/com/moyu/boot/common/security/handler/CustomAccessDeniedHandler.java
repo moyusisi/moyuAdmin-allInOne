@@ -2,8 +2,9 @@ package com.moyu.boot.common.security.handler;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.model.Result;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -16,12 +17,12 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 授权异常处理，无权限访问时的处理
- * 使用@PreAuthorize进行权限校验时，不通过就会进入自定义的异常
+ * 自定义鉴权异常(未授权访问)处理器，无权限访问时的处理(filter层)
  *
  * @author shisong
  * @since 2025-01-05
  */
+@Slf4j
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
@@ -30,9 +31,9 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        int code = HttpStatus.FORBIDDEN.value();
-        String message = "权限不足，无法访问：" + request.getRequestURI();
-        String responseBody = new ObjectMapper().writeValueAsString(new Result<>(code, message));
+        log.warn("未授权访问：{}", request.getRequestURI());
+        Result<?> result = new Result<>(ResultCodeEnum.ACCESS_UNAUTHORIZED);
+        String responseBody = new ObjectMapper().writeValueAsString(result);
         PrintWriter printWriter = response.getWriter();
         printWriter.print(responseBody);
         printWriter.flush();
