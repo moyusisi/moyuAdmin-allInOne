@@ -49,8 +49,13 @@
           </a-form-item>
         </a-col>
         <a-col :span="6" v-if="showMore">
-          <a-form-item name="startTimeRange" label="记录时间">
-            <a-range-picker v-model:value="queryFormData.startTimeRange" valueFormat="YYYY-MM-DD"/>
+          <a-form-item name="startTime1" label="起始时间">
+            <a-date-picker v-model:value="queryFormData.startTime1" placeholder="起始时间" :showTime="{ format: 'HH:mm:ss' }" format="YYYY-MM-DD HH:mm:ss" valueFormat="YYYY-MM-DD HH:mm:ss"/>
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="startTime2" label="截止时间">
+            <a-date-picker v-model:value="queryFormData.startTime2" placeholder="截止时间" :showTime="{ format: 'HH:mm:ss' }" format="YYYY-MM-DD HH:mm:ss" valueFormat="YYYY-MM-DD HH:mm:ss"/>
           </a-form-item>
         </a-col>
       </a-row>
@@ -262,7 +267,7 @@
       width: 120,
     },
     {
-      title: "记录时间",
+      title: "创建时间",
       dataIndex: "createTime",
       align: "center",
       width: 160,
