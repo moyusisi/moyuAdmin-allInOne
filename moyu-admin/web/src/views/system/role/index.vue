@@ -164,7 +164,6 @@
   // 定义tableDOM
   const tableRef = ref()
   const formRef = ref()
-  const module = ref()
   const grantMenuFormRef = ref()
   const roleUserRef = ref()
   const queryFormRef = ref()
