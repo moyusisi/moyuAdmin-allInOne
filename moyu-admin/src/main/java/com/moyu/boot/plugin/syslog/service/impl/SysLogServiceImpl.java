@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.syslog.service.impl;
+package com.moyu.boot.plugin.sysLog.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -9,11 +9,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
 import com.moyu.boot.common.core.model.PageData;
-import com.moyu.boot.plugin.syslog.mapper.SysLogMapper;
-import com.moyu.boot.plugin.syslog.model.entity.SysLog;
-import com.moyu.boot.plugin.syslog.model.param.SysLogParam;
-import com.moyu.boot.plugin.syslog.model.vo.SysLogVO;
-import com.moyu.boot.plugin.syslog.service.SysLogService;
+import com.moyu.boot.plugin.sysLog.mapper.SysLogMapper;
+import com.moyu.boot.plugin.sysLog.model.entity.SysLog;
+import com.moyu.boot.plugin.sysLog.model.param.SysLogParam;
+import com.moyu.boot.plugin.sysLog.model.vo.SysLogVO;
+import com.moyu.boot.plugin.sysLog.service.SysLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;

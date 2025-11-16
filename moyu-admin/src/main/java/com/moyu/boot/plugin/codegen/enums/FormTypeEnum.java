@@ -1,7 +1,6 @@
-package com.moyu.boot.plugin.codegen.enums;
+package com.moyu.boot.plugin.codeGen.enums;
 
 
-import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 

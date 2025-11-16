@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.codegen.model.entity;
+package com.moyu.boot.plugin.codeGen.model.entity;
 
 
 import com.baomidou.mybatisplus.annotation.*;

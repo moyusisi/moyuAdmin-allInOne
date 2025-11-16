@@ -1,8 +1,8 @@
-package com.moyu.boot.plugin.codegen.service;
+package com.moyu.boot.plugin.codeGen.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.moyu.boot.BaseTest;
-import com.moyu.boot.plugin.codegen.model.entity.GenField;
+import com.moyu.boot.plugin.codeGen.model.entity.GenField;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

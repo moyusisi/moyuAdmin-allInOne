@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.codegen.config;
+package com.moyu.boot.plugin.codeGen.config;
 
 
 import lombok.Getter;

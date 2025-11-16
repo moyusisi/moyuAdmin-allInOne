@@ -2,10 +2,10 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.moyu.boot.plugin.codegen.mapper.DataBaseMapper">
+<mapper namespace="com.moyu.boot.plugin.codeGen.mapper.DataBaseMapper">
 
     <!-- 查询数据库表分页 -->
-    <select id="getTablePage" resultType="com.moyu.boot.plugin.codegen.model.vo.TableMetaData">
+    <select id="getTablePage" resultType="com.moyu.boot.plugin.codeGen.model.vo.TableMetaData">
         SELECT
         t1.TABLE_NAME,
         t1.TABLE_COMMENT,
@@ -29,7 +29,7 @@
         ORDER BY t1.CREATE_TIME DESC
     </select>
 
-    <select id="getTableListByNames" resultType="com.moyu.boot.plugin.codegen.model.vo.TableMetaData">
+    <select id="getTableListByNames" resultType="com.moyu.boot.plugin.codeGen.model.vo.TableMetaData">
         SELECT TABLE_NAME, TABLE_COMMENT, CREATE_TIME, UPDATE_TIME
         FROM information_schema.tables
         WHERE
@@ -40,7 +40,7 @@
         </foreach>
     </select>
 
-    <select id="getTableMetaData" resultType="com.moyu.boot.plugin.codegen.model.vo.TableMetaData">
+    <select id="getTableMetaData" resultType="com.moyu.boot.plugin.codeGen.model.vo.TableMetaData">
         SELECT
             TABLE_NAME ,
             TABLE_COMMENT ,
@@ -55,7 +55,7 @@
     </select>
 
 
-    <select id="getTableColumns" resultType="com.moyu.boot.plugin.codegen.model.bo.ColumnMetaData">
+    <select id="getTableColumns" resultType="com.moyu.boot.plugin.codeGen.model.bo.ColumnMetaData">
         SELECT
             COLUMN_NAME,
             DATA_TYPE,

@@ -1,11 +1,11 @@
-package com.moyu.boot.plugin.codegen.mapper;
+package com.moyu.boot.plugin.codeGen.mapper;
 
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.moyu.boot.plugin.codegen.model.bo.ColumnMetaData;
-import com.moyu.boot.plugin.codegen.model.param.GenConfigParam;
-import com.moyu.boot.plugin.codegen.model.vo.TableMetaData;
+import com.moyu.boot.plugin.codeGen.model.bo.ColumnMetaData;
+import com.moyu.boot.plugin.codeGen.model.param.GenConfigParam;
+import com.moyu.boot.plugin.codeGen.model.vo.TableMetaData;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.codegen.enums;
+package com.moyu.boot.plugin.codeGen.enums;
 
 
 import lombok.Getter;

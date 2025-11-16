@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.codegen.model.vo;
+package com.moyu.boot.plugin.codeGen.model.vo;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;

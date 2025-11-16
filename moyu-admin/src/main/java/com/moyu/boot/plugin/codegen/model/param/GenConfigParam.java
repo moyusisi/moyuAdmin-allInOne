@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.codegen.model.param;
+package com.moyu.boot.plugin.codeGen.model.param;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
