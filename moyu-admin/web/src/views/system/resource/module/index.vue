@@ -3,13 +3,13 @@
     <a-form ref="queryFormRef" :model="queryFormData">
       <a-row :gutter="24">
         <a-col :span="6">
-          <a-form-item name="name" label="模块名称">
-            <a-input v-model:value="queryFormData.name" placeholder="搜索模块名称" allowClear />
+          <a-form-item name="code" label="唯一编码">
+            <a-input v-model:value="queryFormData.code" placeholder="查询唯一编码" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="code" label="唯一编码">
-            <a-input v-model:value="queryFormData.code" placeholder="查询唯一编码" allowClear />
+          <a-form-item name="name" label="模块名称">
+            <a-input v-model:value="queryFormData.name" placeholder="搜索模块名称" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
@@ -56,8 +56,10 @@
           </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'code'">
+          <!-- 唯一键点击查看详情 -->
           <a-tooltip :title="text" placement="topLeft">
-            <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+            <!--<a style="text-decoration: underline;" @click="detailRef.onOpen(record)">{{ text }}</a>-->
+            <a @click="detailRef.onOpen(record)">{{ text }}</a>
           </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'path'">
@@ -92,22 +94,30 @@
     </MTable>
   </a-card>
   <Form ref="formRef" @successful="tableRef.refresh(true)" />
+  <Detail ref="detailRef"/>
 </template>
 
 <script setup>
   import resourceApi from '@/api/system/resourceApi.js'
 
   import { h, ref } from "vue"
+  import { useRoute, useRouter } from "vue-router"
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import Form from "@/views/system/resource/module/form.vue"
+  import Detail from "@/views/system/resource/detail.vue"
   import MTable from "@/components/MTable/index.vue"
+
+  // store
+  const route = useRoute();
+  const router = useRouter();
 
   // resourceType=1标识模块
   const queryFormRef = ref()
   const queryFormData = ref({ resourceType: 1 })
   // 其他页面操作
   const formRef = ref()
+  const detailRef = ref()
 
   /***** 表格相关对象 start *****/
   const tableRef = ref()
@@ -142,13 +152,6 @@
       width: 150,
     },
     {
-      title: "模块主页",
-      dataIndex: "link",
-      align: "center",
-      resizable: true,
-      width: 200,
-    },
-    {
       title: "排序顺序",
       dataIndex: "sortNum",
       align: "center",
@@ -164,6 +167,12 @@
       width: 150,
     },
     {
+      title: '变更时间',
+      dataIndex: 'updateTime',
+      align: 'center',
+      width: 160
+    },
+    {
       title: '操作',
       dataIndex: 'action',
       align: 'center',
@@ -172,7 +181,24 @@
   ])
   /***** 表格相关对象 end *****/
 
-      // 提交查询
+  // 挂载前初始化参数
+  onBeforeMount(() => {
+    if (route.query.code) {
+      queryFormData.value.code = route.query.code
+    } else if (route.query.code || history.state.code) {
+      queryFormData.value.code = history.state.code
+    }
+  })
+
+  // 挂载后处理
+  onMounted(() => {
+    if (route.query.code || history.state.code) {
+      const row = { code: route.query.code || history.state.code }
+      detailRef.value.onOpen(row)
+    }
+  })
+
+  // 提交查询
   const querySubmit = () => {
         tableRef.value.refresh(true)
       }

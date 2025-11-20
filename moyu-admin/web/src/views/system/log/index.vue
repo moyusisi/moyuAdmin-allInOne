@@ -4,6 +4,11 @@
     <a-form ref="queryFormRef" :model="queryFormData" :label-col="{span: 6}">
       <a-row :gutter="24">
         <a-col :span="6">
+          <a-form-item name="module" label="唯一ID">
+            <a-input v-model:value="queryFormData.id" placeholder="请输入唯一ID" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6">
           <a-form-item name="module" label="系统/模块">
             <a-input v-model:value="queryFormData.module" placeholder="搜索系统/模块" allowClear />
           </a-form-item>
@@ -14,11 +19,6 @@
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="operate" label="操作">
-            <a-input v-model:value="queryFormData.operate" placeholder="搜索操作" allowClear />
-          </a-form-item>
-        </a-col>
-        <a-col :span="6">
           <a-form-item>
             <a-flex gap="small">
               <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
@@ -26,6 +26,11 @@
               <a-button v-if="!showMore" type="link" @click="showMore = !showMore">更多条件<DownOutlined /></a-button>
               <a-button v-else type="link"  @click="showMore = !showMore">收起<UpOutlined /></a-button>
             </a-flex>
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="operate" label="操作">
+            <a-input v-model:value="queryFormData.operate" placeholder="搜索操作" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6" v-if="showMore">
@@ -44,7 +49,7 @@
           </a-form-item>
         </a-col>
         <a-col :span="6" v-if="showMore">
-          <a-form-item name="createBy" label="操作人ID">
+          <a-form-item name="createBy" label="操作人">
             <a-input v-model:value="queryFormData.createBy" placeholder="请输入操作人ID" allowClear />
           </a-form-item>
         </a-col>
@@ -156,11 +161,18 @@
   import logApi from '@/api/system/logApi.js'
 
   import { h, ref } from "vue"
-  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined, DownOutlined, UpOutlined } from "@ant-design/icons-vue"
+  import { useRoute, useRouter } from "vue-router"
+  import { useSettingsStore } from "@/store"
+  import { DeleteOutlined, DownOutlined, RedoOutlined, SearchOutlined, UpOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import Form from "./form.vue"
   import Detail from "./detail.vue"
   import MTable from "@/components/MTable/index.vue"
+
+  // store
+  const settingsStore = useSettingsStore()
+  const route = useRoute();
+  const router = useRouter();
 
   // 查询表单相关对象
   const queryFormRef = ref()
@@ -230,6 +242,30 @@
       width: 150,
     },
     {
+      title: "浏览器",
+      dataIndex: "opBrowser",
+      align: "center",
+      resizable: true,
+      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: "平台",
+      dataIndex: "opPlatform",
+      align: "center",
+      resizable: true,
+      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: "操作系统",
+      dataIndex: "opOs",
+      align: "center",
+      resizable: true,
+      ellipsis: true,
+      width: 100,
+    },
+    {
       title: "接口地址",
       dataIndex: "requestUrl",
       align: "center",
@@ -282,9 +318,21 @@
   ])
   /***** 表格相关对象 end *****/
 
-  // 加载完毕调用
-  onMounted(() => {
+  // 挂载前初始化参数
+  onBeforeMount(() => {
+    if (route.query.id) {
+      queryFormData.value.id = route.query.id
+    } else if (route.query.id || history.state.id) {
+      queryFormData.value.id = history.state.id
+    }
+  })
 
+  // 挂载后处理
+  onMounted(() => {
+    if (route.query.id || history.state.id) {
+      const row = { id: route.query.id || history.state.id }
+      detailRef.value.onOpen(row)
+    }
   })
 
   // 提交查询

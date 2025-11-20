@@ -3,6 +3,7 @@ import axios from 'axios'
 import { Modal, message } from 'ant-design-vue'
 import settings from '@/config/settings'
 import router from "@/router"
+import { useRoute } from 'vue-router'
 
 // 创建 axios 实例
 const service = axios.create({
@@ -80,11 +81,15 @@ const reLogin = () => {
 	Modal.error({
 		title: '提示：',
 		okText: '重新登录',
-		content: '登录已失效， 请重新登录',
+		content: '未登录或登录已过期， 请重新登录',
 		onOk: () => {
+			const currentRoute = router.currentRoute.value
+			console.log('reLogin...')
 			localStorage.clear()
 			// 跳转到登录页
-			router.push({ path: '/login' })
+			router.push(`/login?redirect=${currentRoute.fullPath}`).catch(err => {
+				console.log(err)
+			})
 			reLoginShow.value = false
 		}
 	})

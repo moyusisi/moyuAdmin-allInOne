@@ -43,8 +43,10 @@
           <a-tag v-if="node.resourceType === 6" color="purple">按钮</a-tag>
         </template>
         <template v-if="column.dataIndex === 'code'">
+          <!-- 唯一键点击查看详情 -->
           <a-tooltip :title="text" placement="topLeft">
-            <a-tag v-if="node.code" :bordered="false">{{ node.code }}</a-tag>
+            <!--<a style="text-decoration: underline;" @click="detailRef.onOpen(record)">{{ text }}</a>-->
+            <a @click="detailRef.onOpen(node)">{{ text }}</a>
           </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'path'">
@@ -101,18 +103,25 @@
     </MTable>
   </a-card>
   <Form ref="formRef" @successful="handleSuccess" />
+  <Detail ref="detailRef"/>
 </template>
 
 <script setup>
   import resourceApi from '@/api/system/resourceApi.js'
 
   import { h, ref } from "vue"
+  import { useRoute, useRouter } from "vue-router";
   import { PlusOutlined, DeleteOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
-  import { useMenuStore } from '@/store/menu'
   import Form from './form.vue'
   import BatchDeleteButton from '@/components/BatchDeleteButton/index.vue'
   import MTable from "@/components/MTable/index.vue"
+  import Detail from "@/views/system/resource/detail.vue"
+
+
+  // store
+  const route = useRoute();
+  const router = useRouter();
 
   // 查询表单相关对象
   const moduleList = ref([])
@@ -120,25 +129,12 @@
   const moduleId = ref()
   // 其他页面操作
   const formRef = ref()
+  const detailRef = ref()
 
   /***** 表格相关对象 start *****/
   const tableRef = ref()
   // 已选中的行
-  let selectedRowKeys = ref([])
-  // 列表选择配置
-  const options = {
-    alert: {
-      show: false,
-      clear: () => {
-        selectedRowKeys = ref([])
-      }
-    },
-    rowSelection: {
-      onChange: (selectedRowKey, selectedRows) => {
-        selectedRowKeys.value = selectedRowKey
-      }
-    }
-  }
+  const selectedRowKeys = ref([])
   // 表格列配置
   const columns = [
     {
@@ -207,6 +203,7 @@
       width: 150
     }
   ]
+  /***** 表格相关对象 end *****/
 
   // 初始化
   const init = async () => {

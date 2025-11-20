@@ -11,13 +11,13 @@
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="name" label="名称">
-            <a-input v-model:value="queryFormData.name" placeholder="搜索名称" allowClear />
+          <a-form-item name="code" label="唯一编码">
+            <a-input v-model:value="queryFormData.code" placeholder="查询唯一编码" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="path" label="接口地址">
-            <a-input v-model:value="queryFormData.path" placeholder="搜索接口地址" allowClear />
+          <a-form-item name="name" label="名称">
+            <a-input v-model:value="queryFormData.name" placeholder="搜索名称" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
@@ -25,7 +25,14 @@
             <a-flex gap="small">
               <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
               <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+              <a-button v-if="!showMore" type="link" @click="showMore = !showMore">更多条件<DownOutlined /></a-button>
+              <a-button v-else type="link"  @click="showMore = !showMore">收起<UpOutlined /></a-button>
             </a-flex>
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="path" label="接口地址">
+            <a-input v-model:value="queryFormData.path" placeholder="搜索接口地址" allowClear />
           </a-form-item>
         </a-col>
       </a-row>
@@ -60,8 +67,10 @@
           </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'code'">
+          <!-- 唯一键点击查看详情 -->
           <a-tooltip :title="text" placement="topLeft">
-            <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+            <!--<a style="text-decoration: underline;" @click="detailRef.onOpen(record)">{{ text }}</a>-->
+            <a @click="detailRef.onOpen(record)">{{ text }}</a>
           </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'path'">
@@ -96,16 +105,23 @@
     </MTable>
   </a-card>
   <Form ref="formRef" @successful="tableRef.refresh(true)" />
+  <Detail ref="detailRef"/>
 </template>
 
 <script setup>
   import resourceApi from '@/api/system/resourceApi.js'
 
   import { h, ref } from "vue"
-  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
+  import { useRoute, useRouter } from "vue-router";
+  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined, UpOutlined, DownOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
-  import Form from "./form.vue"
   import MTable from "@/components/MTable/index.vue"
+  import Form from "./form.vue"
+  import Detail from "../detail.vue"
+
+  // store
+  const route = useRoute();
+  const router = useRouter();
 
   // 查询表单相关对象
   const queryFormRef = ref()
@@ -114,8 +130,12 @@
   const moduleId = ref()
   const module = ref()
   const moduleList = ref([])
+  // 是否展示更多搜索条件
+  const showMore = ref(false)
+
   // 其他页面操作
   const formRef = ref()
+  const detailRef = ref()
 
   /***** 表格相关对象 start *****/
   const tableRef = ref()
@@ -181,9 +201,21 @@
   ]
   /***** 表格相关对象 end *****/
 
-  // 加载完毕调用
-  onMounted(() => {
+  // 挂载前初始化参数
+  onBeforeMount(() => {
+    if (route.query.code) {
+      queryFormData.value.code = route.query.code
+    } else if (route.query.code || history.state.code) {
+      queryFormData.value.code = history.state.code
+    }
+  })
 
+  // 挂载后处理
+  onMounted(() => {
+    if (route.query.code || history.state.code) {
+      const row = { code: route.query.code || history.state.code }
+      detailRef.value.onOpen(row)
+    }
   })
 
   // 初始化

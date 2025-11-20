@@ -9,6 +9,7 @@
       :tree-data="treeData"
       :field-names="{ children: 'children', label: 'name', value: 'code' }"
       :tree-line="{ showLeafIcon:false }"
+      :disabled="props.disabled"
       :tree-checkable="props.multiSelect"
       :show-checked-strategy="TreeSelect.SHOW_ALL"
       @change="onChange"
@@ -28,6 +29,10 @@ const props = defineProps({
   },
   defaultValue: {
     type: [String, Array]
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   },
   // 模块编码
   moduleCode: {

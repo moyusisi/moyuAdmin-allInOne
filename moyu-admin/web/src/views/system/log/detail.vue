@@ -17,17 +17,12 @@
         <a-card title="基本信息">
           <a-row :gutter="24">
             <a-col :span="8">
-              <a-form-item name="requestUrl" label="请求路径地址" tooltip="" >
-                <a-tag :bordered="false">{{ formData.requestUrl }}</a-tag>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
               <a-form-item name="module" label="系统/模块" tooltip="系统/模块" >
                 {{ formData.module }}
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="business" label="业务" tooltip="业务" >
+              <a-form-item name="business" label="业务" tooltip="" >
                 {{ formData.business }}
               </a-form-item>
             </a-col>
@@ -36,20 +31,44 @@
                 {{ formData.operate }}
               </a-form-item>
             </a-col>
-
+            <a-col :span="8">
+              <a-form-item name="requestUrl" label="请求路径地址" tooltip="" >
+                <a-tag :bordered="false">{{ formData.requestUrl }}</a-tag>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="executionTime" label="执行耗时" tooltip="" >
+                {{ formData.executionTime }}ms
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="createBy" label="操作人ID" tooltip="" >
+                {{ formData.createBy }}
+              </a-form-item>
+            </a-col>
             <a-col :span="8">
               <a-form-item name="content" label="内容说明" tooltip="" >
                 {{ formData.content }}
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="requestContent" label="请求参数" tooltip="" >
-                {{ formData.requestContent }}
+              <a-form-item name="createBy" label="用户IP" tooltip="" >
+                {{ formData.opIp }}
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="responseContent" label="返回结果" tooltip="" >
-                <span>{{ formData.responseContent }}</span>
+              <a-form-item name="opBrowser" label="浏览器" tooltip="" >
+                {{ formData.opBrowser }}
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="opPlatform" label="平台" tooltip="" >
+                {{ formData.opPlatform }}
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="opOs" label="操作系统" tooltip="" >
+                {{ formData.opOs }}
               </a-form-item>
             </a-col>
             <a-col :span="8">
@@ -63,18 +82,31 @@
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="executionTime" label="执行耗时" tooltip="" >
-                {{ formData.executionTime }}ms
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="createBy" label="操作人ID" tooltip="操作人ID" >
-                {{ formData.createBy }}
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
               <a-form-item name="createTime" label="记录时间" tooltip="" >
                 {{ formData.createTime }}
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-card>
+        <a-card title="请求信息">
+          <a-row :gutter="24">
+            <a-col :span="24">
+              <a-form-item name="requestUrl" label="请求地址" tooltip="" :label-col="{span: 2}" >
+                <a-tag :bordered="false">{{ formData.requestUrl }}</a-tag>
+              </a-form-item>
+            </a-col>
+          </a-row>
+          <a-row :gutter="24">
+            <a-col :span="24">
+              <a-form-item name="requestContent" label="请求参数" tooltip="" :label-col="{span: 2}" >
+                <highlightjs v-if="formData.requestContent" autodetect :code="formData.requestContent" />
+              </a-form-item>
+            </a-col>
+          </a-row>
+          <a-row :gutter="24">
+            <a-col :span="24">
+              <a-form-item name="responseContent" label="返回结果" tooltip="" :label-col="{span: 2}" >
+                <highlightjs v-if="formData.responseContent" autodetect :code="formData.requestContent" />
               </a-form-item>
             </a-col>
           </a-row>
@@ -92,8 +124,6 @@
 <script setup>
   import logApi from '@/api/system/logApi.js'
 
-  import { required } from '@/utils/formRules'
-  import { message } from "ant-design-vue"
   import { useSettingsStore } from "@/store"
 
   // store

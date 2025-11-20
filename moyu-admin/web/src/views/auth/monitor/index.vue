@@ -120,7 +120,7 @@
   import monitorApi from "@/api/auth/monitorApi.js";
 
   import { h, ref } from "vue"
-  import { TeamOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
+  import { TeamOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import MTable from "@/components/MTable/index.vue"
   import TokenList from "./tokenList.vue"
