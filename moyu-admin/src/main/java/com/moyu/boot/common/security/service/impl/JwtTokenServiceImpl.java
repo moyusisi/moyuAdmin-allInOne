@@ -26,7 +26,6 @@ public class JwtTokenServiceImpl implements TokenService {
 
     @Override
     public String generateToken(LoginUser loginUser) {
-
         // 连缀写法追加多个
         StpUtil.login(loginUser.getUsername(), new SaLoginParameter()
                 // 是否在登录后将 Token 写入到响应头
@@ -35,12 +34,18 @@ public class JwtTokenServiceImpl implements TokenService {
                 .setExtra("username", loginUser.getUsername())
                 .setExtra("orgCode", loginUser.getOrgCode())
                 .setExtra("groupCode", loginUser.getGroupCode())
+                .setExtra("groupOrgCode", loginUser.getGroupOrgCode())
                 .setExtra("roles", loginUser.getRoles())
                 .setExtra("perms", loginUser.getPerms())
                 .setExtra("dataScope", loginUser.getDataScope())
                 .setExtra("scopes", loginUser.getScopes())
         );
         return StpUtil.getTokenValue();
+    }
+
+    @Override
+    public String refreshToken(LoginUser loginUser) {
+        return generateToken(loginUser);
     }
 
     @Override
@@ -55,6 +60,7 @@ public class JwtTokenServiceImpl implements TokenService {
                 .username((String) StpUtil.getExtra("username"))
                 .orgCode((String) StpUtil.getExtra("orgCode"))
                 .groupCode((String) StpUtil.getExtra("groupCode"))
+                .groupOrgCode((String) StpUtil.getExtra("groupOrgCode"))
                 .roles(ObjectUtil.isEmpty(roles) ? new HashSet<>() : new HashSet<>((List<String>) roles))
                 .perms(ObjectUtil.isEmpty(perms) ? new HashSet<>() : new HashSet<>((List<String>) perms))
                 .dataScope(ObjectUtil.isEmpty(dataScope) ? null : ((Number) dataScope).intValue())
