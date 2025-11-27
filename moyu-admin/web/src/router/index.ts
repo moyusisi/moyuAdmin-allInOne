@@ -3,7 +3,6 @@ import systemRouter from './systemRouter'
 import NProgress from '@/utils/nprogress'
 import settings from "@/config/settings.ts"
 import { useMenuStore, useUserStore } from "@/store";
-import { message } from "ant-design-vue";
 
 export const constRoutes: RouteRecordRaw[] = [...systemRouter]
 
@@ -17,6 +16,8 @@ const router = createRouter({
 
 // 白名单路由
 const whiteList = ["/login", "/callback"]
+// 进度条配置
+NProgress.configure({ showSpinner: false, speed: 500 })
 
 
 // 导航守卫 参考：https://router.vuejs.org/zh/guide/advanced/navigation-guards.html
@@ -61,16 +62,12 @@ router.beforeEach(async (to, from) => {
     // 生成动态路由
     await menuStore.generateRoutes();
     console.log("动态加载异步路由...")
-    // console.log(asyncRoutes)
     // console.log(router.getRoutes())
     // 由于新增加了路由，所以重新导航
-    return { ...to, replace: true }
+    console.log("重新导航...", to)
+    return { path: to.fullPath, replace: true }
   }
 
-  // 未匹配到任何路由，跳转404
-  if (to.matched.length === 0) {
-    return { path: "/404" }
-  }
   // 已登录访问登陆页，则跳转到首页
   if (to.path === "/login") {
     // 如果已登录，则重定向，跳转首页
