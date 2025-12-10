@@ -484,6 +484,13 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
         } else {
             fieldConfig.setShowInList(1);
         }
+        // 省略提示
+        if (fieldConfig.getFieldType().equals("String") || fieldConfig.getFieldType().equals("Date")) {
+            fieldConfig.setEllipsis(1);
+        } else {
+            fieldConfig.setEllipsis(0);
+        }
+        // showInForm
         if (BaseEntity.baseFieldSet.contains(fieldConfig.getFieldName())) {
             fieldConfig.setShowInForm(0);
         } else {
@@ -579,6 +586,7 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
         genConfigInfo.setEntityDesc(genConfig.getEntityDesc());
         genConfigInfo.setParentMenuCode(genConfig.getParentMenuCode());
         genConfigInfo.setAuthor(genConfig.getAuthor());
+        genConfigInfo.setDetailOpenType(genConfig.getDetailOpenType());
         genConfigInfo.setSourceType(genConfig.getSourceType());
         List<FieldConfigVO> fieldConfigList = new ArrayList<>();
         if (CollectionUtil.isNotEmpty(fieldList)) {
@@ -608,6 +616,7 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
         genConfig.setEntityDesc(genConfigInfo.getEntityDesc());
         genConfig.setParentMenuCode(genConfigInfo.getParentMenuCode());
         genConfig.setAuthor(genConfigInfo.getAuthor());
+        genConfig.setDetailOpenType(genConfigInfo.getDetailOpenType());
         genConfig.setSourceType(genConfigInfo.getSourceType());
         return genConfig;
     }
@@ -629,6 +638,7 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
         bindMap.put("entityName", entityName);
         bindMap.put("entityDesc", entityDesc);
         bindMap.put("parentMenuCode", StrUtil.nullToEmpty(genConfig.getParentMenuCode()));
+        bindMap.put("detailOpenType", genConfig.getDetailOpenType());
         bindMap.put("author", genConfig.getAuthor());
         bindMap.put("fieldList", fieldList);
         return bindMap;
@@ -708,6 +718,13 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
                 } else {
                     fieldConfig.setShowInList(1);
                 }
+                // 省略提示
+                if (fieldConfig.getFieldType().equals("String") || fieldConfig.getFieldType().equals("Date")) {
+                    fieldConfig.setEllipsis(1);
+                } else {
+                    fieldConfig.setEllipsis(0);
+                }
+                // showInForm
                 if (BaseEntity.baseFieldSet.contains(fieldConfig.getFieldName())) {
                     fieldConfig.setShowInForm(0);
                 } else {

@@ -121,8 +121,8 @@
         <template v-if="column.dataIndex === 'id'">
           <!-- 唯一键点击查看详情 -->
           <a-tooltip :title="text" placement="topLeft">
-            <!--<a style="text-decoration: underline;" @click="detailRef.onOpen(record)">{{ text }}</a>-->
-            <a @click="detailRef.onOpen(record)">{{ text }}</a>
+            <!--<a style="text-decoration: underline;" @click="openDetail(record)">{{ text }}</a>-->
+            <a @click="openDetail(record)">{{ text }}</a>
           </a-tooltip>
         </template>
 <#if fieldList??>
@@ -289,7 +289,12 @@
       tableRef.value.refresh()
     })
   }
-
+  // 打开详情页
+  const openDetail = (row) => {
+    detailRef.value.onOpen(row)
+    // 独立页面打开(与抽屉打开二选一)
+    // router.push({ path: "/${moduleName}/${entityName?uncap_first}/detail", query: { id: row.id } })
+  }
 </script>
 
 <style scoped>
