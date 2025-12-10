@@ -55,7 +55,7 @@
         </template>
         <template v-if="column.dataIndex === 'code'">
           <a-tooltip :title="text" placement="topLeft">
-            <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+            <a @click="detailRef.onOpen(record)">{{ record.code }}</a>
           </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'orgName'">
@@ -99,6 +99,7 @@
     </MTable>
   </a-card>
   <Form ref="formRef" @successful="tableRef.refresh(true)" />
+  <Detail ref="detailRef"/>
   <GroupRole ref="groupRoleRef" @successful="handleSuccess()" />
   <GroupUser ref="groupUserRef" @successful="handleSuccess()" />
 </template>
@@ -109,6 +110,7 @@
   import { message } from 'ant-design-vue'
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import Form from './form.vue'
+  import Detail from './detail.vue'
   import GroupRole from './groupRole.vue'
   import GroupUser from './groupUser.vue'
   import MTable from "@/components/MTable/index.vue"
@@ -128,6 +130,7 @@
 
   // 其他页面操作
   const formRef = ref()
+  const detailRef = ref()
   const groupUserRef = ref()
   const groupRoleRef = ref()
 
@@ -226,15 +229,6 @@
   // 组织机构变更
   const orgChange = (value) => {
     queryFormData.value.orgCode = value
-  }
-  // 点击树查询
-  const treeSelect = (selectedKeys) => {
-    if (selectedKeys.length > 0) {
-      queryFormData.value.orgCode = selectedKeys.toString()
-    } else {
-      delete queryFormData.value.orgCode
-    }
-    tableRef.value.refresh(true)
   }
   // 删除
   const deleteGroup = (record) => {

@@ -50,7 +50,7 @@
         </template>
         <template v-if="column.dataIndex === 'code'">
           <a-tooltip :title="text" placement="topLeft">
-            <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
+            <a @click="detailRef.onOpen(record)">{{ record.code }}</a>
           </a-tooltip>
         </template>
         <template v-if="column.dataIndex === 'status'">
@@ -88,6 +88,7 @@
   </a-card>
   <grant-menu-form ref="grantMenuFormRef" @successful="tableRef.refresh()" />
   <Form ref="formRef" @successful="tableRef.refresh()" />
+  <Detail ref="detailRef"/>
   <RoleUser ref="roleUserRef" />
 </template>
 
@@ -98,10 +99,26 @@
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import Form from "./form.vue"
+  import Detail from "./detail.vue"
   import MTable from "@/components/MTable/index.vue"
   import GrantMenuForm from "./grantMenuForm.vue"
   import RoleUser from "./roleUser.vue"
 
+  // 查询表单相关对象
+  const queryFormRef = ref()
+  const queryFormData = ref({})
+
+  // 其他页面操作
+  const formRef = ref()
+  const detailRef = ref()
+  const grantMenuFormRef = ref()
+  const roleUserRef = ref()
+
+  /***** 表格相关对象 start *****/
+  const tableRef = ref()
+  // 已选中的行
+  const selectedRowKeys = ref([])
+  // 表格列配置
   const columns = [
     {
       title: '角色名称',
@@ -154,20 +171,14 @@
       width: 200
     }
   ]
-  const selectedRowKeys = ref([])
+  /***** 表格相关对象 end *****/
+
   // 使用状态options（0正常 1停用）
   const statusOptions = [
     { label: "正常", value: 0 },
     { label: "已停用", value: 1 }
   ]
 
-  // 定义tableDOM
-  const tableRef = ref()
-  const formRef = ref()
-  const grantMenuFormRef = ref()
-  const roleUserRef = ref()
-  const queryFormRef = ref()
-  const queryFormData = ref({})
 
   // 表格查询 返回 Promise 对象
   const loadData = (parameter) => {

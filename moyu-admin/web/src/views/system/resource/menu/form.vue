@@ -212,7 +212,7 @@
   // 是否可见options
   const visibleOptions = [
     { label: "可见", value: 1 },
-    { label: "不可见", value: 0 }
+    { label: "隐藏", value: 0 }
   ]
   // 验证并提交数据
   const onSubmit = () => {
