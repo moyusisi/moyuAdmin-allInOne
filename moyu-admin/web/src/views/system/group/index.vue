@@ -63,13 +63,6 @@
             <span>{{ text }}</span>
           </a-tooltip>
         </template>
-        <template v-if="column.dataIndex === 'dataScope'">
-          <!-- 数据范围(字典 0无限制 1本人数据 2本机构 3本机构及以下 4自定义) -->
-          <a-tag v-if="record.dataScope === 1" color="orange">本人数据</a-tag>
-          <a-tag v-if="record.dataScope === 2" color="cyan">本机构</a-tag>
-          <a-tag v-if="record.dataScope === 3" color="blue">本机构及以下</a-tag>
-          <a-tag v-if="record.dataScope === 4" color="purple">自定义</a-tag>
-        </template>
         <template v-if="column.dataIndex === 'status'">
           <a-tag v-if="record.status === 0" color="green">正常</a-tag>
           <a-tag v-else>已停用</a-tag>
@@ -163,13 +156,6 @@
       resizable: true,
       ellipsis: true,
       width: 200,
-    },
-    {
-      title: '数据范围',
-      dataIndex: 'dataScope',
-      align: "center",
-      resizable: true,
-      width: 100,
     },
     {
       title: "状态",

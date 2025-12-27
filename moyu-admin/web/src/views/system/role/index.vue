@@ -34,7 +34,7 @@
       <template #operator>
         <a-space wrap style="margin-bottom: 6px">
           <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen()">新增角色</a-button>
-          <a-popconfirm :title=" '确定要删除这 ' + selectedRowKeys.length + ' 条数据吗？' " :disabled ="selectedRowKeys.length < 1" @confirm="deleteBatchRole">
+          <a-popconfirm v-if="hasPerm(['sys:role:delete'])" :title=" '确定要删除这 ' + selectedRowKeys.length + ' 条数据吗？' " :disabled ="selectedRowKeys.length < 1" @confirm="deleteBatchRole">
             <a-button danger :icon="h(DeleteOutlined)" :disabled="selectedRowKeys.length < 1">
               批量删除
             </a-button>
@@ -67,16 +67,19 @@
             <template #split>
               <a-divider type="vertical" />
             </template>
-            <a-tooltip title="分配权限">
-              <a style="color:#1980FF;" @click="grantMenuFormRef.onOpen(record)"><DeploymentUnitOutlined /></a>
-            </a-tooltip>
             <a-tooltip title="分配用户">
               <a style="color:#53C61D;" @click="roleUserRef.onOpen(record)"><UserAddOutlined /></a>
+            </a-tooltip>
+            <a-tooltip title="功能权限">
+              <a style="color:#1980FF;" @click="grantMenuFormRef.onOpen(record)"><PicLeftOutlined /></a>
+            </a-tooltip>
+            <a-tooltip title="数据权限">
+              <a style="color:#fa541c;" @click="grantScopeFormRef.onOpen(record)"><ApiOutlined /></a>
             </a-tooltip>
             <a-tooltip title="编辑">
               <a @click="formRef.onOpen(record)"><FormOutlined /></a>
             </a-tooltip>
-            <a-tooltip title="删除">
+            <a-tooltip title="删除" v-if="hasPerm(['sys:role:delete'])">
               <a-popconfirm title="确定要删除吗？" @confirm="deleteRole(record)">
                 <a style="color:#FF4D4F;"><DeleteOutlined/></a>
               </a-popconfirm>
@@ -86,7 +89,8 @@
       </template>
     </MTable>
   </a-card>
-  <grant-menu-form ref="grantMenuFormRef" @successful="tableRef.refresh()" />
+  <GrantMenuForm ref="grantMenuFormRef" @successful="tableRef.refresh()" />
+  <GrantScopeForm ref="grantScopeFormRef" />
   <Form ref="formRef" @successful="tableRef.refresh()" />
   <Detail ref="detailRef"/>
   <RoleUser ref="roleUserRef" />
@@ -98,10 +102,12 @@
   import { h, ref } from "vue"
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
+  import { hasPerm } from "@/utils/permission"
+  import MTable from "@/components/MTable/index.vue"
   import Form from "./form.vue"
   import Detail from "./detail.vue"
-  import MTable from "@/components/MTable/index.vue"
   import GrantMenuForm from "./grantMenuForm.vue"
+  import GrantScopeForm from "./grantScopeForm.vue"
   import RoleUser from "./roleUser.vue"
 
   // 查询表单相关对象
@@ -112,6 +118,7 @@
   const formRef = ref()
   const detailRef = ref()
   const grantMenuFormRef = ref()
+  const grantScopeFormRef = ref()
   const roleUserRef = ref()
 
   /***** 表格相关对象 start *****/

@@ -1,10 +1,10 @@
 <template>
   <!-- 上方查询区 -->
   <a-card size="small">
-    <a-form ref="queryFormRef" :model="queryFormData" :label-col="{span: 6}">
+    <a-form ref="queryFormRef" :model="queryFormData">
       <a-row :gutter="24">
         <a-col :span="6">
-          <a-form-item name="module" label="日志ID">
+          <a-form-item name="id" label="日志ID">
             <a-input v-model:value="queryFormData.id" placeholder="请输入唯一ID" allowClear />
           </a-form-item>
         </a-col>
@@ -180,15 +180,13 @@
 
   import { h, ref } from "vue"
   import { useRoute, useRouter } from "vue-router"
-  import { useSettingsStore } from "@/store"
-  import { DeleteOutlined, DownOutlined, RedoOutlined, SearchOutlined, UpOutlined } from "@ant-design/icons-vue"
+  import { DeleteOutlined, RedoOutlined, SearchOutlined, DownOutlined, UpOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
+  import MTable from "@/components/MTable/index.vue"
   import Form from "./form.vue"
   import Detail from "./detail.vue"
-  import MTable from "@/components/MTable/index.vue"
 
   // store
-  const settingsStore = useSettingsStore()
   const route = useRoute();
   const router = useRouter();
 
@@ -225,7 +223,7 @@
       dataIndex: "createBy",
       align: "center",
       resizable: true,
-      width: 150,
+      width: 100,
     },
     {
       title: "系统/模块",
@@ -403,6 +401,7 @@
   // 打开详情页
   const openDetail = (row) => {
     detailRef.value.onOpen(row)
+    // 独立页面打开(与抽屉打开二选一)
     // router.push({ path: "/ops/sys/logDetail", query: { id: row.id } })
   }
 </script>

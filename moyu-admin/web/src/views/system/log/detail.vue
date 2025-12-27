@@ -140,9 +140,9 @@
   import { useRoute, useRouter } from "vue-router";
 
   // store
-  const settingsStore = useSettingsStore()
   const route = useRoute();
   const router = useRouter();
+  const settingsStore = useSettingsStore()
 
   const emit = defineEmits({ successful: null })
   // 默认是关闭状态
@@ -158,7 +158,7 @@
   const dataLoading = ref(false)
   const submitLoading = ref(false)
 
-  // 挂载后处理
+  // 挂载后读取路由中的query参数
   // onMounted(() => {
   //   if (route.query.id || history.state.id) {
   //     const row = { id: route.query.id || history.state.id }

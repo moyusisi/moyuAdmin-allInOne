@@ -44,21 +44,6 @@
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="dataScope" label="数据范围" tooltip="">
-                <span>
-                  <a-tag v-if="formData.dataScope === 1" color="green">仅本人</a-tag>
-                  <a-tag v-if="formData.dataScope === 2" color="green">仅本机构</a-tag>
-                  <a-tag v-if="formData.dataScope === 3" color="green">本机构及以下</a-tag>
-                  <a-tag v-if="formData.dataScope === 4" color="green">自定义</a-tag>
-                </span>
-              </a-form-item>
-            </a-col>
-            <a-col :span="24" v-if="formData.dataScope === 4">
-              <a-form-item name="scopeList" label="自定义范围" tooltip="" :label-col="{span: 2}" >
-                <OrgTreeSelect :defaultValue="scopeList" multiSelect disabled/>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
               <a-form-item name="remark" label="备注" tooltip="" >
                 <span style="white-space: pre-wrap;">{{ formData.remark }}</span>
               </a-form-item>
@@ -122,8 +107,6 @@
   const formData = ref({})
   const dataLoading = ref(false)
   const submitLoading = ref(false)
-  // 自定义数据范围列表
-  const scopeList = ref([])
 
   // 打开抽屉
   const onOpen = (row) => {
@@ -144,9 +127,6 @@
     let param = { code: row.code }
     groupApi.groupDetail(param).then((res) => {
       formData.value = res.data
-      if(res.data.scopeSet) {
-        scopeList.value = res.data.scopeSet.split(',')
-      }
     }).finally(() => {
       dataLoading.value = false
       // 数据就绪之后显示
