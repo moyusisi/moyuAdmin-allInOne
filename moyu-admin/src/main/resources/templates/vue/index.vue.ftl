@@ -153,18 +153,27 @@
     </MTable>
   </a-card>
   <Form ref="formRef" @successful="tableRef.refresh()"/>
+<#if detailOpenType == 0>
   <Detail ref="detailRef"/>
+</#if>
 </template>
 
 <script setup>
   import ${entityName?uncap_first}Api from '@/api/${moduleName}/${entityName?uncap_first}Api.js'
 
   import { h, ref } from "vue"
+  import { useRoute, useRouter } from "vue-router"
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined, DownOutlined, UpOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import MTable from "@/components/MTable/index.vue"
   import Form from "./form.vue"
+<#if detailOpenType == 0>
   import Detail from "./detail.vue"
+</#if>
+
+  // store
+  const route = useRoute();
+  const router = useRouter();
 
   // 查询表单相关对象
   const queryFormRef = ref()
@@ -180,7 +189,9 @@
   ]
   // 其他页面操作
   const formRef = ref()
+<#if detailOpenType == 0>
   const detailRef = ref()
+</#if>
 
   /***** 表格相关对象 start *****/
   const tableRef = ref()
@@ -291,9 +302,13 @@
   }
   // 打开详情页
   const openDetail = (row) => {
+    <#if detailOpenType == 0>
     detailRef.value.onOpen(row)
     // 独立页面打开(与抽屉打开二选一)
     // router.push({ path: "/${moduleName}/${entityName?uncap_first}/detail", query: { id: row.id } })
+    <#else>
+    router.push({ path: "/${moduleName}/${entityName?uncap_first}/detail", query: { id: row.id } })
+    </#if>
   }
 </script>
 
@@ -302,17 +317,7 @@
   .ant-card .ant-form {
     margin-bottom: -12px !important;
   }
-  .ant-form-item {
+  .ant-card .ant-form-item {
     margin-bottom: 12px !important;
-  }
-  .custom-btn {
-    background-color: #52C41AFF;
-    border-color: #52C41AFF;
-    color: #fff;
-  }
-  .custom-btn:hover {
-    background-color: #79D84B;
-    border-color: #79D84B;
-    color: #fff;
   }
 </style>

@@ -102,8 +102,6 @@ create table sys_group
     `code`        VARCHAR(64)   DEFAULT NULL COMMENT '编码',
     `org_code`    VARCHAR(64)   DEFAULT NULL COMMENT '直属组织编码',
     `org_name`    VARCHAR(64)   DEFAULT NULL COMMENT '直属组织名称',
-    `data_scope`  TINYINT       DEFAULT NULL COMMENT '数据范围(字典 0无限制 1本人数据 2本机构 3本机构及以下 4自定义)',
-    `scope_set`   VARCHAR(1024) DEFAULT NULL COMMENT '自定义scope集合,逗号分隔',
     `org_path`    VARCHAR(1024) DEFAULT NULL COMMENT '组织机构层级路径,逗号分隔,父节点在后',
 
     `sort_num`    INT           DEFAULT NULL COMMENT '排序顺序',
@@ -159,14 +157,16 @@ DROP TABLE IF EXISTS `sys_relation`;
 CREATE TABLE `sys_relation`
 (
     `id`            BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
-    `object_id`     VARCHAR(64) DEFAULT NULL COMMENT '对象ID',
-    `target_id`     VARCHAR(64) DEFAULT NULL COMMENT '目标ID',
-    `relation_type` TINYINT     DEFAULT NULL COMMENT '关系类型(字典 1:role_has_user,2:role_has_perm,3:group_has_user,4:group_has_role)',
-    `deleted`       TINYINT     DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
-    `create_time`   DATETIME    DEFAULT NULL COMMENT '创建时间',
-    `create_by`     VARCHAR(32) DEFAULT NULL COMMENT '创建人',
-    `update_time`   DATETIME    DEFAULT NULL COMMENT '修改时间',
-    `update_by`     VARCHAR(32) DEFAULT NULL COMMENT '修改人',
+    `object_id`     VARCHAR(64)   DEFAULT NULL COMMENT '对象ID',
+    `target_id`     VARCHAR(64)   DEFAULT NULL COMMENT '目标ID',
+    `relation_type` TINYINT       DEFAULT NULL COMMENT '关系类型(字典 1:role_has_user,2:role_has_perm,3:group_has_user,4:group_has_role)',
+    `data_scope`    TINYINT       DEFAULT NULL COMMENT '数据权限(字典 0无限制 1仅本人数据 2仅本机构 3本机构及以下 4自定义)',
+    `scopes`        VARCHAR(1024) DEFAULT NULL COMMENT '自定义scope集合,逗号分隔',
+    `deleted`       TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
+    `create_time`   DATETIME      DEFAULT NULL COMMENT '创建时间',
+    `create_by`     VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
+    `update_time`   DATETIME      DEFAULT NULL COMMENT '修改时间',
+    `update_by`     VARCHAR(32)   DEFAULT NULL COMMENT '修改人',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   CHARACTER SET = utf8mb4

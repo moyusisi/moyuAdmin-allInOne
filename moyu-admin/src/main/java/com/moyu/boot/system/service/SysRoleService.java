@@ -3,12 +3,15 @@ package com.moyu.boot.system.service;
 import cn.hutool.core.lang.tree.Tree;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.moyu.boot.common.core.model.PageData;
+import com.moyu.boot.common.security.model.LoginUser;
 import com.moyu.boot.system.model.entity.SysRole;
 import com.moyu.boot.system.model.entity.SysUser;
 import com.moyu.boot.system.model.param.SysRoleParam;
+import com.moyu.boot.system.model.vo.PermScopeInfo;
 import com.moyu.boot.system.model.vo.SysRoleVO;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -61,7 +64,14 @@ public interface SysRoleService extends IService<SysRole> {
      *
      * @param param 角色code必须传
      */
-    List<Tree<String>> treeForGrant(SysRoleParam param);
+    List<Tree<String>> menuTreeForGrant(SysRoleParam param);
+
+    /**
+     * 获取角色已授权的接口数据权限列表
+     *
+     * @param param 角色code, module必须传
+     */
+    List<PermScopeInfo> permScopeListForGrant(SysRoleParam param);
 
     /**
      * 角色授权，ROLE_HAS_MENU
@@ -69,6 +79,13 @@ public interface SysRoleService extends IService<SysRole> {
      * @param param 角色code，授权module必须传
      */
     void grantMenu(SysRoleParam param);
+
+    /**
+     * 角色授权数据范围，ROLE_HAS_PERM
+     *
+     * @param param 角色code，授权module必须传
+     */
+    void grantScope(SysRoleParam param);
 
     /**
      * 角色内用户列表，仅包含 ROLE_HAS_USER 关系直接指定的用户。
@@ -98,4 +115,11 @@ public interface SysRoleService extends IService<SysRole> {
      * 获取指定角色的权限标识
      */
     Set<String> rolePerms(Set<String> roleSet);
+
+    /**
+     * 获取角色的权限标识+数据范围(数据权限自动合并)
+     *
+     * @return Map:接口perm标识 -> dataScope
+     */
+    Map<String, LoginUser.DataScopeInfo> rolePermScopeMap(Set<String> roleSet, String orgCode);
 }

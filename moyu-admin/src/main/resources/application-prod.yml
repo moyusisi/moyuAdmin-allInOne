@@ -1,10 +1,24 @@
 # 监控管理
 management:
-  # 端点控制
   endpoints:
     web:
       exposure:
-        include: health,info
+        # web暴露端点包含，默认[health]
+        include: health
+  endpoint:
+    health: # 开启health 配置从不展示细节
+      probes:
+        # 是否启用活体和就绪探测
+        enabled: true
+      # 何时显示完整的运行状况详细信息
+      show-details: never
+  health:
+    # 存活探针: /actuator/health/liveness
+    livenessState:
+      enabled: true
+    # 就绪探针: /actuator/health/readiness
+    readinessState:
+      enabled: true
 
 # spring配置
 spring:
@@ -96,9 +110,4 @@ custom:
       # 监控管理类
       - /actuator/**
       - /monitor/**
-    # 忽略列表，不经过Security的任何过滤器(如静态资源)
-    ignore-list:
-      - /static/**
-      - /public/**
-      - /assets/**
-      - /**/*.ico
+

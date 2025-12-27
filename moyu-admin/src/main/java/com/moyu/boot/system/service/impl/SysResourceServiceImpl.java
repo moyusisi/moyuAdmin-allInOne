@@ -69,12 +69,16 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
         LambdaQueryWrapper<SysResource> queryWrapper = Wrappers.lambdaQuery(SysResource.class);
         // 指定模块
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getModule()), SysResource::getModule, param.getModule());
-        // 指定资源类型
+        // 指定资源类型 resourceType
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getResourceType()), SysResource::getResourceType, param.getResourceType());
         // 指定name查询
         queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysResource::getName, param.getName());
         // 指定code查询
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysResource::getCode, param.getCode());
+        // 指定path查询
+        queryWrapper.like(ObjectUtil.isNotEmpty(param.getPath()), SysResource::getPath, param.getPath());
+        // 指定visible查询
+        queryWrapper.like(ObjectUtil.isNotEmpty(param.getVisible()), SysResource::getVisible, param.getVisible());
         // 仅查询未删除的
         queryWrapper.eq(SysResource::getDeleted, 0);
         // 指定排序
@@ -321,12 +325,11 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
         nodeConfig.setIdKey("code");
         nodeConfig.setParentIdKey("parentCode");
         // 结构转换
-        List<TreeNode<String>> treeNodeList = menuList.stream()
-                .map(menu -> {
-                    TreeNode<String> node = new TreeNode<>(menu.getCode(), menu.getParentCode(), menu.getName(), menu.getSortNum());
-                    node.setExtra(BeanUtil.beanToMap(menu, false, true));
-                    return node;
-                }).collect(Collectors.toList());
+        List<TreeNode<String>> treeNodeList = menuList.stream().map(menu -> {
+            TreeNode<String> node = new TreeNode<>(menu.getCode(), menu.getParentCode(), menu.getName(), menu.getSortNum());
+            node.setExtra(BeanUtil.beanToMap(menu, false, true));
+            return node;
+        }).collect(Collectors.toList());
         // 构建树
         return TreeUtil.build(treeNodeList, rootId, nodeConfig, new DefaultNodeParser<>());
     }

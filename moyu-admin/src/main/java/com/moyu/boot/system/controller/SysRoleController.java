@@ -9,6 +9,7 @@ import com.moyu.boot.common.core.model.PageData;
 import com.moyu.boot.common.core.model.Result;
 import com.moyu.boot.system.model.entity.SysUser;
 import com.moyu.boot.system.model.param.SysRoleParam;
+import com.moyu.boot.system.model.vo.PermScopeInfo;
 import com.moyu.boot.system.model.vo.SysRoleVO;
 import com.moyu.boot.system.service.SysRoleService;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -110,7 +111,18 @@ public class SysRoleController {
     @SysLog(module = "system", value = "获取菜单树")
     public Result<List<Tree<String>>> menuTreeForGrant(@RequestBody SysRoleParam roleParam) {
         Assert.notEmpty(roleParam.getCode(), "角色code不能为空");
-        return Result.success(sysRoleService.treeForGrant(roleParam));
+        return Result.success(sysRoleService.menuTreeForGrant(roleParam));
+    }
+
+    /**
+     * 角色授权的接口数据范围信息列表
+     */
+    @PostMapping("/permScopeForGrant")
+    @SysLog(module = "system", value = "获取菜单树")
+    public Result<List<PermScopeInfo>> permScopeForGrant(@RequestBody SysRoleParam roleParam) {
+        Assert.notEmpty(roleParam.getCode(), "角色code不能为空");
+        Assert.notEmpty(roleParam.getModule(), "模块moudle不能为空");
+        return Result.success(sysRoleService.permScopeListForGrant(roleParam));
     }
 
     /**
@@ -119,10 +131,23 @@ public class SysRoleController {
     @SysLog(module = "system", value = "给角色授权菜单资源", response = true)
     @PreAuthorize("hasRole('ROOT') || hasAuthority('sys:role:grantMenu')")
     @PostMapping("/grantMenu")
-    public Result<List<Tree<String>>> grantMenu(@RequestBody SysRoleParam roleParam) {
+    public Result<?> grantMenu(@RequestBody SysRoleParam roleParam) {
         Assert.notEmpty(roleParam.getCode(), "角色code不能为空");
         Assert.notEmpty(roleParam.getModule(), "模块module不能为空");
         sysRoleService.grantMenu(roleParam);
+        return Result.success();
+    }
+
+    /**
+     * 给角色授权接口数据范围
+     */
+    @PostMapping("/grantScope")
+    @SysLog(module = "system", value = "给角色授权数据范围", response = true)
+    @PreAuthorize("hasRole('ROOT') || hasAuthority('sys:role:grantScope')")
+    public Result<?> grantScope(@RequestBody SysRoleParam roleParam) {
+        Assert.notEmpty(roleParam.getCode(), "角色code不能为空");
+        Assert.notEmpty(roleParam.getGrantScopeList(), "数据范围列表不能为空");
+        sysRoleService.grantScope(roleParam);
         return Result.success();
     }
 
