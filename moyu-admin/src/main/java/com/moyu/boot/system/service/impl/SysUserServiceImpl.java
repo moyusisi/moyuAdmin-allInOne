@@ -74,20 +74,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public PageData<SysUser> pageList(SysUserParam param) {
-        String deptCode = param.getOrgCode();
-        // 查询指定的组织所有的children，包含本身
-        List<String> childrenCode = new ArrayList<>();
-        if (StrUtil.isNotBlank(deptCode)) {
-            childrenCode = sysOrgService.childrenCodeList(deptCode);
-        }
         // 查询条件
         LambdaQueryWrapper<SysUser> queryWrapper = Wrappers.lambdaQuery(SysUser.class);
         // 指定name查询
         queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysUser::getName, param.getName());
         // 指定orgCode查询
-        queryWrapper.in(ObjectUtil.isNotEmpty(childrenCode), SysUser::getOrgCode, childrenCode);
-        // 指定orgCode查询(与上面的in等价)
-        queryWrapper.apply(ObjectUtil.isNotEmpty(deptCode), "find_in_set('" + deptCode + "', org_path)");
+        String parentCode = param.getOrgCode();
+        if (ObjectUtil.isNotEmpty(parentCode)) {
+            // 查询指定的组织所有的children，包含本身
+            List<String> children = sysOrgService.childrenCodeList(parentCode);
+            queryWrapper.in(ObjectUtil.isNotEmpty(children), SysUser::getOrgCode, children);
+        }
         // 指定status查询
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getStatus()), SysUser::getStatus, param.getStatus());
         // 仅查询未删除的
@@ -96,20 +93,19 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (!SecurityUtils.isRoot()) {
             // 指定的列名
             Integer dataScope = SecurityUtils.getDataScope();
+            Set<String> scopeSet = SecurityUtils.getScopes();
             if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
                 String username = SecurityUtils.getUsername();
-                queryWrapper.and(e -> e.eq(SysUser::getCreateBy, username));
+                queryWrapper.eq(SysUser::getCreateBy, username);
             } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getGroupOrgCode();
-                queryWrapper.and(e -> e.eq(SysUser::getOrgCode, orgCode));
+                String orgCode = SecurityUtils.getOrgCode();
+                queryWrapper.eq(SysUser::getOrgCode, orgCode);
             } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getGroupOrgCode();
-                // find_in_set函数比like高效
-//                queryWrapper.and(e -> e.eq(SysUser::getOrgCode, orgCode).or().like(SysUser::getOrgPath, orgCode));
-                queryWrapper.and(e -> e.eq(SysUser::getOrgCode, orgCode).or().apply("find_in_set('" + orgCode + "', org_path)"));
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysUser::getOrgCode, scopeSet);
+            } else if (DataScopeEnum.COMPANY.getCode().equals(dataScope)) {
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysUser::getOrgCode, scopeSet);
             } else if (DataScopeEnum.ORG_DEFINE.getCode().equals(dataScope)) {
-                Set<String> scopes = SecurityUtils.getScopes();
-                queryWrapper.and(e -> e.in(SysUser::getOrgCode, scopes));
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysUser::getOrgCode, scopeSet);
             }
             log.debug("数据权限为:{}, 已追加过滤条件", DataScopeEnum.getByCode(dataScope));
         }

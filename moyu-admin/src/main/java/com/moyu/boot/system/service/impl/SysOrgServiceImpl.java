@@ -15,12 +15,14 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.moyu.boot.common.core.enums.DataScopeEnum;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
 import com.moyu.boot.common.core.model.PageData;
 import com.moyu.boot.common.security.util.SecurityUtils;
 import com.moyu.boot.system.constant.SysConstants;
+import com.moyu.boot.system.enums.OrgTypeEnum;
 import com.moyu.boot.system.mapper.SysOrgMapper;
 import com.moyu.boot.system.model.entity.SysOrg;
 import com.moyu.boot.system.model.param.SysOrgParam;
@@ -53,12 +55,13 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
 
     @Override
     public List<SysOrg> list(SysOrgParam param) {
+        String parentCode = param.getParentCode();
         // 查询条件
         LambdaQueryWrapper<SysOrg> queryWrapper = Wrappers.lambdaQuery(SysOrg.class);
         // 指定name查询
         queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysOrg::getName, param.getName());
-        // 指定parentCode查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getParentCode()), SysOrg::getParentCode, param.getParentCode());
+        // 指定父节点查询(包括本身)
+        queryWrapper.and(ObjectUtil.isNotEmpty(parentCode), e -> e.eq(SysOrg::getCode, parentCode).or().eq(SysOrg::getParentCode, parentCode));
         // 指定status查询
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getStatus()), SysOrg::getStatus, param.getStatus());
         // 仅查询未删除的
@@ -80,10 +83,8 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         LambdaQueryWrapper<SysOrg> queryWrapper = Wrappers.lambdaQuery(SysOrg.class);
         // 指定name查询
         queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysOrg::getName, param.getName());
-        // 指定父节点查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(parentCode), SysOrg::getParentCode, parentCode);
-        // 指定父节点查询(包括本身) = parentCode or code
-//        queryWrapper.and(ObjectUtil.isNotEmpty(parentCode), e -> e.eq(SysOrg::getCode, parentCode).or().eq(SysOrg::getParentCode, parentCode));
+        // 指定父节点查询(包括本身)
+        queryWrapper.and(ObjectUtil.isNotEmpty(parentCode), e -> e.eq(SysOrg::getCode, parentCode).or().eq(SysOrg::getParentCode, parentCode));
         // 指定status查询
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getStatus()), SysOrg::getStatus, param.getStatus());
         // 仅查询未删除的
@@ -95,20 +96,19 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         if (!SecurityUtils.isRoot()) {
             // 指定的列名
             Integer dataScope = SecurityUtils.getDataScope();
+            Set<String> scopeSet = SecurityUtils.getScopes();
             if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
                 String username = SecurityUtils.getUsername();
-                queryWrapper.and(e -> e.eq(SysOrg::getCreateBy, username));
+                queryWrapper.eq(SysOrg::getCreateBy, username);
             } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getGroupOrgCode();
-                queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode));
+                String orgCode = SecurityUtils.getOrgCode();
+                queryWrapper.eq(SysOrg::getCode, orgCode);
             } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getGroupOrgCode();
-                // find_in_set函数比like高效
-//                queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode).or().like(SysOrg::getOrgPath, orgCode));
-                queryWrapper.and(e -> e.eq(SysOrg::getCode, orgCode).or().apply("find_in_set('" + orgCode + "', org_path)"));
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysOrg::getCode, scopeSet);
+            } else if (DataScopeEnum.COMPANY.getCode().equals(dataScope)) {
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysOrg::getCode, scopeSet);
             } else if (DataScopeEnum.ORG_DEFINE.getCode().equals(dataScope)) {
-                Set<String> scopes = SecurityUtils.getScopes();
-                queryWrapper.and(e -> e.in(SysOrg::getCode, scopes));
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysOrg::getCode, scopeSet);
             }
         }
         // 分页查询
@@ -174,20 +174,50 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
         return codeList;
     }
 
+    @Override
+    public String orgCompany(String orgCode) {
+        String companyCode = orgCode;
+        // 获取组织结构树
+        Tree<String> node = singleTree().getNode(orgCode);
+        while (null != node) {
+            if (OrgTypeEnum.COMPANY.getCode().equals(node.get("orgType"))) {
+                companyCode = node.getId();
+                break;
+            }
+            node = node.getParent();
+        }
+        return companyCode;
+    }
+
     /**
      * 组织机构(树太大需要加缓存)
      */
     @Override
     public List<Tree<String>> tree() {
-        return singleTree().getChildren();
+        Tree<String> rootTree = singleTree();
+        if (SecurityUtils.isRoot()) {
+            return rootTree.getChildren();
+        }
+        // 数据范围
+        Integer dataScope = SecurityUtils.getDataScope();
+        // 未设置或设置为不限制时，返回全树
+        if (dataScope == null || DataScopeEnum.ALL.getCode().equals(dataScope)) {
+            return rootTree.getChildren();
+        }
+        // 其他情况都按照数据范围返回公司树
+        String orgCode = getUserCompanyCode(rootTree, SecurityUtils.getOrgCode());
+        // 用户直属公司orgTree
+        Tree<String> orgTree = rootTree.getNode(orgCode);
+        // 用户公司树列表
+        return Lists.newArrayList(orgTree);
     }
 
     @Override
     public Tree<String> singleTree() {
-//        if (ObjectUtil.isEmpty(rootTree)) {
-//            rootTree = loadRootTree();
-//        }
-        return loadRootTree();
+        if (ObjectUtil.isEmpty(rootTree)) {
+            rootTree = loadRootTree();
+        }
+        return rootTree;
     }
 
     @Override
@@ -247,6 +277,19 @@ public class SysOrgServiceImpl extends ServiceImpl<SysOrgMapper, SysOrg> impleme
             // 本节点的子节点orgPath也应该改变，待tree更新之后才可以修改 TODO
         }
         this.updateById(updateOrg);
+    }
+
+    /**
+     * 获取指定部门所属公司的orgCode
+     */
+    private String getUserCompanyCode(Tree<String> tree, String deptCode) {
+        // 通过用户的orgPath获取用户的组织链接
+        List<String> orgPathList = TreeUtil.getParentsId(tree.getNode(deptCode), true);
+        // 从前往后遍历，因组织链有顺序，所以遍历顺序不能变
+        String orgCode = orgPathList.stream()
+                .filter(code -> ObjectUtil.equal(OrgTypeEnum.COMPANY.getCode(), tree.getNode(code).get("orgType")))
+                .findFirst().orElse(deptCode);
+        return orgCode;
     }
 
     /**

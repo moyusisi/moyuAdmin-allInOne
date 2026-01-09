@@ -56,19 +56,11 @@ public class SecurityUtils {
     }
 
     /**
-     * 获取当前岗位部门ID
+     * 获取当前部门code
      */
-    public static String getGroupOrgCode() {
-        return getLoginUser().map(LoginUser::getGroupOrgCode).orElse(null);
+    public static String getOrgCode() {
+        return getLoginUser().map(LoginUser::getOrgCode).orElse(null);
     }
-
-    /**
-     * 获取数据权限范围
-     */
-    public static Integer getDataScope() {
-        return getLoginUser().map(LoginUser::getDataScope).orElse(null);
-    }
-
 
     /**
      * 获取用户角色集合
@@ -82,6 +74,13 @@ public class SecurityUtils {
      */
     public static Set<String> getPerms() {
         return getLoginUser().map(LoginUser::getPerms).orElse(new HashSet<>());
+    }
+
+    /**
+     * 获取数据权限范围
+     */
+    public static Integer getDataScope() {
+        return getLoginUser().map(LoginUser::getDataScope).orElse(null);
     }
 
     /**

@@ -70,6 +70,8 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysGroup::getName, param.getName());
         // 指定code查询
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysGroup::getCode, param.getCode());
+        // 指定codeSet集合查询
+        queryWrapper.in(ObjectUtil.isNotEmpty(param.getCodeSet()), SysGroup::getCode, param.getCodeSet());
         // 指定orgCode查询
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getOrgCode()), SysGroup::getOrgCode, param.getOrgCode());
         // 指定status查询
@@ -91,6 +93,8 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysGroup::getName, param.getName());
         // 指定code查询
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysGroup::getCode, param.getCode());
+        // 指定codeSet集合查询
+        queryWrapper.in(ObjectUtil.isNotEmpty(param.getCodeSet()), SysGroup::getCode, param.getCodeSet());
         // 指定orgCode查询
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getOrgCode()), SysGroup::getOrgCode, param.getOrgCode());
         // 指定status查询
@@ -103,20 +107,19 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         if (!SecurityUtils.isRoot()) {
             // 指定的列名
             Integer dataScope = SecurityUtils.getDataScope();
+            Set<String> scopeSet = SecurityUtils.getScopes();
             if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
                 String username = SecurityUtils.getUsername();
-                queryWrapper.and(e -> e.eq(SysGroup::getCreateBy, username));
+                queryWrapper.eq(SysGroup::getCreateBy, username);
             } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getGroupOrgCode();
-                queryWrapper.and(e -> e.eq(SysGroup::getOrgCode, orgCode));
+                String orgCode = SecurityUtils.getOrgCode();
+                queryWrapper.eq(SysGroup::getOrgCode, orgCode);
             } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getGroupOrgCode();
-                // find_in_set函数比like高效
-//                queryWrapper.and(e -> e.eq(SysGroup::getOrgCode, orgCode).or().like(SysGroup::getOrgPath, orgCode));
-                queryWrapper.and(e -> e.eq(SysGroup::getOrgCode, orgCode).or().apply("find_in_set('" + orgCode + "', org_path)"));
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet);
+            } else if (DataScopeEnum.COMPANY.getCode().equals(dataScope)) {
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet);
             } else if (DataScopeEnum.ORG_DEFINE.getCode().equals(dataScope)) {
-                Set<String> scopes = SecurityUtils.getScopes();
-                queryWrapper.and(e -> e.in(SysGroup::getOrgCode, scopes));
+                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet);
             }
             log.debug("数据权限为:{}, 已追加过滤条件", DataScopeEnum.getByCode(dataScope));
         }
@@ -241,6 +244,21 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
                 .eq(SysGroup::getDeleted, 0)
         );
         return groupList;
+    }
+
+    @Override
+    public List<SysGroupVO> userGroupList(SysGroupParam param) {
+        // 查询指定user的所有group
+        Set<String> groupSet = sysRelationService.userGroup(param.getUsername());
+        if (ObjectUtil.isEmpty(groupSet)) {
+            return new ArrayList<>();
+        }
+        // 添加查询参数
+        param.setCodeSet(groupSet);
+        param.setStatus(0);
+        // 查询岗位
+        List<SysGroup> groupList = this.list(param);
+        return buildGroupVOList(groupList);
     }
 
     @Override
