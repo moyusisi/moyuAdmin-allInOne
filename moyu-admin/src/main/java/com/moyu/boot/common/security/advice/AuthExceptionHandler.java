@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,14 +33,18 @@ import javax.servlet.http.HttpServletRequest;
 @RestControllerAdvice(annotations = RestController.class)
 public class AuthExceptionHandler {
 
-    // security的认证异常(AuthenticationException及子类)
+    // security的认证异常(用户进行认证过程中，认证失败时触发。)
     @ExceptionHandler(AuthenticationException.class)
     public Result<?> authenticationException(AuthenticationException e) {
+        if (e instanceof BadCredentialsException) {
+            // 用户名或密码错误
+            return new Result<>(ResultCodeEnum.USER_PASSWORD_ERROR);
+        }
         // 登录异常
         return new Result<>(ResultCodeEnum.USER_LOGIN_EXCEPTION);
     }
 
-    // security的授权异常(AccessDeniedException及子类) 先于security AuthenticationEntryPoint 处理
+    // security的授权异常(AccessDeniedException及子类) 先于filter层的exceptionHandling处理
     // sa权限认证的相关异常(SaTokenException的子类)也一起处理(注意要使用AOP模式，不要使用拦截器模式,否则无法打印入参)
     @ExceptionHandler({AccessDeniedException.class, NotLoginException.class, NotRoleException.class, NotPermissionException.class})
     public Result<?> accessDeniedException(HttpServletRequest request, Exception e) {

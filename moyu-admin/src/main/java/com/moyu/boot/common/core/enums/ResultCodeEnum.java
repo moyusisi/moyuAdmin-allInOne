@@ -44,7 +44,7 @@ public enum ResultCodeEnum implements IResultCode, Serializable {
     USER_PASSWORD_ERROR("A0210", "用户名或密码错误"),
     USER_LOGIN_CHECK_ERROR("A0220", "用户身份校验失败"),
     // 一般需要重新登录
-    USER_LOGIN_EXPIRED("A0230", "用户登录已过期"),
+    USER_LOGIN_EXPIRED("A0230", "用户未登录或登录已过期"),
     USER_LOGIN_REPLACED("A0231", "用户被顶替下线"),
     USER_LOGIN_KICKOUT("A0232", "用户被强制下线"),
     /**
@@ -52,6 +52,9 @@ public enum ResultCodeEnum implements IResultCode, Serializable {
      */
     ACCESS_PERMISSION_EXCEPTION("A0300", "访问权限异常"),
     ACCESS_UNAUTHORIZED("A0301", "访问未授权"),
+    AUTHORIZATION_EXPIRED("A0311", "授权已过期"),
+    NO_PERMISSION_TO_USE_API("A0312", "无权限使用 API"),
+
     /**
      * 二级宏观错误码
      */

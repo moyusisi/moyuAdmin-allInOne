@@ -1,6 +1,8 @@
 package com.moyu.boot.common.security.handler;
 
 
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.extra.servlet.ServletUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.model.Result;
@@ -17,7 +19,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 自定义认证异常(登录异常)处理，未认证访问的情况处理(在filter层处理)
+ * 自定义认证异常处理，未认证访问需要认证的资源时触发(在filter层处理)
  * <p>
  * AuthenticationFailureHandler接口的实现类是AuthenticationEntryPointFailureHandler，
  * 它通过AuthenticationEntryPoint进行处理
@@ -40,6 +42,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         Result<?> result = new Result<>(ResultCodeEnum.USER_LOGIN_EXPIRED);
         String responseBody = new ObjectMapper().writeValueAsString(result);
         log.info("Security Filter层，访问{}认证异常，处理返回:{}", request.getRequestURI(), responseBody);
+        String ip = ServletUtil.getClientIP(request);
+        if (ObjectUtil.isNotEmpty(ip)) {
+            log.info("From Ip:{}, User-Agent:{}", ip, ServletUtil.getHeaderIgnoreCase(request, "User-Agent"));
+        }
         PrintWriter printWriter = response.getWriter();
         printWriter.print(responseBody);
         printWriter.flush();
