@@ -55,6 +55,13 @@ public enum ResultCodeEnum implements IResultCode, Serializable {
     AUTHORIZATION_EXPIRED("A0311", "授权已过期"),
     NO_PERMISSION_TO_USE_API("A0312", "无权限使用 API"),
 
+    USER_ACCESS_BLOCKED("A0320", "用户访问被拦截"),
+    BLACKLISTED_USER("A0321", "黑名单用户"),
+    ACCOUNT_FROZEN("A0322", "账号被冻结"),
+    ILLEGAL_IP_ADDRESS("A0323", "非法 IP 地址"),
+    GATEWAY_ACCESS_RESTRICTED("A0324", "网关访问受限"),
+    REGION_BLACKLIST("A0325", "地域黑名单"),
+
     /**
      * 二级宏观错误码
      */
