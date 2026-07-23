@@ -96,36 +96,63 @@
   </a-card>
   <a-card size="small">
     <!--  表格数据区  -->
-    <vxe-grid ref="gridRef" v-bind="gridOptions">
-      <!-- 左侧操作栏 -->
-      <template #toolbarButtons>
-        <a-space wrap style="margin-bottom: 6px">
+    <MTable ref="tableRef"
+            :columns="columns"
+            :loadData="loadData"
+            :row-key="(row) => row.id"
+            showRowSelection
+            @selectedChange="onSelectedChange"
+    >
+      <!--  表格上方左侧操作区  -->
+      <template #operator>
+        <a-space wrap style="margin-bottom: 8px">
           <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen()">新增</a-button>
-          <a-button danger :icon="h(DeleteOutlined)" @click="gridRef?.commitProxy('delete')">批量删除</a-button>
+          <a-popconfirm :title=" '确定要删除这 ' + selectedRowKeys.length + ' 条数据吗？' " :disabled ="selectedRowKeys.length < 1" @confirm="batchDelete">
+            <a-button danger :icon="h(DeleteOutlined)" :disabled="selectedRowKeys.length < 1">
+              批量删除
+            </a-button>
+          </a-popconfirm>
         </a-space>
       </template>
-      <!-- 字段插槽 -->
-      <template #id="{row, rowIndex, column, columnIndex}">
-        <a @click="openDetail(row)">{{ row.id }}</a>
-      </template>
-      <template #action="{row, rowIndex, column, columnIndex}">
-        <a-space>
-          <template #split>
-            <a-divider type="vertical" />
-          </template>
-          <a-tooltip title="编辑">
-            <a @click="formRef.onOpen(row)"><FormOutlined /></a>
+      <template #bodyCell="{ column, record, index, text }">
+        <template v-if="column.dataIndex === 'index'">
+          <span>{{ index + 1 }}</span>
+        </template>
+        <template v-if="column.dataIndex === 'id'">
+          <!-- 唯一键点击查看详情 -->
+          <a-tooltip :title="text" placement="topLeft">
+            <!--<a style="text-decoration: underline;" @click="openDetail(record)">{{ text }}</a>-->
+            <a @click="openDetail(record)">{{ text }}</a>
           </a-tooltip>
-          <a-tooltip title="删除">
-            <a-popconfirm title="确定要删除吗？" @confirm="delete${entityName}(row)">
-              <a style="color:#FF4D4F;"><DeleteOutlined/></a>
-            </a-popconfirm>
+        </template>
+<#if fieldList??>
+  <#list fieldList as fieldConfig>
+    <#if fieldConfig.showInList == 1 && fieldConfig.ellipsis == 1>
+        <template v-if="column.dataIndex === '${fieldConfig.fieldName}'">
+          <!-- 长文本省略提示 -->
+          <a-tooltip :title="text" placement="topLeft">
+            <span>{{ text }}</span>
           </a-tooltip>
-        </a-space>
+        </template>
+    </#if>
+  </#list>
+</#if>
+        <template v-if="column.dataIndex === 'action'">
+          <a-space>
+            <a-tooltip title="编辑">
+              <a @click="formRef.onOpen(record)">编辑</a>
+            </a-tooltip>
+            <a-tooltip title="删除">
+              <a-popconfirm title="确定要删除吗？" @confirm="delete${entityName}(record)">
+                <a style="color:#FF4D4F;">删除</a>
+              </a-popconfirm>
+            </a-tooltip>
+          </a-space>
+        </template>
       </template>
-    </vxe-grid>
+    </MTable>
   </a-card>
-  <Form ref="formRef" @successful="refresh()"/>
+  <Form ref="formRef" @successful="tableRef.refresh()"/>
 <#if detailOpenType == 0>
   <Detail ref="detailRef"/>
 </#if>
@@ -138,6 +165,7 @@
   import { useRoute, useRouter } from "vue-router"
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined, DownOutlined, UpOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
+  import MTable from "@/components/MTable/index.vue"
   import Form from "./form.vue"
 <#if detailOpenType == 0>
   import Detail from "./detail.vue"
@@ -166,83 +194,59 @@
 </#if>
 
   /***** 表格相关对象 start *****/
-  const gridRef = ref()
-  const gridOptions = ref({
-    // 分页配置项
-    pagerConfig: {
-      enabled: true,
+  const tableRef = ref()
+  // 已选中的行
+  const selectedRowKeys = ref([])
+  // 表格列配置
+  const columns = ref([
+    // 不需要序号可以删掉
+    {
+      title: '序号',
+      dataIndex: 'index',
+      align: 'center',
+      width: 50,
     },
-    // 排序配置项
-    sortConfig: {
-      // 服务端排序
-      remote: true,
-    },
-    // 数据代理配置
-    proxyConfig: {
-      // 获取响应的值配置
-      response: {
-        // 只对 pager-config 配置时有效，响应结果中获取数据列表的属性（分页场景）
-        result: "records",
-        // 只对 pager-config 配置时有效，响应结果中获取分页的属性（分页场景）
-        total: "total",
-      },
-      // 启用排序请求代理
-      sort: true,
-      // 代理配置
-      ajax: {
-        query: ({ page, sort, sorts, filters, form }) => {
-          const sortItem = sorts[0] || {}
-          // console.log(sortItem)
-          // 默认接收 Promise<{ result: [], page: { total: 100 } }>
-          return loadData({
-            pageNum: page.currentPage,
-            pageSize: page.pageSize,
-            sortField: sortItem.field,
-            sortOrder: sortItem.order
-          })
-        },
-        delete: ({ body, form }) => {
-          // 删除已选
-          const ids = body.removeRecords.map(item => item.id);
-          return ${entityName?uncap_first}Api.delete${entityName}({ ids })
-        }
-      }
-    },
-    // 列字段
-    columns: [
-      { type: 'checkbox', width: 50 },
-      { type: 'seq', width: 50 },
-      { field: 'id', title: '唯一ID', width: 100, sortable: true, slots: { default: 'id' } },
 <#if fieldList??>
   <#list fieldList as fieldConfig>
     <#if fieldConfig.showInList == 1>
       <#if fieldConfig.fieldType == "Date">
-      { field: '${fieldConfig.fieldName}', title: '${fieldConfig.fieldRemark}', width: 170 },
+    {
+      title: "${fieldConfig.fieldRemark}",
+      dataIndex: "${fieldConfig.fieldName}",
+      align: "center",
+      width: 160,
+    },
       <#elseif fieldConfig.fieldType == "String">
-      { field: '${fieldConfig.fieldName}', title: '${fieldConfig.fieldRemark[0..*8]}', width: 150 },
+    {
+      title: "${fieldConfig.fieldRemark[0..*8]}",
+      dataIndex: "${fieldConfig.fieldName}",
+      align: "center",
+      resizable: true,
+        <#if fieldConfig.ellipsis == 1>
+      ellipsis: true,
+        </#if>
+      width: 150,
+    },
       <#else>
-      { field: '${fieldConfig.fieldName}', title: '${fieldConfig.fieldRemark[0..*8]}', width: 100 },
+    {
+      title: "${fieldConfig.fieldRemark[0..*8]}",
+      dataIndex: "${fieldConfig.fieldName}",
+      align: "center",
+      resizable: true,
+      width: 100,
+    },
       </#if>
     </#if>
   </#list>
 </#if>
-      { field: 'action', title: '操作', width: 100, slots: { default: 'action' } },
-    ],
-    // 工具栏配置
-    toolbarConfig: {
-      // 是否显示个性化列配置
-      custom: true,
-      // 是否允许最大化显示
-      zoom: true,
-      // 刷新按钮配置
-      refresh: true,
-      // 插槽
-      slots: {
-        // 操作栏按钮
-        buttons: "toolbarButtons",
-      },
+    // 单行操作，不需要可以删掉
+    {
+      title: '操作',
+      dataIndex: 'action',
+      align: 'center',
+      width: 100,
     },
-  })
+  ])
   /***** 表格相关对象 end *****/
 
   // 加载完毕调用
@@ -252,19 +256,12 @@
 
   // 提交查询
   const querySubmit = () => {
-    // reload 返回第一页触发ajax.query
-    // query 当前页触发ajax.query
-    gridRef.value?.commitProxy("reload")
+    tableRef.value.refresh(true)
   }
   // 重置
   const reset = () => {
     queryFormRef.value.resetFields()
-    refresh()
-  }
-  // 重置
-  const refresh = () => {
-    // 返回第一页触发ajax.query
-    gridRef.value?.commitProxy("reload")
+    tableRef.value.refresh(true)
   }
   // 加载数据
   const loadData = (parameter) => {
@@ -277,16 +274,32 @@
       console.error(err)
     })
   }
+  // 选中行发生变化
+  const onSelectedChange = (selectedKeys, selectedRows) => {
+    selectedRowKeys.value = selectedKeys
+    // console.log('onSelectedChange,selectedKeys:', selectedKeys);
+  }
 
   // 删除
   const delete${entityName} = (record) => {
     let data = { ids: [record.id] }
     ${entityName?uncap_first}Api.delete${entityName}(data).then((res) => {
       message.success(res.message)
-      refresh()
+      tableRef.value.refresh()
     })
   }
-
+  // 批量删除
+  const batchDelete = () => {
+    if (selectedRowKeys.value.length < 1) {
+      message.warning("请至少选择一条数据")
+      return
+    }
+    let data = { ids: selectedRowKeys.value }
+    ${entityName?uncap_first}Api.delete${entityName}(data).then((res) => {
+      message.success(res.message)
+      tableRef.value.refresh()
+    })
+  }
   // 打开详情页
   const openDetail = (row) => {
     <#if detailOpenType == 0>

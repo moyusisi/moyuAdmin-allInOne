@@ -6,6 +6,7 @@
       :closable="false"
       :maskClosable="false"
       :destroy-on-close="true"
+      :get-container="getDrawerContainer"
       @close="onClose"
   >
     <!--  上方操作区  -->
@@ -24,7 +25,7 @@
   <#list fieldList as fieldConfig>
     <#if fieldConfig.showInForm == 1>
             <a-col :span="12">
-              <a-form-item name="${fieldConfig.fieldName}" label="${fieldConfig.fieldRemark[0..*6]}" tooltip="${fieldConfig.fieldRemark}" <#if fieldConfig.required == 1>required</#if>>
+              <a-form-item name="${fieldConfig.fieldName}" label="${fieldConfig.fieldRemark[0..*6]}" tooltip="" <#if fieldConfig.required == 1>required</#if>>
       <#if fieldConfig.formType == "INPUT">
                 <a-input v-model:value="formData.${fieldConfig.fieldName}" placeholder="${fieldConfig.fieldRemark}" allowClear />
       <#elseif fieldConfig.formType == "INPUT_NUMBER">
@@ -147,6 +148,11 @@
       })
     }).catch(() => {
     })
+  }
+  // 获取Drawer渲染到的dom容器。 默认body,当有vxe-grid时使用表格dom
+  const getDrawerContainer = () => {
+    // vxe-grid的z-index过大，防止盖住drawer
+    return document.querySelector('.vxe-grid') || document.body
   }
   // 调用这个函数将子组件的一些数据和方法暴露出去
   defineExpose({

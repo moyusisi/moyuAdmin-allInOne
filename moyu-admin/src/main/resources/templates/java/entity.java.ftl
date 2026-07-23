@@ -1,7 +1,7 @@
 package ${packageName}.${moduleName}.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.moyu.boot.common.mybatis.entity.BaseEntity;
+import com.moyu.boot.common.core.model.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,8 +25,8 @@ public class ${entityName} extends BaseEntity {
             && fieldConfig.fieldName != "createTime" && fieldConfig.fieldName != "updateTime"
             && fieldConfig.fieldName != "createBy" && fieldConfig.fieldName != "updateBy">
     /**
-    * ${fieldConfig.fieldRemark}
-    */
+     * ${fieldConfig.fieldRemark}
+     */
     private ${fieldConfig.fieldType} ${fieldConfig.fieldName};
         </#if>
     </#list>

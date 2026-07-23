@@ -5,8 +5,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.moyu.boot.common.core.model.BasePageParam;
-import lombok.Data;
+import com.moyu.boot.common.core.model.PageParam;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
@@ -20,9 +23,12 @@ import java.util.Set;
  * @author ${author}
  * @since ${.now?string["yyyy-MM-dd"]}
  */
-@Data
+@Getter
+@Setter
+@ToString
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ${entityName}Param extends BasePageParam {
+public class ${entityName}Param extends PageParam {
 
     //********** 额外字段 **********//
     /**
@@ -49,8 +55,8 @@ public class ${entityName}Param extends BasePageParam {
         && fieldConfig.fieldName != "createTime" && fieldConfig.fieldName != "updateTime"
         && fieldConfig.fieldName != "createBy" && fieldConfig.fieldName != "updateBy">
     /**
-    * ${fieldConfig.fieldRemark}
-    */
+     * ${fieldConfig.fieldRemark}
+     */
             <#if fieldConfig.required == 1 >
                 <#if fieldConfig.fieldType == 'String'>
     @NotBlank(message = "${fieldConfig.fieldName}不能为空")
@@ -71,8 +77,8 @@ public class ${entityName}Param extends BasePageParam {
         <#-- 范围控制多两个个字段 -->
         <#if fieldConfig.queryType == "BETWEEN">
     /**
-    * ${fieldConfig.fieldRemark}-起始
-    */
+     * ${fieldConfig.fieldRemark}-起始
+     */
             <#if fieldConfig.formType == "DATE">
     @JsonFormat(pattern="yyyy-MM-dd")
             <#elseif fieldConfig.formType == "DATE_TIME">
@@ -80,8 +86,8 @@ public class ${entityName}Param extends BasePageParam {
             </#if>
     private ${fieldConfig.fieldType} ${fieldConfig.fieldName}1;
     /**
-    * ${fieldConfig.fieldRemark}-截止
-    */
+     * ${fieldConfig.fieldRemark}-截止
+     */
             <#if fieldConfig.formType == "DATE">
     @JsonFormat(pattern="yyyy-MM-dd")
             <#elseif fieldConfig.formType == "DATE_TIME">

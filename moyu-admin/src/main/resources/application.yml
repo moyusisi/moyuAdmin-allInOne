@@ -9,9 +9,9 @@ server:
 # spring配置
 spring:
   application:
-    name: moyu-admin
+    name: moyu-boot
   profiles:
-    active: prod
+    active: local
   config:
     import: classpath:codegen.yml
   # mvc配置
@@ -36,3 +36,6 @@ mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   # 加载全局的配置文件
 #  config-location: classpath:mybatis-config.xml
+  global-config:
+    # 关闭控制台输出banner
+    banner: false
