@@ -2,13 +2,13 @@ package com.moyu.boot.system.service;
 
 import cn.hutool.core.lang.tree.Tree;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.moyu.boot.common.authZ.model.LoginUser;
 import com.moyu.boot.common.core.model.PageData;
-import com.moyu.boot.common.security.model.LoginUser;
 import com.moyu.boot.system.model.entity.SysRole;
-import com.moyu.boot.system.model.entity.SysUser;
 import com.moyu.boot.system.model.param.SysRoleParam;
 import com.moyu.boot.system.model.vo.PermScopeInfo;
 import com.moyu.boot.system.model.vo.SysRoleVO;
+import com.moyu.boot.system.model.vo.SysUserVO;
 
 import java.util.List;
 import java.util.Map;
@@ -60,6 +60,13 @@ public interface SysRoleService extends IService<SysRole> {
     void update(SysRoleParam param);
 
     /**
+     * 角色(多个)拥有的菜单
+     *
+     * @param param code或codeSet必传一个
+     */
+    List<Tree<String>> menuTree(SysRoleParam param);
+
+    /**
      * 获取菜单树，用于给角色授权时选择(treeNode不包含button)
      *
      * @param param 角色code必须传
@@ -88,24 +95,24 @@ public interface SysRoleService extends IService<SysRole> {
     void grantScope(SysRoleParam param);
 
     /**
-     * 角色内用户列表，仅包含 ROLE_HAS_USER 关系直接指定的用户。
+     * 角色内用户列表，仅包含 USER_HAS_ROLE 关系直接指定的用户。
      */
-    List<SysUser> roleUserList(SysRoleParam param);
+    List<SysUserVO> roleUserList(SysRoleParam param);
 
     /**
-     * 用户直接关联的角色, 仅包含 ROLE_HAS_USER 关系直接指定的用户。
+     * 用户直接关联的角色, 仅包含 USER_HAS_ROLE 关系直接指定的用户。
      */
     Set<String> userRoles(String username);
 
     /**
-     * 角色新增用户，ROLE_HAS_USER
+     * 角色新增用户，USER_HAS_ROLE
      *
      * @param param 角色code，用户集合 codeSet
      */
     void roleAddUser(SysRoleParam param);
 
     /**
-     * 角色删除用户，ROLE_HAS_USER
+     * 角色删除用户，USER_HAS_ROLE
      *
      * @param param 角色code，用户集合 codeSet
      */
@@ -117,9 +124,9 @@ public interface SysRoleService extends IService<SysRole> {
     Set<String> rolePerms(Set<String> roleSet);
 
     /**
-     * 获取角色的权限标识+数据范围(数据权限自动合并)
+     * 获取角色的拥有的接口的数据范围(数据权限自动合并)
      *
-     * @return Map:接口perm标识 -> dataScope
+     * @return Map:接口path -> dataScope
      */
-    Map<String, LoginUser.DataScopeInfo> rolePermScopeMap(Set<String> roleSet, String orgCode);
+    Map<String, LoginUser.DataScopeInfo> roleDataScopeMap(Set<String> roleSet, String orgCode);
 }

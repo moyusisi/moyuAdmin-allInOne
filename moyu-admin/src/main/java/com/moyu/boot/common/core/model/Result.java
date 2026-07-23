@@ -1,12 +1,13 @@
 package com.moyu.boot.common.core.model;
 
+import com.moyu.boot.common.core.enums.ResultCode;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 
 import java.io.Serializable;
 import java.util.StringJoiner;
 
 /**
- * 基本响应对象, 包含错误代码和错误描述信息, 返回的具体数据可包含在 data 字段中, data采用范型, 可根据需要定义类型
+ * 基本响应结果对象, 包含错误代码和错误描述信息, 返回的具体数据可包含在 data 字段中, data采用范型, 可根据需要定义类型
  * <p>使用举例:</p>
  * <pre>
  * 仅创建一个空响应对象:
@@ -89,12 +90,12 @@ public class Result<T> implements Serializable {
         this.data = data;
     }
 
-    public Result(IResultCode resultCode) {
+    public Result(ResultCode resultCode) {
         this.code = resultCode.getCode();
         this.message = resultCode.getMessage();
     }
 
-    public Result(IResultCode resultCode, String detail) {
+    public Result(ResultCode resultCode, String detail) {
         this.code = resultCode.getCode();
         String message = resultCode.getMessage();
         if (detail != null && !detail.isEmpty()) {

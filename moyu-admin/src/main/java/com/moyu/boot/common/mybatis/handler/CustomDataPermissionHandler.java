@@ -1,14 +1,13 @@
 package com.moyu.boot.common.mybatis.handler;
 
-
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.baomidou.mybatisplus.extension.plugins.handler.MultiDataPermissionHandler;
+import com.moyu.boot.common.authZ.util.LoginUserUtils;
 import com.moyu.boot.common.core.enums.DataScopeEnum;
 import com.moyu.boot.common.mybatis.annotation.DataPermission;
-import com.moyu.boot.common.security.util.SecurityUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
@@ -54,7 +53,7 @@ public class CustomDataPermissionHandler implements MultiDataPermissionHandler {
             return null;
         }
         // root超管不做任何限制
-        if (SecurityUtils.isRoot()) {
+        if (LoginUserUtils.isRoot()) {
             return null;
         }
         log.debug("{} 执行数据权限过滤", mappedStatementId);
@@ -71,9 +70,9 @@ public class CustomDataPermissionHandler implements MultiDataPermissionHandler {
     public static Expression dataScopeFilter(DataPermission annotation) {
         // 指定的列名
         String orgColumn = annotation.orgColumn();
-        Integer dataScope = SecurityUtils.getDataScope();
+        Integer dataScope = LoginUserUtils.getDataScope();
         DataScopeEnum scopeEnum = DataScopeEnum.getByCode(dataScope);
-        Set<String> scopeSet = SecurityUtils.getScopes();
+        Set<String> scopeSet = LoginUserUtils.getScopes();
         // 要追加的条件
         String sqlStr = "";
         switch (scopeEnum) {
@@ -83,13 +82,13 @@ public class CustomDataPermissionHandler implements MultiDataPermissionHandler {
             }
             case SELF: {
                 // 仅自己
-                String username = SecurityUtils.getUsername();
+                String username = LoginUserUtils.getUsername();
                 sqlStr = annotation.userColumn() + " = '" + username + "'";
                 break;
             }
             case ORG: {
                 // 本机构
-                String orgCode = SecurityUtils.getOrgCode();
+                String orgCode = LoginUserUtils.getOrgCode();
                 sqlStr = orgColumn + " = '" + orgCode + "'";
                 break;
             }
@@ -102,7 +101,16 @@ public class CustomDataPermissionHandler implements MultiDataPermissionHandler {
                 // 第三种方法使用 orgPath find_in_set, 这种处理方式与like类似但效率高点
                 // sqlStr = "( " + orgColumn + " = '" + orgCode + "' OR find_in_set('" + orgCode + "', " + annotation.orgPathColumn() + " ) )";
                 if (ObjectUtil.isEmpty(scopeSet)) {
-                    log.warn("dataScope为本机构及以下，但scopeSet为空,将不限制数据权限");
+                    log.warn("dataScope为{}，但scopeSet为空,将不限制数据范围", scopeEnum.name());
+                } else {
+                    sqlStr = orgColumn + " IN ('" + CollectionUtil.join(scopeSet, "', '") + "')";
+                }
+                break;
+            }
+            case COMPANY: {
+                //  本公司及以下
+                if (ObjectUtil.isEmpty(scopeSet)) {
+                    log.warn("dataScope为{}，但scopeSet为空,将不限制数据范围", scopeEnum.name());
                 } else {
                     sqlStr = orgColumn + " IN ('" + CollectionUtil.join(scopeSet, "', '") + "')";
                 }
@@ -111,7 +119,7 @@ public class CustomDataPermissionHandler implements MultiDataPermissionHandler {
             case ORG_DEFINE: {
                 //  自定义
                 if (ObjectUtil.isEmpty(scopeSet)) {
-                    log.warn("dataScope为自定义，但scopeSet为空,将不限制数据权限");
+                    log.warn("dataScope为{}，但scopeSet为空,将不限制数据范围", scopeEnum.name());
                 } else {
                     sqlStr = orgColumn + " IN ('" + CollectionUtil.join(scopeSet, "', '") + "')";
                 }

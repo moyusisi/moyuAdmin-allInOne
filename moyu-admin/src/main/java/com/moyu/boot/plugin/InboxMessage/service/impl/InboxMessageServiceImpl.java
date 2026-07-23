@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.InboxMessage.service.impl;
+package com.moyu.boot.plugin.inboxMessage.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Assert;
@@ -11,15 +11,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
 import com.moyu.boot.common.core.model.PageData;
-import com.moyu.boot.common.security.util.SecurityUtils;
-import com.moyu.boot.plugin.InboxMessage.mapper.InboxMessageMapper;
-import com.moyu.boot.plugin.InboxMessage.model.entity.InboxMessage;
-import com.moyu.boot.plugin.InboxMessage.model.entity.UserMessage;
-import com.moyu.boot.plugin.InboxMessage.model.param.InboxMessageParam;
-import com.moyu.boot.plugin.InboxMessage.model.vo.InboxMessageVO;
-import com.moyu.boot.plugin.InboxMessage.model.vo.UserMessageVO;
-import com.moyu.boot.plugin.InboxMessage.service.InboxMessageService;
-import com.moyu.boot.plugin.InboxMessage.service.UserMessageService;
+import com.moyu.boot.common.authZ.util.LoginUserUtils;
+import com.moyu.boot.plugin.inboxMessage.mapper.InboxMessageMapper;
+import com.moyu.boot.plugin.inboxMessage.model.entity.InboxMessage;
+import com.moyu.boot.plugin.inboxMessage.model.entity.UserMessage;
+import com.moyu.boot.plugin.inboxMessage.model.param.InboxMessageParam;
+import com.moyu.boot.plugin.inboxMessage.model.vo.InboxMessageVO;
+import com.moyu.boot.plugin.inboxMessage.model.vo.UserMessageVO;
+import com.moyu.boot.plugin.inboxMessage.service.InboxMessageService;
+import com.moyu.boot.plugin.inboxMessage.service.UserMessageService;
 import com.moyu.boot.system.model.entity.SysUser;
 import com.moyu.boot.system.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,6 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 /**
  * 站内消息服务实现类
@@ -125,6 +124,7 @@ public class InboxMessageServiceImpl extends ServiceImpl<InboxMessageMapper, Inb
         InboxMessage inboxMessage = BeanUtil.copyProperties(param, InboxMessage.class);
         inboxMessage.setCode("MSG" + IdUtil.getSnowflakeNextId());
         inboxMessage.setSendTime(new Date());
+        inboxMessage.setSendBy(LoginUserUtils.getUsername());
         // 其他处理
         inboxMessage.setId(null);
         List<String> userList = param.getReceiveUserList();
@@ -183,7 +183,7 @@ public class InboxMessageServiceImpl extends ServiceImpl<InboxMessageMapper, Inb
 
     @Override
     public InboxMessageVO read(InboxMessageParam param) {
-        String userId = SecurityUtils.getUsername();
+        String userId = LoginUserUtils.getUsername();
         Assert.notEmpty(userId, "用户ID不能为空");
         // 查询消息
         InboxMessage inboxMessage = this.getOne(Wrappers.lambdaQuery(InboxMessage.class).eq(InboxMessage::getCode, param.getCode()));
@@ -209,7 +209,7 @@ public class InboxMessageServiceImpl extends ServiceImpl<InboxMessageMapper, Inb
 
     @Override
     public Long unreadCount(InboxMessageParam param) {
-        String userId = SecurityUtils.getUsername();
+        String userId = LoginUserUtils.getUsername();
         Assert.notEmpty(userId, "用户ID不能为空");
         Long count = userMessageService.count(Wrappers.lambdaQuery(UserMessage.class)
                 .eq(UserMessage::getUserId, userId)
@@ -221,7 +221,7 @@ public class InboxMessageServiceImpl extends ServiceImpl<InboxMessageMapper, Inb
 
     @Override
     public PageData<UserMessageVO> userReadPage(InboxMessageParam param) {
-        param.setUserId(SecurityUtils.getUsername());
+        param.setUserId(LoginUserUtils.getUsername());
         Assert.notEmpty(param.getUserId(), "用户ID不能为空");
         PageData<UserMessageVO> pageData = userMessageService.pageList(param);
         if (pageData.getTotal() == 0) {

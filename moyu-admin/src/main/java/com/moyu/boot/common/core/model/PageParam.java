@@ -1,0 +1,76 @@
+package com.moyu.boot.common.core.model;
+
+import java.io.Serializable;
+import java.util.StringJoiner;
+
+/**
+ * 分页请求参数基类对象
+ *
+ * @author shisong02
+ * @since 2022-10-24
+ */
+public class PageParam implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 当前页码，当前第几页
+     */
+    private Integer pageNum;
+
+    /**
+     * 每页大小
+     */
+    private Integer pageSize;
+
+    /**
+     * 排序字段
+     */
+    private String sortField;
+
+    /**
+     * 排序方式, asc/desc
+     */
+    private String sortOrder;
+
+    public Integer getPageNum() {
+        return pageNum;
+    }
+
+    public void setPageNum(Integer pageNum) {
+        this.pageNum = pageNum;
+    }
+
+    public Integer getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public String getSortField() {
+        return sortField;
+    }
+
+    public void setSortField(String sortField) {
+        this.sortField = sortField;
+    }
+
+    public String getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(String sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", PageParam.class.getSimpleName() + "[", "]")
+                .add("pageNum=" + pageNum)
+                .add("pageSize=" + pageSize)
+                .add("sortField='" + sortField + "'")
+                .add("sortOrder='" + sortOrder + "'")
+                .toString();
+    }
+}

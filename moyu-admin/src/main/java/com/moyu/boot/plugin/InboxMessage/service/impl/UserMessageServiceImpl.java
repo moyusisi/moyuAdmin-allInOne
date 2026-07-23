@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.InboxMessage.service.impl;
+package com.moyu.boot.plugin.inboxMessage.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -9,11 +9,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
 import com.moyu.boot.common.core.model.PageData;
-import com.moyu.boot.plugin.InboxMessage.mapper.UserMessageMapper;
-import com.moyu.boot.plugin.InboxMessage.model.entity.UserMessage;
-import com.moyu.boot.plugin.InboxMessage.model.param.InboxMessageParam;
-import com.moyu.boot.plugin.InboxMessage.model.vo.UserMessageVO;
-import com.moyu.boot.plugin.InboxMessage.service.UserMessageService;
+import com.moyu.boot.plugin.inboxMessage.mapper.UserMessageMapper;
+import com.moyu.boot.plugin.inboxMessage.model.entity.UserMessage;
+import com.moyu.boot.plugin.inboxMessage.model.param.InboxMessageParam;
+import com.moyu.boot.plugin.inboxMessage.model.vo.UserMessageVO;
+import com.moyu.boot.plugin.inboxMessage.service.UserMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -21,7 +21,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
 
 /**
  * 站内信接收服务实现类

@@ -1,6 +1,5 @@
 package com.moyu.boot.plugin.codeGen.controller;
 
-
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
 import com.moyu.boot.common.core.annotation.Log;
@@ -35,7 +34,7 @@ import java.util.List;
  * @author shisong
  * @since 2025-09-15
  */
-@Log(jsonLog = true)
+@Log(jsonLog = true, response = false)
 @Slf4j
 @RestController
 @RequestMapping("/api/gen/config")

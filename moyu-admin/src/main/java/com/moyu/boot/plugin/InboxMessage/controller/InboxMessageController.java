@@ -1,4 +1,4 @@
-package com.moyu.boot.plugin.InboxMessage.controller;
+package com.moyu.boot.plugin.inboxMessage.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.hutool.core.lang.Assert;
@@ -6,11 +6,11 @@ import cn.hutool.core.util.ObjectUtil;
 import com.moyu.boot.common.core.annotation.Log;
 import com.moyu.boot.common.core.model.PageData;
 import com.moyu.boot.common.core.model.Result;
-import com.moyu.boot.common.security.util.SecurityUtils;
-import com.moyu.boot.plugin.InboxMessage.model.param.InboxMessageParam;
-import com.moyu.boot.plugin.InboxMessage.model.vo.InboxMessageVO;
-import com.moyu.boot.plugin.InboxMessage.model.vo.UserMessageVO;
-import com.moyu.boot.plugin.InboxMessage.service.InboxMessageService;
+import com.moyu.boot.common.authZ.util.LoginUserUtils;
+import com.moyu.boot.plugin.inboxMessage.model.param.InboxMessageParam;
+import com.moyu.boot.plugin.inboxMessage.model.vo.InboxMessageVO;
+import com.moyu.boot.plugin.inboxMessage.model.vo.UserMessageVO;
+import com.moyu.boot.plugin.inboxMessage.service.InboxMessageService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,7 +38,7 @@ public class InboxMessageController {
     /**
      * 站内消息列表
      */
-//    @PreAuthorize("hasAuthority('dev:message:list')")
+//    @SaCheckPermission("dev:message:list")
     @PostMapping("/list")
     public Result<List<InboxMessageVO>> list(@RequestBody InboxMessageParam param) {
         List<InboxMessageVO> list = inboxMessageService.list(param);
@@ -48,7 +48,7 @@ public class InboxMessageController {
     /**
      * 站内消息分页列表
      */
-    //@PreAuthorize("hasAuthority('dev:message:page')")
+    //@SaCheckPermission("dev:message:page")
     @PostMapping("/page")
     public Result<PageData<InboxMessageVO>> pageList(@RequestBody InboxMessageParam param) {
         Assert.isTrue(ObjectUtil.isAllNotEmpty(param.getPageNum(), param.getPageSize()), "分页参数pageNum,pageSize都不能为空");
@@ -59,7 +59,7 @@ public class InboxMessageController {
     /**
      * 站内消息详情
      */
-    //@PreAuthorize("hasAuthority('dev:message:detail')")
+    //@SaCheckPermission("dev:message:detail")
     @PostMapping("/detail")
     public Result<InboxMessageVO> detail(@RequestBody InboxMessageParam param) {
         Assert.isTrue(ObjectUtil.isNotEmpty(param.getId()), "id不能为空");
@@ -69,7 +69,7 @@ public class InboxMessageController {
     /**
      * 新增站内消息
      */
-    //@PreAuthorize("hasAuthority('dev:message:add')")
+    //@SaCheckPermission("dev:message:add")
     @PostMapping("/add")
     public Result<?> add(@Validated @RequestBody InboxMessageParam param) {
         inboxMessageService.add(param);
@@ -79,7 +79,7 @@ public class InboxMessageController {
     /**
      * 删除数据
      */
-    //@PreAuthorize("hasAuthority('dev:message:delete')")
+    //@SaCheckPermission("dev:message:delete")
     @PostMapping("/delete")
     public Result<?> delete(@RequestBody InboxMessageParam param) {
         Assert.notEmpty(param.getIds(), "删除列表ids不能为空");
@@ -90,7 +90,7 @@ public class InboxMessageController {
     /**
      * 触达记录、阅读列表
      */
-    //@PreAuthorize("hasAuthority('dev:message:page')")
+    //@SaCheckPermission("dev:message:page")
     @PostMapping("/userMessagePage")
     public Result<PageData<UserMessageVO>> userMessagePage(@RequestBody InboxMessageParam param) {
         Assert.isTrue(ObjectUtil.isAllNotEmpty(param.getPageNum(), param.getPageSize()), "分页参数pageNum,pageSize都不能为空");
@@ -105,7 +105,7 @@ public class InboxMessageController {
     @PostMapping("/read")
     public Result<InboxMessageVO> read(@RequestBody InboxMessageParam param) {
         Assert.isTrue(ObjectUtil.isNotEmpty(param.getCode()), "code不能为空");
-        Assert.notEmpty(SecurityUtils.getUsername(), "用户ID不能为空");
+        Assert.notEmpty(LoginUserUtils.getUsername(), "用户ID不能为空");
         return Result.success(inboxMessageService.read(param));
     }
 
@@ -115,7 +115,7 @@ public class InboxMessageController {
     @SaCheckLogin
     @PostMapping("/unreadCount")
     public Result<Long> unreadCount(@RequestBody InboxMessageParam param) {
-        Assert.notEmpty(SecurityUtils.getUsername(), "用户ID不能为空");
+        Assert.notEmpty(LoginUserUtils.getUsername(), "用户ID不能为空");
         Long unreadCount = inboxMessageService.unreadCount(param);
         return Result.success(unreadCount);
     }
@@ -127,7 +127,7 @@ public class InboxMessageController {
     @PostMapping("/readPage")
     public Result<PageData<UserMessageVO>> userReadPage(@RequestBody InboxMessageParam param) {
         Assert.isTrue(ObjectUtil.isAllNotEmpty(param.getPageNum(), param.getPageSize()), "分页参数pageNum,pageSize都不能为空");
-        Assert.notEmpty(SecurityUtils.getUsername(), "用户ID不能为空");
+        Assert.notEmpty(LoginUserUtils.getUsername(), "用户ID不能为空");
         PageData<UserMessageVO> page = inboxMessageService.userReadPage(param);
         return Result.success(page);
     }

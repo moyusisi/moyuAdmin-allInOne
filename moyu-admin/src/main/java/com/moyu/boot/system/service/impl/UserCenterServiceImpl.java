@@ -1,6 +1,5 @@
 package com.moyu.boot.system.service.impl;
 
-
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNode;
@@ -8,24 +7,26 @@ import cn.hutool.core.lang.tree.TreeNodeConfig;
 import cn.hutool.core.lang.tree.TreeUtil;
 import cn.hutool.core.lang.tree.parser.DefaultNodeParser;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.moyu.boot.common.authZ.model.LoginUser;
+import com.moyu.boot.common.authZ.service.TokenService;
+import com.moyu.boot.common.authZ.util.LoginUserUtils;
 import com.moyu.boot.common.core.enums.DataScopeEnum;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
-import com.moyu.boot.common.security.model.LoginUser;
-import com.moyu.boot.common.security.service.TokenService;
-import com.moyu.boot.common.security.util.SecurityUtils;
 import com.moyu.boot.system.constant.SysConstants;
 import com.moyu.boot.system.enums.ResourceTypeEnum;
 import com.moyu.boot.system.model.entity.SysGroup;
 import com.moyu.boot.system.model.entity.SysResource;
 import com.moyu.boot.system.model.entity.SysUser;
+import com.moyu.boot.system.model.entity.ext.ResourceExt;
 import com.moyu.boot.system.model.param.SysRoleParam;
-import com.moyu.boot.system.model.param.SysUserParam;
 import com.moyu.boot.system.model.vo.GroupInfo;
 import com.moyu.boot.system.model.vo.Meta;
 import com.moyu.boot.system.model.vo.SysRoleVO;
@@ -70,14 +71,17 @@ public class UserCenterServiceImpl implements UserCenterService {
 
     @Override
     public UserInfo currentUserInfo(String username) {
-        // 查询用户entity
-        SysUser user = sysUserService.detail(SysUserParam.builder().account(username).build());
         // 当前登陆用户
-        Optional<LoginUser> optUser = SecurityUtils.getLoginUser();
+        Optional<LoginUser> optUser = LoginUserUtils.getLoginUser();
         if (!optUser.isPresent()) {
             throw new BusinessException(ResultCodeEnum.USER_LOGIN_CHECK_ERROR);
         }
         LoginUser loginUser = optUser.get();
+        // 查询用户
+        SysUser user = sysUserService.getOne(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getAccount, username));
+        if (user == null) {
+            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定数据");
+        }
         // 构造用户信息视图对象
         UserInfo userInfo = UserInfo.builder().account(username).orgCode(loginUser.getOrgCode())
                 .name(user.getName()).nickName(user.getNickName()).avatar(user.getAvatar())
@@ -107,19 +111,19 @@ public class UserCenterServiceImpl implements UserCenterService {
 
     @Override
     public List<Tree<String>> userMenu(String username) {
-        Optional<LoginUser> optUser = SecurityUtils.getLoginUser();
+        Optional<LoginUser> optUser = LoginUserUtils.getLoginUser();
         if (!optUser.isPresent()) {
             throw new BusinessException(ResultCodeEnum.USER_LOGIN_CHECK_ERROR);
         }
-        Set<String> roleSet = SecurityUtils.getRoles();
+        Set<String> roleSet = LoginUserUtils.getRoles();
         // 用户有权限的资源code集合(含按钮)
         Set<String> permSet = sysRelationService.rolePerm(roleSet);
         //  无任何权限直接返回
-        if (CollectionUtils.isEmpty(permSet) && !SecurityUtils.isRoot()) {
+        if (CollectionUtils.isEmpty(permSet) && !LoginUserUtils.isRoot()) {
             return Lists.newArrayList();
         }
         // 查询所有的菜单(不含按钮)
-        List<SysResource> menuList = sysResourceService.list(Wrappers.lambdaQuery(SysResource.class)
+        List<SysResource> menuList = Db.list(Wrappers.lambdaQuery(SysResource.class)
                 // 不能是按钮
                 .ne(SysResource::getResourceType, ResourceTypeEnum.BUTTON.getCode())
                 .eq(SysResource::getDeleted, 0)
@@ -129,16 +133,16 @@ public class UserCenterServiceImpl implements UserCenterService {
         List<SysResource> userMenuList = CollectionUtil.newArrayList();
         menuList.forEach(sysMenu -> {
             if (ResourceTypeEnum.MODULE.getCode().equals(sysMenu.getResourceType())) {
-                // path为空则设置为随机字符串
-                if (ObjectUtil.isEmpty(sysMenu.getPath())) {
-                    sysMenu.setPath(StrUtil.SLASH + RandomUtil.randomString(10));
-                }
                 userMenuList.add(sysMenu);
             } else if (ResourceTypeEnum.DIR.getCode().equals(sysMenu.getResourceType())) {
+                // 前端的路由对象path不能为空
+                if (ObjectUtil.isEmpty(sysMenu.getPath())) {
+                    sysMenu.setPath(StrUtil.SLASH + sysMenu.getCode());
+                }
                 userMenuList.add(sysMenu);
             } else {
-                // 叶子结点有权限才添加(菜单、内链、外链等)
-                if (SecurityUtils.isRoot() || permSet.contains(sysMenu.getCode())) {
+                // 有权限才添加(菜单、内链、外链等)
+                if (LoginUserUtils.isRoot() || permSet.contains(sysMenu.getCode())) {
                     userMenuList.add(sysMenu);
                 }
             }
@@ -146,7 +150,7 @@ public class UserCenterServiceImpl implements UserCenterService {
         // 构建菜单路由树结构
         Tree<String> singleTree = buildMenuTree(userMenuList, SysConstants.ROOT_NODE_ID);
 
-        // 移除空目录(只要有符合条件的子节点就保留)
+        // 剪枝,移除空目录(本节点或子节点满足条件，则保留当前节点及其所有子节点)
         singleTree.filter(tree -> {
             // id=0或parentId=0均不符合要求(排除根和模块)
             if (SysConstants.ROOT_NODE_ID.equals(tree.getId()) || SysConstants.ROOT_NODE_ID.equals(tree.getParentId())) {
@@ -155,10 +159,8 @@ public class UserCenterServiceImpl implements UserCenterService {
             if (ObjectUtil.isNotEmpty(tree.get("meta"))) {
                 Meta meta = (Meta) tree.get("meta");
                 String metaType = meta.getType();
-                // 叶子结点不是目录
+                // 结点不是目录则保留
                 boolean notDir = !ResourceTypeEnum.DIR.name().equalsIgnoreCase(metaType) && !ResourceTypeEnum.MODULE.name().equalsIgnoreCase(metaType);
-                // 有权限的菜单叶子节点才符合要求
-//                return notDir && permSet.contains(tree.getId());
                 return notDir;
             } else {
                 return false;
@@ -170,21 +172,21 @@ public class UserCenterServiceImpl implements UserCenterService {
     @Override
     public List<SysRoleVO> userRoleList(String roleName) {
         // 当前登陆用户
-        if (!SecurityUtils.getLoginUser().isPresent()) {
+        if (!LoginUserUtils.getLoginUser().isPresent()) {
             throw new BusinessException(ResultCodeEnum.USER_LOGIN_CHECK_ERROR);
         }
-        if (SecurityUtils.isRoot()) {
+        if (LoginUserUtils.isRoot()) {
             // root拥有所有角色
             return sysRoleService.list(SysRoleParam.builder().name(roleName).build());
         }
         // 当前用户的角色
-        Set<String> roleSet = SecurityUtils.getRoles();
+        Set<String> roleSet = LoginUserUtils.getRoles();
         return sysRoleService.list(SysRoleParam.builder().codeSet(roleSet).name(roleName).build());
     }
 
     @Override
-    public String switchUserGroup(String groupCode) {
-        LoginUser loginUser = SecurityUtils.getLoginUser().orElse(null);
+    public void switchUserGroup(String groupCode) {
+        LoginUser loginUser = LoginUserUtils.getLoginUser().orElse(null);
         if (loginUser == null) {
             throw new BusinessException(ResultCodeEnum.USER_LOGIN_CHECK_ERROR);
         }
@@ -213,10 +215,10 @@ public class UserCenterServiceImpl implements UserCenterService {
         // 岗位权限 权限标识集合(仅接口,无菜单)
         loginUser.setPerms(sysRoleService.rolePerms(roleSet));
         // 接口权限的数据范围
-        loginUser.setPermScopeMap(sysRoleService.rolePermScopeMap(roleSet, group.getOrgCode()));
+        loginUser.setDataScopeMap(sysRoleService.roleDataScopeMap(roleSet, group.getOrgCode()));
         // 数据范围默认本人数据，真正的数据范围在PreDataScope切面中赋值
         loginUser.setDataScope(DataScopeEnum.SELF.getCode());
-        return tokenService.refreshToken(loginUser);
+        tokenService.switchUser(loginUser);
     }
 
     /**
@@ -231,6 +233,7 @@ public class UserCenterServiceImpl implements UserCenterService {
         TreeNodeConfig nodeConfig = new TreeNodeConfig();
         nodeConfig.setIdKey("code");
         nodeConfig.setParentIdKey("parentCode");
+        Gson gson = new GsonBuilder().create();
         // 结构转换
         List<TreeNode<String>> treeNodeList = menuList.stream()
                 .map(menu -> {
@@ -241,19 +244,25 @@ public class UserCenterServiceImpl implements UserCenterService {
                     extra.put("path", menu.getPath());
                     extra.put("component", menu.getComponent());
                     if (ResourceTypeEnum.DIR.equals(resourceType)) {
-                        extra.put("redirect", menu.getLink());
+                        extra.put("redirect", menu.getPath());
                     } else if (ResourceTypeEnum.MODULE.equals(resourceType)) {
-                        extra.put("redirect", menu.getLink());
+                        extra.put("redirect", menu.getPath());
                     }
                     Meta meta = new Meta();
                     meta.setIcon(menu.getIcon());
                     meta.setTitle(menu.getName());
                     // metaType 使用字符串
                     meta.setType(resourceType.name().toLowerCase());
-                    meta.setKeepAlive(true);
                     // 如果设置了不可见，那么设置hidden
                     if (ObjectUtil.equal(menu.getVisible(), 0)) {
                         meta.setHidden(true);
+                    }
+                    // 扩展字段
+                    ResourceExt.MetaExt ext = gson.fromJson(menu.getExtJson(), ResourceExt.MetaExt.class);
+                    if (ObjectUtil.isNotEmpty(ext)) {
+                        meta.setBrief(ObjectUtil.equal(ext.getBrief(), 1));
+                        meta.setAffix(ObjectUtil.equal(ext.getAffix(), 1));
+                        meta.setKeepAlive(ObjectUtil.equal(ext.getKeepAlive(), 1));
                     }
                     // 如果是内链或者外链，设置url
                     if (ResourceTypeEnum.IFRAME.equals(resourceType) || ResourceTypeEnum.LINK.equals(resourceType)) {

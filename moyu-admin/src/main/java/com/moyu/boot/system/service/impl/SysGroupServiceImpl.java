@@ -7,16 +7,16 @@ import cn.hutool.core.lang.tree.TreeUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.base.Strings;
+import com.moyu.boot.common.authZ.util.LoginUserUtils;
 import com.moyu.boot.common.core.enums.DataScopeEnum;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
+import com.moyu.boot.common.core.model.BaseEntity;
 import com.moyu.boot.common.core.model.PageData;
-import com.moyu.boot.common.security.util.SecurityUtils;
 import com.moyu.boot.system.constant.SysConstants;
 import com.moyu.boot.system.enums.RelationTypeEnum;
 import com.moyu.boot.system.mapper.SysGroupMapper;
@@ -29,6 +29,7 @@ import com.moyu.boot.system.model.param.SysRoleParam;
 import com.moyu.boot.system.model.param.SysUserParam;
 import com.moyu.boot.system.model.vo.SysGroupVO;
 import com.moyu.boot.system.model.vo.SysRoleVO;
+import com.moyu.boot.system.model.vo.SysUserVO;
 import com.moyu.boot.system.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -104,15 +105,15 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         // 指定排序
         queryWrapper.orderByAsc(SysGroup::getSortNum);
         // 非ROOT则限制数据权限
-        if (!SecurityUtils.isRoot()) {
+        if (!LoginUserUtils.isRoot()) {
             // 指定的列名
-            Integer dataScope = SecurityUtils.getDataScope();
-            Set<String> scopeSet = SecurityUtils.getScopes();
+            Integer dataScope = LoginUserUtils.getDataScope();
+            Set<String> scopeSet = LoginUserUtils.getScopes();
             if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
-                String username = SecurityUtils.getUsername();
+                String username = LoginUserUtils.getUsername();
                 queryWrapper.eq(SysGroup::getCreateBy, username);
             } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
-                String orgCode = SecurityUtils.getOrgCode();
+                String orgCode = LoginUserUtils.getOrgCode();
                 queryWrapper.eq(SysGroup::getOrgCode, orgCode);
             } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
                 queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet);
@@ -173,10 +174,16 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
     public void deleteByIds(SysGroupParam param) {
         // 待删除的id集合
         Set<Long> idSet = param.getIds();
+        // 删除时先查再删
+        List<SysGroup> groupList = this.listByIds(idSet);
+        // 要删除的和查询到的进行比对
+        if (ObjectUtil.notEqual(idSet.size(), groupList.size())) {
+            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "删除失败，未查到原数据");
+        }
+        // 物理删除
+        //this.removeByIds(idSet);
         // 逻辑删除
-        LambdaUpdateWrapper<SysGroup> updateWrapper = Wrappers.lambdaUpdate(SysGroup.class);
-        updateWrapper.in(SysGroup::getId, idSet).set(SysGroup::getDeleted, 1);
-        this.update(updateWrapper);
+        this.update(Wrappers.lambdaUpdate(SysGroup.class).in(SysGroup::getId, idSet).set(SysGroup::getDeleted, 1));
     }
 
     @Override
@@ -187,7 +194,7 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "更新失败，未查到原数据");
         }
         // 属性复制
-        SysGroup updateGroup = BeanUtil.copyProperties(param, SysGroup.class);
+        SysGroup updateGroup = BeanUtil.copyProperties(param, SysGroup.class, BaseEntity.UPDATE_TIME, BaseEntity.UPDATE_BY);
         updateGroup.setId(oldGroup.getId());
         // 若新指定了直属组织，则设置组织名
         if (ObjectUtil.notEqual(oldGroup.getOrgCode(), updateGroup.getOrgCode()) && ObjectUtil.isNotEmpty(updateGroup.getOrgCode())) {
@@ -216,18 +223,18 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
     }
 
     @Override
-    public List<SysUser> groupUserList(SysGroupParam param) {
+    public List<SysUserVO> groupUserList(SysGroupParam param) {
         // 查询指定group的所有user
         Set<String> userSet = sysRelationService.groupUser(param.getCode());
         if (ObjectUtil.isEmpty(userSet)) {
             return new ArrayList<>();
         }
         // 查询用户(可指定搜索词)
-        List<SysUser> userList = sysUserService.list(SysUserParam.builder()
+        List<SysUserVO> voList = sysUserService.list(SysUserParam.builder()
                 .name(param.getSearchKey())
                 .orgCode(param.getOrgCode())
                 .codeSet(userSet).build());
-        return userList;
+        return voList;
     }
 
     @Override
@@ -308,7 +315,7 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
 
     @Override
     public void groupAddUser(SysGroupParam param) {
-        String objectId = param.getCode();
+        String groupCode = param.getCode();
         Set<String> userSet = param.getCodeSet();
         if (ObjectUtil.isEmpty(userSet)) {
             return;
@@ -316,15 +323,15 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         // 已加入分组的用户
         Set<String> oldUserSet = new HashSet<>();
         Set<String> otherGroupUserSet = new HashSet<>();
-        // 查询指定group包含的user，放入oldSet
+        // 查询指定group关联的的user，放入oldSet
         sysRelationService.list(Wrappers.lambdaQuery(SysRelation.class)
-                .in(SysRelation::getTargetId, userSet)
-                .eq(SysRelation::getRelationType, RelationTypeEnum.GROUP_HAS_USER.getCode())
+                .in(SysRelation::getObjectId, userSet)
+                .eq(SysRelation::getRelationType, RelationTypeEnum.USER_HAS_GROUP.getCode())
         ).forEach(e -> {
-            if (objectId.equals(e.getObjectId())) {
-                oldUserSet.add(e.getTargetId());
+            if (groupCode.equals(e.getTargetId())) {
+                oldUserSet.add(e.getObjectId());
             } else {
-                otherGroupUserSet.add(e.getTargetId());
+                otherGroupUserSet.add(e.getObjectId());
             }
         });
         // 限制用户只允许加入一个分组
@@ -332,18 +339,18 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
 //            String message = String.format("用户%s已加入其他分组，不可重复添加", otherGroupUserSet);
 //            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER.getCode(), message);
 //        }
-        // 从target中删除已经存在的
+        // 从userSet中删除已经存在的
         userSet.removeAll(oldUserSet);
         // 再次判断要新增的内容为空则返回
         if (ObjectUtil.isEmpty(userSet)) {
             return;
         }
         List<SysRelation> addList = new ArrayList<>();
-        userSet.forEach(code -> {
+        userSet.forEach(username -> {
             SysRelation entity = new SysRelation();
-            entity.setObjectId(objectId);
-            entity.setTargetId(code);
-            entity.setRelationType(RelationTypeEnum.GROUP_HAS_USER.getCode());
+            entity.setObjectId(username);
+            entity.setTargetId(groupCode);
+            entity.setRelationType(RelationTypeEnum.USER_HAS_GROUP.getCode());
             addList.add(entity);
         });
         sysRelationService.saveBatch(addList);
@@ -359,8 +366,8 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         // 要删除的ids
         Set<Long> ids = new HashSet<>();
         // 查询指定group中存在的user，加入ids待删
-        sysRelationService.list(SysRelationParam.builder().objectId(param.getCode()).targetSet(param.getCodeSet())
-                .relationType(RelationTypeEnum.GROUP_HAS_USER.getCode()).build()
+        sysRelationService.list(SysRelationParam.builder().targetId(param.getCode()).objectSet(param.getCodeSet())
+                .relationType(RelationTypeEnum.USER_HAS_GROUP.getCode()).build()
         ).forEach(e -> ids.add(e.getId()));
         // 物理删除
         if (ObjectUtil.isNotEmpty(ids)) {
@@ -369,9 +376,22 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
     }
 
     @Override
+    public List<Tree<String>> menuTree(SysGroupParam param) {
+        // 查询指定group的所有role
+        Set<String> roleSet = sysRelationService.groupRole(param.getCode());
+        if (ObjectUtil.isEmpty(roleSet)) {
+            return new ArrayList<>();
+        }
+        return sysRoleService.menuTree(SysRoleParam.builder().codeSet(roleSet).build());
+    }
+
+    @Override
     public SysGroup userDefaultGroup(String username) {
-        // 查询用户entity
-        SysUser user = sysUserService.detail(SysUserParam.builder().account(username).build());
+        // 查询用户
+        SysUser user = sysUserService.getOne(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getAccount, username));
+        if (user == null) {
+            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定数据");
+        }
         SysGroup group = new SysGroup();
         group.setCode(defaultGroup());
         group.setName("系统默认");

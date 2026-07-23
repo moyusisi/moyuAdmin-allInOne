@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.moyu.boot.common.mybatis.entity.BaseEntity;
+import com.moyu.boot.common.core.model.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -44,7 +44,7 @@ public class SysResource extends BaseEntity {
     private String code;
 
     /**
-     * 菜单类型（字典 1模块 2目录 3菜单 4按钮 5外链）
+     * 资源类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）
      *
      * @see com.moyu.boot.system.enums.ResourceTypeEnum
      */
@@ -64,11 +64,6 @@ public class SysResource extends BaseEntity {
      * 权限标识
      */
     private String permission;
-
-    /**
-     * 链接地址
-     */
-    private String link;
 
     /**
      * 图标

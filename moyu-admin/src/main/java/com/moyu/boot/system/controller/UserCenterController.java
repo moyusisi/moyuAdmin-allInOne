@@ -1,12 +1,11 @@
 package com.moyu.boot.system.controller;
 
-
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.tree.Tree;
 import com.moyu.boot.common.core.annotation.Log;
 import com.moyu.boot.common.core.annotation.SysLog;
 import com.moyu.boot.common.core.model.Result;
-import com.moyu.boot.common.security.util.SecurityUtils;
+import com.moyu.boot.common.authZ.util.LoginUserUtils;
 import com.moyu.boot.system.model.param.SysGroupParam;
 import com.moyu.boot.system.model.param.SysRoleParam;
 import com.moyu.boot.system.model.vo.SysRoleVO;
@@ -40,7 +39,7 @@ public class UserCenterController {
     @PostMapping("/userInfo")
     public Result<UserInfo> currentUserInfo() {
         // 当前登陆用户username
-        String username = SecurityUtils.getUsername();
+        String username = LoginUserUtils.getUsername();
         return Result.success(userCenterService.currentUserInfo(username));
     }
 
@@ -50,14 +49,14 @@ public class UserCenterController {
     @RequestMapping("/userMenu")
     public Result<List<Tree<String>>> userMenu() {
         // 当前登陆用户username
-        String username = SecurityUtils.getUsername();
+        String username = LoginUserUtils.getUsername();
         return Result.success(userCenterService.userMenu(username));
     }
 
     /**
      * 获取当前用户拥有的角色列表(用于将当前用户角色赋予group)
      */
-    @SysLog(module = "system", value = "查询当前用户的拥有的角色列表")
+    @SysLog(module = "system", logType = 2, value = "查询当前用户的拥有的角色列表")
     @PostMapping("/userRoleList")
     public Result<List<SysRoleVO>> userRoleList(@RequestBody SysRoleParam roleParam) {
         return Result.success(userCenterService.userRoleList(roleParam.getSearchKey()));
@@ -66,11 +65,12 @@ public class UserCenterController {
     /**
      * 当前用户岗位切换
      */
-    @SysLog(module = "system", value = "岗位切换")
+    @SysLog(module = "system", logType = 2, value = "岗位切换")
     @PostMapping("/switchUserGroup")
-    public Result<String> switchUserGroup(@RequestBody SysGroupParam groupParam) {
+    public Result<?> switchUserGroup(@RequestBody SysGroupParam groupParam) {
         Assert.notEmpty(groupParam.getCode(), "岗位code不能为空");
-        return Result.success(userCenterService.switchUserGroup(groupParam.getCode()));
+        userCenterService.switchUserGroup(groupParam.getCode());
+        return Result.success();
     }
 
 }

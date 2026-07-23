@@ -1,6 +1,5 @@
 package com.moyu.boot.common.core.annotation;
 
-
 import java.lang.annotation.*;
 
 /**
@@ -15,12 +14,12 @@ import java.lang.annotation.*;
 @Documented
 public @interface SysLog {
     /**
-     * 日志内容，对应content
+     * 日志名称，对应name
      */
     String value() default "";
 
     /**
-     * 日志类型(字典 0默认 1操作访问 2登录认证 3三方交互)
+     * 日志类型(字典 0默认 1访问日志 2操作日志 3交互日志)
      */
     int logType() default 0;
 
@@ -38,6 +37,11 @@ public @interface SysLog {
      * 操作,用于记录对应业务的什么操作, 无值则切面中会赋值方法名
      */
     String operate() default "";
+
+    /**
+     * 内容说明,用于记录自定义内容
+     */
+    String content() default "";
 
     /**
      * 是否记录请求参数, 默认为true

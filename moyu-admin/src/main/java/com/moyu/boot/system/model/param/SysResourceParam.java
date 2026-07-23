@@ -2,7 +2,7 @@ package com.moyu.boot.system.model.param;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.moyu.boot.common.core.model.BasePageParam;
+import com.moyu.boot.common.core.model.PageParam;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,7 +25,7 @@ import java.util.Set;
 @ToString
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SysResourceParam extends BasePageParam {
+public class SysResourceParam extends PageParam {
     //********** 额外字段 **********//
     /**
      * 待删除的code列表，通常会集联删除
@@ -95,11 +95,6 @@ public class SysResourceParam extends BasePageParam {
     private String permission;
 
     /**
-     * 链接地址
-     */
-    private String link;
-
-    /**
      * 图标
      */
     private String icon;
@@ -121,12 +116,23 @@ public class SysResourceParam extends BasePageParam {
     private Integer sortNum;
 
     /**
-     * 扩展信息
-     */
-    private String extJson;
-
-    /**
      * 备注
      */
     private String remark;
+
+    //***** 扩展信息extJson的属性展开 *****
+    /**
+     * 【目录】是否简洁模式(只有一个菜单时，不显示目录直接显示该菜单)
+     */
+    private Integer brief;
+
+    /**
+     * 【菜单】是否固定显示
+     */
+    private Integer affix;
+
+    /**
+     * 【菜单】是否支持页面缓存
+     */
+    private Integer keepAlive;
 }

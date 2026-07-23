@@ -1,14 +1,12 @@
 package com.moyu.boot.common.core.enums;
 
-import com.moyu.boot.common.core.model.IResultCode;
-
 import java.io.Serializable;
 import java.util.StringJoiner;
 
 /**
  * 响应码枚举，参考阿里巴巴开发手册错误码
  * <p>
- * 00000 正常
+ * 00000 成功
  * A**** 用户端错误
  * B**** 系统执行出错
  * C**** 调用第三方服务出错
@@ -19,7 +17,7 @@ import java.util.StringJoiner;
  * @author song.shi
  * @since 2016-04-01
  */
-public enum ResultCodeEnum implements IResultCode, Serializable {
+public enum ResultCodeEnum implements ResultCode, Serializable {
 
     /**
      * 成功

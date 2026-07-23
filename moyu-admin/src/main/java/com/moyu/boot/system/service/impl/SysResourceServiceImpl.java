@@ -11,12 +11,17 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
+import com.moyu.boot.common.core.enums.SortOrderEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
+import com.moyu.boot.common.core.model.BaseEntity;
 import com.moyu.boot.common.core.model.PageData;
 import com.moyu.boot.system.constant.SysConstants;
 import com.moyu.boot.system.enums.RelationTypeEnum;
@@ -24,13 +29,16 @@ import com.moyu.boot.system.enums.ResourceTypeEnum;
 import com.moyu.boot.system.mapper.SysResourceMapper;
 import com.moyu.boot.system.model.entity.SysRelation;
 import com.moyu.boot.system.model.entity.SysResource;
+import com.moyu.boot.system.model.entity.ext.ResourceExt;
 import com.moyu.boot.system.model.param.SysResourceParam;
+import com.moyu.boot.system.model.vo.SysResourceVO;
 import com.moyu.boot.system.service.SysRelationService;
 import com.moyu.boot.system.service.SysResourceService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -45,80 +53,107 @@ import java.util.stream.Collectors;
 @Service
 public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysResource> implements SysResourceService {
 
+    private static final Gson gson = new GsonBuilder().create();
+
     @Resource
     private SysRelationService sysRelationService;
 
     @Override
     public List<Tree<String>> tree(SysResourceParam param) {
-        // 查询条件(可指定module、status)
-        SysResourceParam query = SysResourceParam.builder().module(param.getModule()).build();
-        // 查询所有资源
-        List<SysResource> resourceList = this.list(query);
+        // 查询所有资源(可指定module)
+        List<SysResource> resourceList = this.list(Wrappers.lambdaQuery(SysResource.class)
+                .eq(ObjectUtil.isNotEmpty(param.getModule()), SysResource::getModule, param.getModule()));
         // 构建树中包含记录的所有字段
         String rootId = ObjectUtil.isEmpty(param.getModule()) ? SysConstants.ROOT_NODE_ID : param.getModule();
         return buildTree(resourceList, rootId);
     }
 
     @Override
-    public List<SysResource> list(SysResourceParam param) {
+    public List<SysResourceVO> list(SysResourceParam param) {
         // 查询条件
-        LambdaQueryWrapper<SysResource> queryWrapper = Wrappers.lambdaQuery(SysResource.class);
+        QueryWrapper<SysResource> queryWrapper = Wrappers.query(SysResource.class).checkSqlInjection();
         // 指定模块
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getModule()), SysResource::getModule, param.getModule());
+        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(param.getModule()), SysResource::getModule, param.getModule());
         // 指定资源类型 resourceType
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getResourceType()), SysResource::getResourceType, param.getResourceType());
-        // 指定name查询
-        queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysResource::getName, param.getName());
+        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(param.getResourceType()), SysResource::getResourceType, param.getResourceType());
         // 指定code查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysResource::getCode, param.getCode());
+        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(param.getCode()), SysResource::getCode, param.getCode());
+        // 指定name查询
+        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.getName()), SysResource::getName, param.getName());
         // 指定path查询
-        queryWrapper.like(ObjectUtil.isNotEmpty(param.getPath()), SysResource::getPath, param.getPath());
-        // 指定visible查询
-        queryWrapper.like(ObjectUtil.isNotEmpty(param.getVisible()), SysResource::getVisible, param.getVisible());
+        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.getPath()), SysResource::getPath, param.getPath());
+        // 指定component查询
+        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.getComponent()), SysResource::getComponent, param.getComponent());
+        // 指定permission查询
+        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.getPermission()), SysResource::getPermission, param.getPermission());
         // 仅查询未删除的
-        queryWrapper.eq(SysResource::getDeleted, 0);
+        queryWrapper.lambda().eq(SysResource::getDeleted, 0);
         // 指定排序
-        queryWrapper.orderByAsc(SysResource::getSortNum);
+        if (ObjectUtil.isAllNotEmpty(param.getSortField(), param.getSortOrder())) {
+            // 检查排序方式
+            SortOrderEnum.validate(param.getSortOrder());
+            queryWrapper.orderBy(true, param.getSortOrder().equals(SortOrderEnum.ASC.getValue()),
+                    StrUtil.toUnderlineCase(param.getSortField()));
+        } else {
+            queryWrapper.lambda().orderByAsc(SysResource::getSortNum);
+        }
         // 查询
         List<SysResource> resourceList = this.list(queryWrapper);
-        return resourceList;
+        // 转换为voList
+        List<SysResourceVO> voList = buildSysResourceVOList(resourceList);
+        return voList;
     }
 
     @Override
-    public PageData<SysResource> pageList(SysResourceParam param) {
+    public PageData<SysResourceVO> pageList(SysResourceParam param) {
         // 查询条件
-        LambdaQueryWrapper<SysResource> queryWrapper = Wrappers.lambdaQuery(SysResource.class);
+        QueryWrapper<SysResource> queryWrapper = Wrappers.query(SysResource.class).checkSqlInjection();
         // 指定模块
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getModule()), SysResource::getModule, param.getModule());
+        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(param.getModule()), SysResource::getModule, param.getModule());
         // 指定资源类型 resourceType
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getResourceType()), SysResource::getResourceType, param.getResourceType());
-        // 指定name查询
-        queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysResource::getName, param.getName());
+        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(param.getResourceType()), SysResource::getResourceType, param.getResourceType());
         // 指定code查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysResource::getCode, param.getCode());
+        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(param.getCode()), SysResource::getCode, param.getCode());
+        // 指定name查询
+        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.getName()), SysResource::getName, param.getName());
         // 指定path查询
-        queryWrapper.like(ObjectUtil.isNotEmpty(param.getPath()), SysResource::getPath, param.getPath());
+        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.getPath()), SysResource::getPath, param.getPath());
+        // 指定component查询
+        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.getComponent()), SysResource::getComponent, param.getComponent());
+        // 指定permission查询
+        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.getPermission()), SysResource::getPermission, param.getPermission());
         // 仅查询未删除的
-        queryWrapper.eq(SysResource::getDeleted, 0);
+        queryWrapper.lambda().eq(SysResource::getDeleted, 0);
         // 指定排序
-        queryWrapper.orderByAsc(SysResource::getSortNum);
+        if (ObjectUtil.isAllNotEmpty(param.getSortField(), param.getSortOrder())) {
+            // 检查排序方式
+            SortOrderEnum.validate(param.getSortOrder());
+            queryWrapper.orderBy(true, param.getSortOrder().equals(SortOrderEnum.ASC.getValue()),
+                    StrUtil.toUnderlineCase(param.getSortField()));
+        } else {
+            queryWrapper.lambda().orderByAsc(SysResource::getSortNum);
+        }
         // 分页查询
         Page<SysResource> page = new Page<>(param.getPageNum(), param.getPageSize());
-        Page<SysResource> menuPage = this.page(page, queryWrapper);
-        return new PageData<>(menuPage.getTotal(), menuPage.getRecords());
+        Page<SysResource> resourcePage = this.page(page, queryWrapper);
+        List<SysResourceVO> voList = buildSysResourceVOList(resourcePage.getRecords());
+        return new PageData<>(resourcePage.getTotal(), voList);
     }
 
     @Override
-    public SysResource detail(SysResourceParam param) {
+    public SysResourceVO detail(SysResourceParam param) {
         // 查询条件 id、code均为唯一标识
         LambdaQueryWrapper<SysResource> queryWrapper = Wrappers.lambdaQuery(SysResource.class);
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getId()), SysResource::getId, param.getId());
         queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysResource::getCode, param.getCode());
-        SysResource sysResource = this.getOne(queryWrapper);
-        if (sysResource == null) {
+        SysResource entity = this.getOne(queryWrapper);
+        if (entity == null) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定数据");
         }
-        return sysResource;
+        // 转换为vo
+        SysResourceVO vo = BeanUtil.copyProperties(entity, SysResourceVO.class);
+        fillFromExtJson(vo, entity.getExtJson());
+        return vo;
     }
 
     @Override
@@ -133,7 +168,7 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
                 throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "唯一编码重复，请更换或留空自动生成");
             }
         }
-        // 非root节点的parent必须存在(module为root节点)
+        // 非module必须有parent存在(module为root节点)
         if (!Objects.equals(ResourceTypeEnum.MODULE.getCode(), param.getResourceType())) {
             Assert.notEmpty(param.getParentCode(), "上级菜单parentCode不能为空");
             // 查询所选父节点
@@ -165,7 +200,11 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
     public void deleteByIds(SysResourceParam param) {
         // 待删除的id集合
         Set<Long> idSet = param.getIds();
-        Set<String> codeSet = listByIds(idSet).stream().map(SysResource::getCode).collect(Collectors.toSet());
+        Set<String> codeSet = this.listByIds(idSet).stream().map(SysResource::getCode).collect(Collectors.toSet());
+        // 要删除的和查询到的进行比对
+        if (ObjectUtil.notEqual(idSet.size(), codeSet.size())) {
+            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "删除失败，未查到原数据");
+        }
         // 物理删除
         this.removeByIds(idSet);
         // 资源删除时,对应的role_has_menu也要删除
@@ -213,9 +252,11 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "更新失败，未查到原数据");
         }
         // 转换
-        SysResource toUpdate = BeanUtil.copyProperties(param, SysResource.class);
+        SysResource toUpdate = BeanUtil.copyProperties(param, SysResource.class, BaseEntity.UPDATE_TIME, BaseEntity.UPDATE_BY);
         // 其他处理
         toUpdate.setId(param.getId());
+        // extJson
+        toUpdate.setExtJson(buildExtJson(param));
         this.updateById(toUpdate);
     }
 
@@ -253,14 +294,28 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
         sysResource.setPath(param.getPath());
         sysResource.setComponent(param.getComponent());
         sysResource.setPermission(param.getPermission());
-        sysResource.setLink(param.getLink());
         sysResource.setIcon(param.getIcon());
         sysResource.setVisible(param.getVisible());
         sysResource.setModule(param.getModule());
         sysResource.setSortNum(param.getSortNum());
-        sysResource.setExtJson(param.getExtJson());
         sysResource.setRemark(param.getRemark());
+        sysResource.setExtJson(buildExtJson(param));
         return sysResource;
+    }
+
+    /**
+     * 构造Resource的extJson
+     */
+    private String buildExtJson(SysResourceParam param) {
+        if (param == null) {
+            return null;
+        }
+        ResourceExt.MetaExt extObj = new ResourceExt.MetaExt();
+        extObj.setBrief(param.getBrief());
+        extObj.setAffix(param.getAffix());
+        extObj.setKeepAlive(param.getKeepAlive());
+        // 扩展信息
+        return new Gson().toJson(extObj);
     }
 
     /**
@@ -276,6 +331,7 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
             Assert.notEmpty(menu.getModule(), "归属模块module不能为空");
         }
         if (Objects.equals(ResourceTypeEnum.MODULE, resourceType)) {
+            Assert.notEmpty(menu.getCode(), "模块编码code不能为空");
             // 模块要设置布局
             if (StrUtil.isEmpty(menu.getComponent())) {
                 menu.setComponent("Layout");
@@ -330,6 +386,39 @@ public class SysResourceServiceImpl extends ServiceImpl<SysResourceMapper, SysRe
         sysRelationService.remove(Wrappers.lambdaQuery(SysRelation.class)
                 .eq(SysRelation::getRelationType, RelationTypeEnum.ROLE_HAS_PERM)
                 .in(SysRelation::getTargetId, codeSet));
+    }
+
+    /**
+     * 实体对象生成展示对象 entityList -> voList
+     */
+    private List<SysResourceVO> buildSysResourceVOList(List<SysResource> entityList) {
+        List<SysResourceVO> voList = new ArrayList<>();
+        if (CollectionUtils.isEmpty(entityList)) {
+            return voList;
+        }
+        for (SysResource entity : entityList) {
+            SysResourceVO vo = BeanUtil.copyProperties(entity, SysResourceVO.class);
+            ResourceExt.MetaExt ext = gson.fromJson(entity.getExtJson(), ResourceExt.MetaExt.class);
+            if (ObjectUtil.isNotEmpty(ext)) {
+                vo.setBrief(ext.getBrief());
+                vo.setAffix(ext.getAffix());
+                vo.setKeepAlive(ext.getKeepAlive());
+            }
+            voList.add(vo);
+        }
+        return voList;
+    }
+
+    /**
+     * 根据extJson填充vo对象
+     */
+    private void fillFromExtJson(SysResourceVO vo, String extJson) {
+        ResourceExt.MetaExt ext = gson.fromJson(extJson, ResourceExt.MetaExt.class);
+        if (ObjectUtil.isNotEmpty(ext)) {
+            vo.setBrief(ext.getBrief());
+            vo.setAffix(ext.getAffix());
+            vo.setKeepAlive(ext.getKeepAlive());
+        }
     }
 }
 
