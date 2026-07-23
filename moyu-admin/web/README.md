@@ -22,6 +22,16 @@ npm install --registry=https://registry.npmmirror.com
 npm run dev
 ```
 
+## 编译打包
+
+```bash
+# 进入项目目录
+cd moyu-antdv-admin
+
+# 编译打包
+npm run buid
+```
+
 ## 检查更新
 
 ```bash

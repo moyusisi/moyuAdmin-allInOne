@@ -10,7 +10,9 @@
       <a-flex gap="small" class="tool-area" justify="flex-end" align="flex-center">
         <!-- 刷新 -->
         <a-tooltip v-if="props.tool.refresh" title="刷新" @click="refresh">
-          <sync-outlined class="tool-icon" />
+          <a-button shape="circle">
+            <ReloadOutlined  class="tool-icon"/>
+          </a-button>
         </a-tooltip>
         <!-- 列展示 -->
         <a-popover v-if="props.tool.columnSetting" trigger="click" placement="topLeft" arrow-point-at-center>
@@ -18,7 +20,9 @@
             <columnSetting :columns="props.columns" @columnChange="columnChange" />
           </template>
           <a-tooltip title="列设置">
-            <component class="tool-icon" is="setting-outlined"></component>
+            <a-button shape="circle">
+              <setting-outlined class="tool-icon" />
+            </a-button>
           </a-tooltip>
         </a-popover>
         <!-- 表格密度 -->
@@ -31,7 +35,9 @@
             </a-menu>
           </template>
           <a-tooltip title="表格密度">
-            <component class="tool-icon" is="column-height-outlined"></component>
+            <a-button shape="circle">
+              <column-height-outlined class="tool-icon" />
+            </a-button>
           </a-tooltip>
         </a-dropdown>
       </a-flex>
@@ -57,7 +63,6 @@
 <script setup lang="ts">
 import { ref, onMounted, useSlots, h } from 'vue'
 import { tableProps } from 'ant-design-vue/es/table/Table.js'
-import { DeleteOutlined, PlusOutlined, SyncOutlined } from "@ant-design/icons-vue"
 import { useSettingsStore } from "@/store"
 import columnSetting from "@/components/MTable/columnSetting.vue"
 
@@ -98,8 +103,8 @@ const props = defineProps(
         type: Object,
         default: () => ({
           refresh: true,
-          height: true,
-          columnSetting: true
+          height: false,
+          columnSetting: false
         })
       }
     })
@@ -131,7 +136,7 @@ const paginationRef = ref({
   // 总条数，需要通过接口获取
   total: 0,
   // 显示总记录数
-  showTotal: (total, range) => `共 ${total} 条 `,
+  showTotal: (total, range) => `共 ${total} 条记录 `,
   // 是否可改变每页显示条数
   showSizeChanger: true,
   // 只有一页或没有数据时隐藏分页栏

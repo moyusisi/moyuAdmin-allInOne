@@ -6,6 +6,7 @@
       :closable="false"
       :maskClosable="false"
       :destroy-on-close="true"
+      :get-container="getDrawerContainer"
       @close="onClose"
   >
     <!--  上方操作区  -->
@@ -27,7 +28,7 @@
                 <a-tag v-if="formData.resourceType === 3" color="blue">菜单</a-tag>
                 <a-tag v-if="formData.resourceType === 4" color="gold">内链</a-tag>
                 <a-tag v-if="formData.resourceType === 5" color="green">链接</a-tag>
-                <a-tag v-if="formData.resourceType === 6" color="purple">按钮/接口</a-tag>
+                <a-tag v-if="formData.resourceType === 6" color="purple">按钮</a-tag>
               </a-form-item>
             </a-col>
             <a-col :span="8">
@@ -45,7 +46,7 @@
                 <MenuTreeSelect :moduleCode="formData.module" :defaultValue="formData.parentCode" disabled/>
               </a-form-item>
             </a-col>
-            <a-col :span="8">
+            <a-col :span="8" v-if="formData.resourceType !== 6">
               <a-form-item name="path" label="路由地址" tooltip="" >
                 <span>{{ formData.path }}</span>
               </a-form-item>
@@ -60,17 +61,35 @@
                 <span><a-tag>{{ formData.permission }}</a-tag></span>
               </a-form-item>
             </a-col>
-            <a-col :span="8">
-              <a-form-item v-if="formData.resourceType !== 6" name="visible" label="是否可见" tooltip="隐藏时不会出现在菜单中" >
+            <a-col :span="8" v-if="formData.resourceType !== 6">
+              <a-form-item name="visible" label="是否可见" tooltip="隐藏时不会出现在菜单中" >
                 <span>
-                  <a-tag v-if="formData.visible === 1" color="green">可见</a-tag>
+                  <a-tag v-if="formData.visible === 1" color="green">显示</a-tag>
                   <a-tag v-else>隐藏</a-tag>
                 </span>
               </a-form-item>
-              <a-form-item  v-if="formData.resourceType === 6" name="visible" label="数据权限" tooltip="是否有数据权限" >
+            </a-col>
+            <a-col :span="8" v-if="formData.resourceType === 2">
+              <a-form-item name="brief" label="简洁模式" tooltip="简洁模式下，当目录下只有一个菜单时，不显示目录直接显示该菜单" >
                 <span>
-                  <a-tag v-if="formData.visible === 1" color="green">有</a-tag>
-                  <a-tag v-else>无</a-tag>
+                  <a-tag v-if="formData.brief === 1" color="green">是</a-tag>
+                  <a-tag v-else>否</a-tag>
+                </span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8" v-if="formData.resourceType === 3">
+              <a-form-item name="affix" label="固定显示" tooltip="" >
+                <span>
+                  <a-tag v-if="formData.affix === 1" color="green">是</a-tag>
+                  <a-tag v-else>否</a-tag>
+                </span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8" v-if="formData.resourceType === 3">
+              <a-form-item name="keepAlive" label="是否缓存" tooltip="" >
+                <span>
+                  <a-tag v-if="formData.keepAlive === 1" color="green">是</a-tag>
+                  <a-tag v-else>否</a-tag>
                 </span>
               </a-form-item>
             </a-col>
@@ -84,18 +103,20 @@
                 <span style="white-space: pre-wrap;">{{ formData.remark }}</span>
               </a-form-item>
             </a-col>
-            <a-col :span="8">
-              <a-form-item name="extJson" label="扩展信息" tooltip="" >
-                <span>{{ formData.extJson }}</span>
-              </a-form-item>
-            </a-col>
+          </a-row>
+        </a-card>
+        <a-card>
+          <template #title>
+            <span><RightSquareFilled style="color: dodgerblue;"/>其他信息</span>
+          </template>
+          <a-row :gutter="24">
             <a-col :span="8">
               <a-form-item name="createTime" label="创建时间" tooltip="" >
                 <span>{{ formData.createTime }}</span>
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="createBy" label="创建者" tooltip="" >
+              <a-form-item name="createBy" label="创建人" tooltip="" >
                 <span>{{ formData.createBy }}</span>
               </a-form-item>
             </a-col>
@@ -105,7 +126,7 @@
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="updateBy" label="更新者" tooltip="" >
+              <a-form-item name="updateBy" label="更新人" tooltip="" >
                 <span>{{ formData.updateBy }}</span>
               </a-form-item>
             </a-col>
@@ -143,10 +164,10 @@
   const formData = ref({})
   const dataLoading = ref(false)
   const submitLoading = ref(false)
-  // 下拉框选项
-  const exampleOptions = [
-    { label: "选项一", value: 1 },
-    { label: "选项二", value: 2 }
+  // 是否选项
+  const yesOrNoOptions = [
+    { label: "是", value: 1 },
+    { label: "否", value: 0 }
   ]
 
   // 打开抽屉
@@ -175,6 +196,11 @@
     })
   }
 
+  // 获取Drawer渲染到的dom容器。 默认body,当有vxe-grid时使用表格dom
+  const getDrawerContainer = () => {
+    // vxe-grid的z-index过大，防止盖住drawer
+    return document.querySelector('.vxe-grid') || document.body
+  }
   // 调用这个函数将子组件的一些数据和方法暴露出去
   defineExpose({
     onOpen

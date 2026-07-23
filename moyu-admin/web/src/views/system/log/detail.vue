@@ -1,11 +1,12 @@
 <template>
   <a-drawer
       :open="visible"
-      title="系统日志详情"
+      title="日志详情"
       :width="drawerWidth"
       :closable="false"
       :maskClosable="false"
       :destroy-on-close="true"
+      :get-container="getDrawerContainer"
       @close="onClose"
   >
     <!--  上方操作区  -->
@@ -26,7 +27,17 @@
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="module" label="系统/模块" tooltip="系统/模块" >
+              <a-form-item name="name" label="日志名称" tooltip="" >
+                {{ formData.name }}
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="createBy" label="操作人" tooltip="" >
+                {{ formData.createBy }}
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="module" label="系统" tooltip="系统/模块" >
                 {{ formData.module }}
               </a-form-item>
             </a-col>
@@ -36,63 +47,40 @@
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="operate" label="操作" tooltip="操作" >
+              <a-form-item name="operate" label="操作" tooltip="操作/接口" >
                 {{ formData.operate }}
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="requestUrl" label="请求路径地址" tooltip="" >
-                <a-tag :bordered="false">{{ formData.requestUrl }}</a-tag>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="executionTime" label="执行耗时" tooltip="" >
-                {{ formData.executionTime }}ms
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="createBy" label="操作人ID" tooltip="" >
-                {{ formData.createBy }}
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="content" label="内容说明" tooltip="" >
+              <a-form-item name="content" label="自定义内容" tooltip="" >
                 {{ formData.content }}
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="createBy" label="用户IP" tooltip="" >
-                {{ formData.opIp }}
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="opBrowser" label="浏览器" tooltip="" >
-                {{ formData.opBrowser }}
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="opPlatform" label="平台" tooltip="" >
-                {{ formData.opPlatform }}
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="opOs" label="操作系统" tooltip="" >
-                {{ formData.opOs }}
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="startTime" label="开始时间" tooltip="" >
-                {{ formData.startTime }}
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="endTime" label="结束时间" tooltip="" >
-                {{ formData.endTime }}
               </a-form-item>
             </a-col>
             <a-col :span="8">
               <a-form-item name="createTime" label="记录时间" tooltip="" >
                 {{ formData.createTime }}
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-card>
+        <a-card>
+          <template #title>
+            <span><RightSquareFilled style="color: dodgerblue;"/>来源信息</span>
+          </template>
+          <a-row :gutter="24">
+            <a-col :span="8">
+              <a-form-item name="sourceClient" label="来源/客户端" tooltip="" >
+                {{ formData.sourceClient }}
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="sourceProvince" label="来源地区" tooltip="" >
+                {{ (formData.sourceProvince??'') + ' ' + (formData.sourceCity??'') }}
+              </a-form-item>
+            </a-col>
+            <a-col :span="24">
+              <a-form-item name="userAgent" label="客户端信息" tooltip="" :label-col="{span: 2}" >
+                <a-tag :bordered="false">{{ formData.userAgent }}</a-tag>
               </a-form-item>
             </a-col>
           </a-row>
@@ -105,6 +93,21 @@
             <a-col :span="24">
               <a-form-item name="requestUrl" label="请求地址" tooltip="" :label-col="{span: 2}" >
                 <a-tag :bordered="false">{{ formData.requestUrl }}</a-tag>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="executionTime" label="执行耗时" tooltip="" >
+                {{ formData.executionTime }}ms
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="startTime" label="开始时间" tooltip="" >
+                {{ formData.startTime }}
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="endTime" label="结束时间" tooltip="" >
+                {{ formData.endTime }}
               </a-form-item>
             </a-col>
           </a-row>
@@ -198,6 +201,11 @@
     })
   }
 
+  // 获取Drawer渲染到的dom容器。 默认body,当有vxe-grid时使用表格dom
+  const getDrawerContainer = () => {
+    // vxe-grid的z-index过大，防止盖住drawer
+    return document.querySelector('.vxe-grid') || document.body
+  }
   // 调用这个函数将子组件的一些数据和方法暴露出去
   defineExpose({
     onOpen

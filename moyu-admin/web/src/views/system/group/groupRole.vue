@@ -6,6 +6,7 @@
     :closable="false"
     :footerStyle="{display: 'flex', justifyContent: 'flex-end'}"
     :destroy-on-close="true"
+    :get-container="getDrawerContainer"
     @close="onClose"
   >
     <template #extra>
@@ -56,6 +57,9 @@
               </template>
               <template v-if="column.dataIndex === 'action'">
                 <a-space>
+                  <a-tooltip title="菜单透视">
+                    <a @click="showMenuTree(record)"><EyeOutlined /></a>
+                  </a-tooltip>
                 </a-space>
               </template>
             </template>
@@ -66,19 +70,21 @@
 
     <!-- 弹窗 -->
     <GroupAddRole ref="groupAddRoleRef" @successful="handleSuccess()" />
+    <MenuTree ref="menuTreeRef"/>
 
   </a-drawer>
 </template>
 
 <script setup>
   import groupApi from '@/api/system/groupApi'
+  import roleApi from '@/api/system/roleApi'
 
   import { useSettingsStore } from "@/store";
-  import { h } from "vue";
+  import { h, ref } from "vue";
   import { PlusOutlined, MinusOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
   import { message } from "ant-design-vue";
   import GroupAddRole from './groupAddRole.vue'
-  import MTable from "@/components/MTable/index.vue";
+  import MenuTree from "@/views/system/components/menuTree.vue"
 
   const settingsStore = useSettingsStore()
   const columns = [
@@ -101,8 +107,8 @@
       width: 100
     },
     {
-      title: '创建时间',
-      dataIndex: 'createTime',
+      title: '维护人',
+      dataIndex: 'updateBy',
       align: 'center',
       width: 160
     },
@@ -117,7 +123,7 @@
       dataIndex: 'action',
       align: 'center',
       resizable: true,
-      width: 150
+      width: 100
     }
   ]
 
@@ -126,10 +132,14 @@
   const group = ref()
   const title = ref()
   const emit = defineEmits({ successful: null })
-  const groupAddRoleRef = ref()
   // 表单数据
   const searchFormRef = ref()
   const searchFormData = ref({})
+
+  // 其他页面操作
+  const groupAddRoleRef = ref()
+  const menuTreeRef = ref()
+
   // table数据
   const tableRef = ref()
   // 表格中的数据(loadTableData中会更新)
@@ -195,9 +205,21 @@
       loadTableData()
     })
   }
+  // 菜单透视
+  const showMenuTree = (row) => {
+    let data = { code: row.code }
+    roleApi.menuTree(data).then((res) => {
+      menuTreeRef.value.onOpen(res.data)
+    })
+  }
   // 成功回调
   const handleSuccess = () => {
     loadTableData()
+  }
+  // 获取Drawer渲染到的dom容器。 默认body,当有vxe-grid时使用表格dom
+  const getDrawerContainer = () => {
+    // vxe-grid的z-index过大，防止盖住drawer
+    return document.querySelector('.vxe-grid') || document.body
   }
   // 调用这个函数将子组件的一些数据和方法暴露出去
   defineExpose({

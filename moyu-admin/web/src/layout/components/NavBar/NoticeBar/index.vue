@@ -57,7 +57,6 @@
   import MTable from "@/components/MTable/index.vue"
   import { ref } from "vue";
   import Detail from "./detail.vue"
-  import Form from "@/views/system/log/form.vue";
 
 
   // bell图标上是否有小红点提示

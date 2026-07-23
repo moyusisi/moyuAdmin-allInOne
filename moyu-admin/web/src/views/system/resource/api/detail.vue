@@ -1,0 +1,167 @@
+<template>
+  <a-drawer
+      :open="visible"
+      title="接口信息详情"
+      :width="drawerWidth"
+      :maskClosable="false"
+      :closable="false"
+      :destroy-on-close="true"
+      :get-container="getDrawerContainer"
+      @close="onClose"
+  >
+    <!--  上方操作区  -->
+    <template #extra>
+      <a-button type="primary" size="small" @click="onClose"><CloseOutlined /></a-button>
+    </template>
+    <!--  数据区  -->
+    <a-spin :spinning="dataLoading">
+      <a-form ref="formRef" :model="formData" :label-col="{span: 6}">
+        <a-card>
+          <template #title>
+            <span><RightSquareFilled style="color: dodgerblue;"/> 基本信息</span>
+          </template>
+          <a-row :gutter="24">
+            <a-col :span="8">
+              <a-form-item name="apiType" label="接口类型" tooltip="" >
+                <a-tag v-if="formData.apiType === 1" color="blue">后端接口</a-tag>
+                <a-tag v-if="formData.apiType === 2" color="cyan">三方接口</a-tag>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="name" label="接口名称" tooltip="">
+                <span>{{ formData.name }}</span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="code" label="权限标识" tooltip="权限标识/唯一标识">
+                <span><a-tag>{{ formData.code }}</a-tag></span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="path" label="接口地址" tooltip="">
+                <span>{{ formData.path }}</span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8" v-if="formData.apiType === 1">
+              <a-form-item name="hasScope" label="数据范围" tooltip="是否控制数据范围" >
+                <a-tag v-if="formData.hasScope === 1" color="green">有</a-tag>
+                <a-tag v-else>无</a-tag>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="extJson" label="扩展信息" tooltip="" >
+                <span>{{ formData.extJson }}</span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="remark" label="备注" tooltip="" >
+                <span>{{ formData.remark }}</span>
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-card>
+        <a-card>
+          <template #title>
+            <span><RightSquareFilled style="color: dodgerblue;"/> 其他信息</span>
+          </template>
+          <a-row :gutter="24">
+            <a-col :span="8">
+              <a-form-item name="createTime" label="创建时间" tooltip="" >
+                <span>{{ formData.createTime }}</span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="createBy" label="创建人" tooltip="" >
+                <span>{{ formData.createBy }}</span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="updateTime" label="更新时间" tooltip="" >
+                <span>{{ formData.updateTime }}</span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="updateBy" label="更新人" tooltip="" >
+                <span>{{ formData.updateBy }}</span>
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-card>
+      </a-form>
+    </a-spin>
+    <!--  底部操作区  -->
+    <template #footer>
+      <a-flex gap="small" justify="flex-end">
+        <a-button type="primary" danger @click="onClose"> 关闭</a-button>
+      </a-flex>
+    </template>
+  </a-drawer>
+</template>
+<script setup>
+import sysApi from '@/api/system/api.js'
+
+import { useSettingsStore } from "@/store"
+import { useRoute, useRouter } from "vue-router";
+
+// store
+const route = useRoute();
+const router = useRouter();
+const settingsStore = useSettingsStore()
+
+// 默认是关闭状态
+const visible = ref(false)
+// 计算属性 抽屉宽度
+const drawerWidth = computed(() => {
+  return settingsStore.menuCollapsed ? `calc(100% - 80px)` : `calc(100% - 210px)`
+})
+
+// 表单数据
+const formRef = ref()
+const formData = ref({})
+const dataLoading = ref(false)
+const submitLoading = ref(false)
+
+// 打开抽屉
+const onOpen = (row) => {
+  if (row) {
+    // 表单数据赋值
+    loadData(row)
+  }
+}
+// 关闭抽屉
+const onClose = () => {
+  formRef.value.resetFields()
+  visible.value = false
+}
+
+// 加载数据
+const loadData = (row) => {
+  dataLoading.value = true
+  // 组装请求参数
+  let param = { id: row.id }
+  sysApi.apiDetail(param).then((res) => {
+    formData.value = res.data
+  }).finally(() => {
+    dataLoading.value = false
+    // 数据就绪之后显示
+    visible.value = true
+  })
+}
+
+// 获取Drawer渲染到的dom容器。 默认body,当有vxe-grid时使用表格dom
+const getDrawerContainer = () => {
+  // vxe-grid的z-index过大，防止盖住drawer
+  return document.querySelector('.vxe-grid') || document.body
+}
+// 调用这个函数将子组件的一些数据和方法暴露出去
+defineExpose({
+  onOpen
+})
+</script>
+
+<style scoped>
+/** 后代选择器 **/
+.ant-card .ant-form-item {
+  margin-bottom: 12px !important;
+}
+</style>

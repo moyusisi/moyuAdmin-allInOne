@@ -9,14 +9,19 @@
       <a-card size="small">
         <a-form ref="queryFormRef" :model="queryFormData">
           <a-row :gutter="24">
-            <a-col :span="8">
-              <a-form-item name="name" label="组织名称">
-                <a-input v-model:value="queryFormData.name" placeholder="搜索组织名称" allowClear />
+            <a-col :span="6">
+              <a-form-item name="code" label="编码">
+                <a-input v-model:value="queryFormData.code" placeholder="组织编码" allowClear />
               </a-form-item>
             </a-col>
             <a-col :span="6">
-              <a-form-item label="使用状态" name="status">
-                <a-select v-model:value="queryFormData.status" placeholder="请选择状态" :options="statusOptions" allowClear />
+              <a-form-item name="name" label="名称">
+                <a-input v-model:value="queryFormData.name" placeholder="搜索组织名称" allowClear />
+              </a-form-item>
+            </a-col>
+            <a-col :span="5">
+              <a-form-item name="orgType" label="类型">
+                <a-select v-model:value="queryFormData.orgType" placeholder="请选择" :options="orgTypeOptions" allowClear />
               </a-form-item>
             </a-col>
             <a-col :span="6">
@@ -24,7 +29,14 @@
                 <a-flex gap="small">
                   <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
                   <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+                  <a-button v-if="!showMore" type="link" @click="showMore = !showMore">更多条件<DownOutlined /></a-button>
+                  <a-button v-else type="link"  @click="showMore = !showMore">收起<UpOutlined /></a-button>
                 </a-flex>
+              </a-form-item>
+            </a-col>
+            <a-col :span="6" v-if="showMore">
+              <a-form-item name="orgLevel" label="组织层级">
+                <a-select v-model:value="queryFormData.orgLevel" placeholder="请选择" :options="orgLevelOptions" allowClear />
               </a-form-item>
             </a-col>
           </a-row>
@@ -32,57 +44,43 @@
       </a-card>
       <a-card size="small">
         <!--  表格数据区  -->
-        <MTable ref="tableRef"
-                :columns="columns"
-                :loadData="loadData"
-                :row-key="(row) => row.code"
-                showRowSelection
-                @selectedChange="onSelectedChange"
-        >
-          <!--  表格上方左侧操作区  -->
-          <template #operator>
+        <vxe-grid ref="gridRef" v-bind="gridOptions">
+          <!-- 左侧操作栏 -->
+          <template #toolbarButtons>
             <a-space wrap style="margin-bottom: 6px">
               <a-button type="primary" :icon="h(PlusOutlined)" @click="formRef.onOpen(null, treeRef.treeData, queryFormData.parentCode)">新增</a-button>
-              <BatchDeleteButton icon="DeleteOutlined" :selectedRowKeys="selectedRowKeys" @batchDelete="batchDelete" />
+              <a-button danger :icon="h(DeleteOutlined)" @click="gridRef?.commitProxy('delete')">批量删除</a-button>
             </a-space>
           </template>
-          <template #bodyCell="{ column, record, index, text }">
-            <template v-if="column.dataIndex === 'name'">
-              <!-- 长文本省略提示 -->
-              <a-tooltip :title="text" placement="topLeft">
-                <span>{{ text }}</span>
-              </a-tooltip>
-            </template>
-            <template v-if="column.dataIndex === 'code'">
-              <!-- 唯一键点击查看详情 -->
-              <a-tooltip :title="text" placement="topLeft">
-                <a @click="openDetail(record)">{{ text }}</a>
-              </a-tooltip>
-            </template>
-            <template v-if="column.dataIndex === 'orgType'">
-              <a-tag v-if="record.orgType === 1" color="cyan">公司组织</a-tag>
-              <a-tag v-if="record.orgType === 2" color="blue">部门机构</a-tag>
-              <a-tag v-if="record.orgType === 3" color="purple">虚拟节点</a-tag>
-            </template>
-            <template v-if="column.dataIndex === 'status'">
-              <a-tag v-if="record.status === 0" color="green">正常</a-tag>
-              <a-tag v-else>已停用</a-tag>
-            </template>
-            <template v-if="column.dataIndex === 'action'">
-              <a-space>
-                <a-tooltip title="编辑">
-                  <a @click="formRef.onOpen(record, treeRef.treeData)"><FormOutlined /></a>
-                </a-tooltip>
-                <a-divider type="vertical" />
-                <a-tooltip title="删除">
-                  <a-popconfirm title="确定要删除吗？" @confirm="deleteOrg(record)">
-                    <a style="color:#FF4D4F;"><DeleteOutlined/></a>
-                  </a-popconfirm>
-                </a-tooltip>
-              </a-space>
-            </template>
+          <!-- 字段插槽 -->
+          <template #code="{row, rowIndex, column, columnIndex}">
+            <a @click="openDetail(row)">{{ row.code }}</a>
           </template>
-        </MTable>
+          <template #orgType="{row, rowIndex, column, columnIndex}">
+            <a-tag v-if="row.orgType === 1" color="cyan">公司组织</a-tag>
+            <a-tag v-if="row.orgType === 2" color="blue">部门机构</a-tag>
+            <a-tag v-if="row.orgType === 3" color="purple">虚拟节点</a-tag>
+          </template>
+          <template #status="{row, rowIndex, column, columnIndex}">
+            <a-tag v-if="row.status === 0" color="green">正常</a-tag>
+            <a-tag v-else>已停用</a-tag>
+          </template>
+          <template #action="{row:record, rowIndex, column, columnIndex}">
+            <a-space>
+              <template #split>
+                <a-divider type="vertical" />
+              </template>
+              <a-tooltip title="编辑">
+                <a @click="formRef.onOpen(record, treeRef.treeData)"><FormOutlined /></a>
+              </a-tooltip>
+              <a-tooltip title="删除">
+                <a-popconfirm title="确定要删除吗？" @confirm="deleteOrg(record)">
+                  <a style="color:#FF4D4F;"><DeleteOutlined/></a>
+                </a-popconfirm>
+              </a-tooltip>
+            </a-space>
+          </template>
+        </vxe-grid>
       </a-card>
     </a-col>
   </a-row>
@@ -97,18 +95,25 @@
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import OrgTree from "../components/orgTree.vue"
-  import BatchDeleteButton from "@/components/BatchDeleteButton/index.vue"
-  import MTable from "@/components/MTable/index.vue"
   import Form from "./form.vue"
   import Detail from "./detail.vue"
 
   // 查询表单相关对象
   const queryFormRef = ref()
   const queryFormData = ref({})
-  // 使用状态options（0正常 1停用）
-  const statusOptions = [
-    { label: "正常", value: 0 },
-    { label: "已停用", value: 1 }
+  // 是否展示更多搜索条件
+  const showMore = ref(false)
+  // 组织机构类型(字典 1公司组织 2部门机构 3虚拟节点)
+  const orgTypeOptions = [
+    { label: "公司组织", value: 1 },
+    { label: "部门机构", value: 2 },
+    { label: "虚拟节点", value: 3 }
+  ]
+  // 组织层级(字典 1一级公司 2二级公司 3三级公司)
+  const orgLevelOptions = [
+    { label: "一级公司", value: 1 },
+    { label: "二级公司", value: 2 },
+    { label: "三级公司", value: 3 }
   ]
   // 其他页面操作
   const formRef = ref()
@@ -117,63 +122,65 @@
   const treeRef = ref()
 
   /***** 表格相关对象 start *****/
-  const tableRef = ref()
-  // 已选中的行
-  const selectedRowKeys = ref([])
-  // 表格列配置
-  const columns = ref([
-    {
-      title: '组织编码',
-      dataIndex: 'code',
-      align: "center",
-      resizable: true,
-      ellipsis: true,
-      width: 120
+  const gridRef = ref()
+  const gridOptions = reactive({
+    // 分页配置项
+    pagerConfig: {
+      enabled: true,
     },
-    {
-      title: '组织名称',
-      dataIndex: 'name',
-      align: "center",
-      resizable: true,
-      ellipsis: true,
-      width: 150
+    // 数据代理配置
+    proxyConfig: {
+      // 获取响应的值配置
+      response: {
+        // 只对 pager-config 配置时有效，响应结果中获取数据列表的属性（分页场景）
+        result: "records",
+        // 只对 pager-config 配置时有效，响应结果中获取分页的属性（分页场景）
+        total: "total",
+      },
+      ajax: {
+        query: ({ page, sort, sorts, filters, form }) => {
+          // 默认接收 Promise<{ result: [], page: { total: 100 } }>
+          return loadData({ pageNum: page.currentPage, pageSize: page.pageSize })
+        },
+        delete: ({ body, form }) => {
+          // 删除已选
+          const codes = body.removeRecords.map(item => item.code);
+          return orgApi.deleteOrgTree({ codes })
+        }
+      }
     },
-    {
-      title: '组织类型',
-      dataIndex: 'orgType',
-      align: 'center',
-      width: 80
+    // 列字段
+    columns: [
+      { type: 'checkbox', width: 50 },
+      { field: 'code', title: '组织编码', width: 120, slots: { default: 'code' } },
+      { field: 'name', title: '组织名称' },
+      { field: 'orgType', title: '组织类型', width: 100, slots: { default: 'orgType' } },
+      { field: 'orgLevel', title: '组织层级', width: 80 },
+      { field: 'sortNum', title: '排序', width: 80 },
+      { field: 'status', title: '状态', width: 80, slots: { default: 'status' } },
+      { field: 'updateTime', title: '修改时间', width: 170 },
+      { field: 'action', title: '操作', width: 100, slots: { default: 'action' } },
+    ],
+    // 工具栏配置
+    toolbarConfig: {
+      // 是否显示个性化列配置
+      custom: true,
+      // 是否允许最大化显示
+      zoom: true,
+      // 刷新按钮配置
+      refresh: true,
+      //插槽
+      slots: {
+        // 按钮列表
+        buttons: "toolbarButtons",
+      },
     },
-    {
-      title: '组织层级',
-      dataIndex: 'orgLevel',
-      align: 'center',
-      width: 80
-    },
-    {
-      title: '排序',
-      dataIndex: 'sortNum',
-      align: 'center',
-      width: 80
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      align: 'center',
-      width: 80
-    },
-    {
-      title: '操作',
-      dataIndex: 'action',
-      align: 'center',
-      width: 100
-    }
-  ])
+  })
   /***** 表格相关对象 end *****/
 
   // 加载完毕调用
   onMounted(() => {
-    console.log("org/index onMounted...")
+    // console.log("org/index onMounted...")
   })
 
   // 调用时机为首次挂载 以及 每次从缓存中被重新插入时
@@ -183,12 +190,19 @@
 
   // 提交查询
   const querySubmit = () => {
-    tableRef.value.refresh(true)
+    // reload 返回第一页触发ajax.query
+    // query 当前页触发ajax.query
+    gridRef.value?.commitProxy("reload")
   }
   // 重置
   const reset = () => {
     queryFormRef.value.resetFields()
-    tableRef.value.refresh(true)
+    refresh()
+  }
+  // 重置
+  const refresh = () => {
+    // 返回第一页触发ajax.query
+    gridRef.value?.commitProxy("reload")
   }
   // 表格查询 返回 Promise 对象
   const loadData = (parameter) => {
@@ -201,11 +215,6 @@
       console.error(err)
     })
   }
-  // 选中行发生变化
-  const onSelectedChange = (selectedKeys, selectedRows) => {
-    selectedRowKeys.value = selectedKeys
-    // console.log('onSelectedChange,selectedKeys:', selectedKeys);
-  }
   // 点击树查询
   const treeSelect = (selectedKeys) => {
     if (selectedKeys.length > 0) {
@@ -213,26 +222,14 @@
     } else {
       delete queryFormData.value.parentCode
     }
-    tableRef.value.refresh(true)
+    refresh()
   }
   // 删除
   const deleteOrg = (record) => {
     let data = { codes: [record.code] }
     orgApi.deleteOrgTree(data).then((res) => {
       message.success(res.message)
-      tableRef.value.refresh()
-    })
-  }
-  // 批量删除
-  const batchDelete = () => {
-    if (selectedRowKeys.value.length < 1) {
-      message.warning("请至少选择一条数据")
-      return
-    }
-    let data = { codes: selectedRowKeys.value }
-    orgApi.deleteOrgTree(data).then((res) => {
-      message.success(res.message)
-      tableRef.value.refresh()
+      refresh()
     })
   }
   // 打开详情页
@@ -244,7 +241,7 @@
   // 成功回调
   const handleSuccess = () => {
     treeRef.value.refresh()
-    tableRef.value.refresh()
+    refresh()
   }
 </script>
 

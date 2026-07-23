@@ -28,6 +28,10 @@ export default {
 	editRole(data) {
 		return service.postJson('/api/sys/role/edit', data)
 	},
+	// 查询角色拥有的菜单树
+	menuTree(data) {
+		return service.postJson('/api/sys/role/menuTree', data)
+	},
 	// 获取角色菜单树，用于给角色授权时选择
 	menuTreeForGrant(data) {
 		return service.postJson('/api/sys/role/menuTreeForGrant', data)

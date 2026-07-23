@@ -1,17 +1,18 @@
 <template>
   <a-drawer
-    title="角色授权-数据权限"
+    title="角色授权-数据范围"
     :open="visible"
     :width="drawerWidth"
     :closable="false"
     :maskClosable="false"
     :destroy-on-close="true"
+    :get-container="getDrawerContainer"
     @close="onClose"
   >
     <template #extra>
       <a-button type="primary" size="small" @click="onClose"><CloseOutlined /></a-button>
     </template>
-    <a-alert message="已授权且有数据权限的接口才可设置数据范围。" type="error" />
+    <a-alert message="已授权且有数据范围的接口才可设置数据范围。" type="error" />
     <!-- 上方模块选择 -->
     <a-card size="small">
       <a-form ref="queryFormRef" :model="queryFormData">
@@ -168,6 +169,21 @@
       width: 50,
     },
     {
+      title: "按钮名称",
+      dataIndex: "btnName",
+      align: "center",
+      resizable: true,
+      ellipsis: true,
+      width: 120,
+    },
+    {
+      title: "权限标识",
+      dataIndex: "permission",
+      resizable: true,
+      ellipsis: true,
+      width: 150,
+    },
+    {
       title: "接口名称",
       dataIndex: "name",
       align: "center",
@@ -176,23 +192,8 @@
       width: 120,
     },
     {
-      title: '唯一编码',
-      dataIndex: 'code',
-      align: "center",
-      resizable: true,
-      ellipsis: true,
-      width: 150
-    },
-    {
       title: "接口地址",
       dataIndex: "path",
-      resizable: true,
-      ellipsis: true,
-      width: 150,
-    },
-    {
-      title: "权限标识",
-      dataIndex: "permission",
       resizable: true,
       ellipsis: true,
       width: 150,
@@ -255,15 +256,6 @@
     // 查询数据权限列表
     dataLoading.value = true
     const res = await roleApi.permScopeForGrant(param)
-    if(res.data) {
-      res.data.forEach((record) => {
-        if (record.scopes) {
-          record.scopeList = record.scopes.split(',')
-        } else {
-          record.scopeList = []
-        }
-      })
-    }
     tableData.value = res.data
     dataLoading.value = false
   }
@@ -296,20 +288,14 @@
   // 验证并提交数据
   const onSubmit = () => {
     // 数据范围列表
-    const scopeList = []
+    const grantScopeList = []
     tableData.value.forEach((record) => {
-      const scopeInfo = { code: record.code, dataScope: record.dataScope }
-      // <!-- 数据范围(字典 1本人 2本机构 3本机构及以下 4本公司及以下 5自定义) -->
-      if (record.dataScope === 5 && record.scopeList) {
-        scopeInfo.scopes = record.scopeList.join(',');
-      } else {
-        scopeInfo.scopes = null;
-      }
-      scopeList.push(scopeInfo)
+      const scopeInfo = { code: record.code, dataScope: record.dataScope, scopeList: record.scopeList }
+      grantScopeList.push(scopeInfo)
     })
     const param = {
       code: roleCode.value,
-      grantScopeList: [...scopeList]
+      grantScopeList: grantScopeList
     }
     submitLoading.value = true
     roleApi.roleGrantScope(param).then((res) => {
@@ -318,6 +304,11 @@
     }).finally(() => {
       submitLoading.value = false
     })
+  }
+  // 获取Drawer渲染到的dom容器。 默认body,当有vxe-grid时使用表格dom
+  const getDrawerContainer = () => {
+    // vxe-grid的z-index过大，防止盖住drawer
+    return document.querySelector('.vxe-grid') || document.body
   }
   // 调用这个函数将子组件的一些数据和方法暴露出去
   defineExpose({

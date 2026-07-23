@@ -30,68 +30,19 @@
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item name="resourceType" label="资源类型" tooltip="" required>
+            <a-form-item name="resourceType" label="菜单类型" tooltip="" required>
               <a-radio-group v-model:value="formData.resourceType" option-type="button" button-style="solid">
                 <!-- 字典 1模块 2目录 3菜单 4内链 5外链 6按钮 -->
                 <a-radio-button :value="2">目录</a-radio-button>
                 <a-radio-button :value="3">菜单</a-radio-button>
                 <a-radio-button :value="4">内链</a-radio-button>
                 <a-radio-button :value="5">外链</a-radio-button>
-                <a-radio-button :value="6">按钮</a-radio-button>
               </a-radio-group>
             </a-form-item>
           </a-col>
+          <!-- 目录、菜单、内链、外链:是否可见 -->
           <a-col :span="12">
-            <a-form-item name="sortNum" label="排序顺序" tooltip="排序顺序" required>
-              <a-input-number v-model:value="formData.sortNum" style="width: 100%"/>
-            </a-form-item>
-          </a-col>
-        </a-row>
-      </a-card>
-      <a-card title="资源信息">
-        <!-- 路由、组件、权限、图标、可见、排序 -->
-        <a-row :gutter="24">
-          <!-- 目录、菜单:路由地址 -->
-          <a-col :span="12" v-if="formData.resourceType === 2 || formData.resourceType === 3">
-            <a-form-item name="path" label="路由地址" tooltip="菜单路由必须以反斜杠'/'开头" required>
-              <a-input v-model:value="formData.path" placeholder="请输入路由地址" allow-clear />
-            </a-form-item>
-          </a-col>
-          <!-- 菜单:组件地址 -->
-          <a-col :span="12" v-if="formData.resourceType === 3">
-            <a-form-item name="component" label="组件地址" tooltip="前端组件(不带.vue)" required>
-              <a-input v-model:value="formData.component" addon-before="src/views/" addon-after=".vue" placeholder="请输入组件地址" allow-clear/>
-            </a-form-item>
-          </a-col>
-          <!-- 内链、外链:链接地址 -->
-          <a-col :span="12" v-if="formData.resourceType === 4 || formData.resourceType === 5">
-            <a-form-item name="path" label="链接地址" tooltip="链接必须以http(s)开头" required>
-              <a-input v-model:value="formData.path" placeholder="请输入链接地址" allow-clear />
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <!-- 按钮:接口地址、权限标识 -->
-        <a-row :gutter="24">
-          <!-- 按钮:接口地址 -->
-          <a-col :span="12" v-if="formData.resourceType === 6">
-            <a-form-item name="path" label="接口地址" tooltip="按钮绑定的接口地址，以反斜杠'/'开头" required>
-              <a-input v-model:value="formData.path" placeholder="请输入接口地址" allow-clear />
-            </a-form-item>
-          </a-col>
-          <!-- 按钮:权限标识 -->
-          <a-col :span="12" v-if="formData.resourceType === 6">
-            <a-form-item name="permission" label="权限标识" tooltip="对应接口的权限标识，如'sys:user:add'" required>
-              <a-input v-model:value="formData.permission" placeholder="请输入权限标识" allow-clear/>
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row :gutter="24">
-          <!-- 目录、菜单、内链、外链:是否可见, 按钮:数据权限 -->
-          <a-col :span="12">
-            <a-form-item v-if="formData.resourceType === 6" name="visible" label="数据权限" tooltip="是否有数据权限" required>
-              <a-radio-group v-model:value="formData.visible" option-type="button" button-style="solid" :options="scopeOptions"/>
-            </a-form-item>
-            <a-form-item v-else name="visible" label="是否可见" tooltip="仅目录菜单生效" required>
+            <a-form-item name="visible" label="是否可见" tooltip="仅目录菜单生效" required>
               <a-radio-group v-model:value="formData.visible" option-type="button" button-style="solid" :options="visibleOptions"/>
             </a-form-item>
           </a-col>
@@ -102,6 +53,55 @@
                 <a-input v-model:value="formData.icon" placeholder="请选择前端根目录" disabled/>
                 <a-button type="primary" @click="iconSelector.showIconModal(formData.icon)">选择</a-button>
               </a-space-compact>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item name="sortNum" label="排序顺序" tooltip="排序顺序" required>
+              <a-input-number v-model:value="formData.sortNum" style="width: 100%"/>
+            </a-form-item>
+          </a-col>
+        </a-row>
+      </a-card>
+      <a-card title="菜单信息">
+        <!-- 路由、组件、权限、图标、可见、排序 -->
+        <a-row :gutter="24">
+          <!-- 目录:路由地址 -->
+          <a-col :span="12" v-if="formData.resourceType === 2">
+            <a-form-item name="path" label="路由地址" tooltip="菜单路由必须以反斜杠'/'开头">
+              <a-input v-model:value="formData.path" placeholder="请输入路由地址" allow-clear />
+            </a-form-item>
+          </a-col>
+          <!-- 菜单:路由地址 -->
+          <a-col :span="12" v-else-if="formData.resourceType === 3">
+            <a-form-item name="path" label="路由地址" tooltip="菜单路由必须以反斜杠'/'开头" required>
+              <a-input v-model:value="formData.path" placeholder="请输入路由地址" allow-clear />
+            </a-form-item>
+          </a-col>
+          <!-- 内链、外链:链接地址 -->
+          <a-col :span="12" v-if="formData.resourceType === 4 || formData.resourceType === 5">
+            <a-form-item name="path" label="链接地址" tooltip="链接必须以http(s)开头" required>
+              <a-input v-model:value="formData.path" placeholder="请输入http(s)链接地址" allow-clear />
+            </a-form-item>
+          </a-col>
+          <!-- 菜单:组件地址 -->
+          <a-col :span="12" v-if="formData.resourceType === 3">
+            <a-form-item name="component" label="组件地址" tooltip="前端组件(不带.vue)" required>
+              <a-input v-model:value="formData.component" addon-before="src/views/" addon-after=".vue" placeholder="请输入组件地址" allow-clear/>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12" v-if="formData.resourceType === 2">
+            <a-form-item name="brief" label="简洁模式" tooltip="简洁模式下，当目录下只有一个菜单时，不显示目录直接显示该菜单" >
+              <a-radio-group v-model:value="formData.brief" option-type="button" button-style="solid" :options="yesOrNoOptions"/>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12" v-if="formData.resourceType === 3">
+            <a-form-item name="affix" label="固定显示" tooltip="" >
+              <a-radio-group v-model:value="formData.affix" option-type="button" button-style="solid" :options="yesOrNoOptions"/>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12" v-if="formData.resourceType === 3">
+            <a-form-item name="keepAlive" label="是否缓存" tooltip="" >
+              <a-radio-group v-model:value="formData.keepAlive" option-type="button" button-style="solid" :options="yesOrNoOptions"/>
             </a-form-item>
           </a-col>
         </a-row>
@@ -120,8 +120,6 @@
 
 <script setup>
   import resourceApi from '@/api/system/resourceApi.js'
-
-  import { required } from '@/utils/formRules'
   import { message } from "ant-design-vue"
   import { useSettingsStore } from "@/store"
   import IconSelector from '@/components/Selector/iconSelector.vue'
@@ -152,15 +150,20 @@
   const submitLoading = ref(false)
   const treeData = ref([])
   const iconSelector = ref()
-  // 是否有数据权限
+  // 是否有数据范围
   const scopeOptions = [
     { label: "有", value: 1 },
     { label: "无", value: 0 }
   ]
   // 是否可见options
   const visibleOptions = [
-    { label: "可见", value: 1 },
+    { label: "显示", value: 1 },
     { label: "隐藏", value: 0 }
+  ]
+  // 是否选项
+  const yesOrNoOptions = [
+    { label: "是", value: 1 },
+    { label: "否", value: 0 }
   ]
 
   // 打开抽屉
@@ -250,7 +253,7 @@
   }
   const buildParam = (data) => {
     // 如果用户输入的组件带反斜线，则去掉
-    if (data.component && data.component.slice(0, 1) === '/') {
+    if (data.component?.startsWith('/')) {
       data.component = data.component.slice(1)
     }
     return data

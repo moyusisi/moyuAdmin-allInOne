@@ -6,6 +6,7 @@
     :closable="false"
     :footerStyle="{display: 'flex', justifyContent: 'flex-end'}"
     :destroy-on-close="true"
+    :get-container="getDrawerContainer"
     @close="onClose"
   >
     <template #extra>
@@ -27,7 +28,6 @@
         </a-card>
       </a-col>
       <a-col :span="19">
-        <a-alert message="用户只能加入一个分组，若用户已加入其他分组，需在其他分组删除后才可添加。" type="warning" />
         <a-card size="small">
           <a-form ref="searchFormRef" :model="searchFormData">
             <a-row :gutter="16">
@@ -182,7 +182,7 @@
     // 总条数，需要通过接口获取
     total: 0,
     // 显示总记录数
-    showTotal: (total, range) => `共 ${total} 条 `,
+    showTotal: (total, range) => `共 ${total} 条记录 `,
     // 是否可改变每页显示条数
     showSizeChanger: true,
     onChange: (page, pageSize) => {
@@ -255,6 +255,11 @@
       // 添加之后重新加载数据
       loadTableData()
     })
+  }
+  // 获取Drawer渲染到的dom容器。 默认body,当有vxe-grid时使用表格dom
+  const getDrawerContainer = () => {
+    // vxe-grid的z-index过大，防止盖住drawer
+    return document.querySelector('.vxe-grid') || document.body
   }
   // 调用这个函数将子组件的一些数据和方法暴露出去
   defineExpose({

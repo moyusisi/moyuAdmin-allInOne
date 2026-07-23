@@ -56,4 +56,8 @@ export default {
 	userGroupList(data) {
 		return service.postJson('/api/sys/group/userGroupList', data)
 	},
+	// 查询岗位拥有的菜单树
+	menuTree(data) {
+		return service.postJson('/api/sys/group/menuTree', data)
+	},
 }
