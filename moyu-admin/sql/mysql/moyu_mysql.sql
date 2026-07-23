@@ -3,9 +3,9 @@ DROP TABLE IF EXISTS `sys_org`;
 CREATE TABLE `sys_org`
 (
     `id`          BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
-    `parent_code` VARCHAR(64)   DEFAULT '0' COMMENT '父编码',
-    `name`        VARCHAR(64)   DEFAULT NULL COMMENT '名称',
     `code`        VARCHAR(64)   DEFAULT NULL COMMENT '编码',
+    `name`        VARCHAR(64)   DEFAULT NULL COMMENT '名称',
+    `parent_code` VARCHAR(64)   DEFAULT '0' COMMENT '父编码',
     `org_type`    TINYINT       DEFAULT NULL COMMENT '组织机构类型(字典 1公司组织 2部门机构 3虚拟节点)',
     `org_level`   TINYINT       DEFAULT NULL COMMENT '组织层级(字典 1一级公司 2二级公司 3三级公司)',
     `org_path`    VARCHAR(1024) DEFAULT NULL COMMENT '组织机构层级路径,逗号分隔,父节点在后',
@@ -31,6 +31,7 @@ drop table if exists sys_user;
 create table sys_user
 (
     `id`              BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
+    `user_id`         VARCHAR(64)   DEFAULT NULL COMMENT '用户唯一id',
     `account`         VARCHAR(64)   DEFAULT NULL COMMENT '账号',
     `password`        VARCHAR(64)   DEFAULT NULL COMMENT '密码',
     `nick_name`       VARCHAR(64)   DEFAULT NULL COMMENT '昵称',
@@ -64,6 +65,7 @@ create table sys_user
     `update_by`       VARCHAR(32)   DEFAULT NULL COMMENT '修改人',
     PRIMARY KEY (`id`),
     KEY `idx_org_code` (`org_code`),
+    UNIQUE INDEX `uniq_user_id` (`user_id`),
     UNIQUE INDEX `uniq_account` (`account`)
 ) ENGINE = InnoDB
   CHARACTER SET = utf8mb4
@@ -75,8 +77,8 @@ drop table if exists sys_role;
 create table sys_role
 (
     `id`          BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
-    `name`        VARCHAR(64) DEFAULT NULL COMMENT '角色名称',
     `code`        VARCHAR(64) DEFAULT NULL COMMENT '角色编码',
+    `name`        VARCHAR(64) DEFAULT NULL COMMENT '角色名称',
 
     `sort_num`    INT         DEFAULT NULL COMMENT '排序顺序',
     `status`      TINYINT     DEFAULT 0 COMMENT '使用状态（0正常 1停用）',
@@ -99,8 +101,8 @@ drop table if exists sys_group;
 create table sys_group
 (
     `id`          BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
-    `name`        VARCHAR(64)   DEFAULT NULL COMMENT '名称',
     `code`        VARCHAR(64)   DEFAULT NULL COMMENT '编码',
+    `name`        VARCHAR(64)   DEFAULT NULL COMMENT '名称',
     `org_code`    VARCHAR(64)   DEFAULT NULL COMMENT '直属组织编码',
     `org_name`    VARCHAR(64)   DEFAULT NULL COMMENT '直属组织名称',
     `org_path`    VARCHAR(1024) DEFAULT NULL COMMENT '组织机构层级路径,逗号分隔,父节点在后',
@@ -122,48 +124,71 @@ create table sys_group
   COLLATE = utf8mb4_general_ci
   AUTO_INCREMENT = 1000 COMMENT = '分组信息表';
 
--- 5. 资源权限表
+-- 5. 资源信息表
 drop table if exists sys_resource;
 create table sys_resource
 (
     `id`            BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
-    `parent_code`   VARCHAR(64)  DEFAULT '0' COMMENT '父编码',
-    `name`          VARCHAR(64)  DEFAULT NULL COMMENT '名称',
-    `code`          VARCHAR(64)  DEFAULT NULL COMMENT '编码',
-    `resource_type` TINYINT      DEFAULT NULL COMMENT '资源类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）',
-    `path`          VARCHAR(64)  DEFAULT NULL COMMENT '路由地址',
-    `component`     VARCHAR(64)  DEFAULT NULL COMMENT '组件地址',
-    `permission`    VARCHAR(64)  DEFAULT NULL COMMENT '权限标识',
-    `link`          VARCHAR(255) DEFAULT NULL COMMENT '链接地址',
-    `icon`          VARCHAR(64)  DEFAULT NULL COMMENT '图标',
-    `visible`       TINYINT      DEFAULT 1 COMMENT '是否可见（0不可见 1可见）',
-    `module`        VARCHAR(64)  DEFAULT NULL COMMENT '归属模块',
+    `code`          VARCHAR(64)   DEFAULT NULL COMMENT '编码',
+    `name`          VARCHAR(64)   DEFAULT NULL COMMENT '名称',
+    `parent_code`   VARCHAR(64)   DEFAULT '0' COMMENT '父编码',
+    `resource_type` TINYINT       DEFAULT NULL COMMENT '资源类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）',
+    `path`          VARCHAR(1024) DEFAULT NULL COMMENT '路由地址',
+    `component`     VARCHAR(64)   DEFAULT NULL COMMENT '组件地址',
+    `permission`    VARCHAR(64)   DEFAULT NULL COMMENT '权限标识',
+    `icon`          VARCHAR(64)   DEFAULT NULL COMMENT '图标',
+    `visible`       TINYINT       DEFAULT 1 COMMENT '是否可见（0不可见 1可见）',
+    `module`        VARCHAR(64)   DEFAULT NULL COMMENT '归属模块',
 
-    `sort_num`      INT          DEFAULT NULL COMMENT '排序顺序',
-    `ext_json`      TEXT         DEFAULT NULL COMMENT '扩展信息',
-    `remark`        TEXT         DEFAULT NULL comment '备注',
-    `deleted`       TINYINT      DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
-    `create_time`   DATETIME     DEFAULT NULL COMMENT '创建时间',
-    `create_by`     VARCHAR(32)  DEFAULT NULL COMMENT '创建人',
-    `update_time`   DATETIME     DEFAULT NULL COMMENT '修改时间',
-    `update_by`     VARCHAR(32)  DEFAULT NULL COMMENT '修改人',
+    `sort_num`      INT           DEFAULT NULL COMMENT '排序顺序',
+    `ext_json`      TEXT          DEFAULT NULL COMMENT '扩展信息',
+    `remark`        TEXT          DEFAULT NULL comment '备注',
+    `deleted`       TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
+    `create_time`   DATETIME      DEFAULT NULL COMMENT '创建时间',
+    `create_by`     VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
+    `update_time`   DATETIME      DEFAULT NULL COMMENT '修改时间',
+    `update_by`     VARCHAR(32)   DEFAULT NULL COMMENT '修改人',
     primary key (`id`),
     UNIQUE INDEX `uniq_code` (`code`)
 ) ENGINE = InnoDB
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_general_ci
-  AUTO_INCREMENT = 2000 COMMENT = '资源权限表';
+  AUTO_INCREMENT = 2000 COMMENT = '资源信息表';
 
--- 6. 用户角色权限关系表
+-- 6. 接口信息表
+drop table if exists sys_api;
+create table sys_api
+(
+    `id`          BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
+    `code`        VARCHAR(64)   DEFAULT NULL COMMENT '接口(权限)标识',
+    `name`        VARCHAR(64)   DEFAULT NULL COMMENT '接口名称',
+    `path`        VARCHAR(1024) DEFAULT NULL COMMENT '接口地址',
+    `has_scope`   TINYINT       DEFAULT 0 COMMENT '是否有数据范围',
+    `api_type`    TINYINT       DEFAULT 0 COMMENT '接口类型（字典 1后端接口 2三方接口）',
+
+    `ext_json`    TEXT          DEFAULT NULL COMMENT '扩展信息',
+    `remark`      TEXT          DEFAULT NULL comment '备注',
+    `deleted`     TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
+    `create_time` DATETIME      DEFAULT NULL COMMENT '创建时间',
+    `create_by`   VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
+    `update_time` DATETIME      DEFAULT NULL COMMENT '修改时间',
+    `update_by`   VARCHAR(32)   DEFAULT NULL COMMENT '修改人',
+    primary key (`id`),
+    UNIQUE INDEX `uniq_code` (`code`)
+) ENGINE = InnoDB
+  CHARACTER SET = utf8mb4
+  COLLATE = utf8mb4_general_ci
+  AUTO_INCREMENT = 2000 COMMENT = '接口信息表';
+
+-- 7. 用户角色权限关系表
 DROP TABLE IF EXISTS `sys_relation`;
 CREATE TABLE `sys_relation`
 (
     `id`            BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
     `object_id`     VARCHAR(64)   DEFAULT NULL COMMENT '对象ID',
     `target_id`     VARCHAR(64)   DEFAULT NULL COMMENT '目标ID',
-    `relation_type` TINYINT       DEFAULT NULL COMMENT '关系类型(字典 1:role_has_user,2:role_has_perm,3:group_has_user,4:group_has_role)',
-    `data_scope`    TINYINT       DEFAULT NULL COMMENT '数据权限(字典 0无限制 1仅本人数据 2仅本机构 3本机构及以下 4自定义)',
-    `scopes`        VARCHAR(1024) DEFAULT NULL COMMENT '自定义scope集合,逗号分隔',
+    `relation_type` TINYINT       DEFAULT NULL COMMENT '关系类型(字典 1:user_has_role,2:role_has_perm,3:user_has_group,4:group_has_role)',
+    `ext_json`      TEXT          DEFAULT NULL COMMENT '扩展信息',
     `deleted`       TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
     `create_time`   DATETIME      DEFAULT NULL COMMENT '创建时间',
     `create_by`     VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
@@ -175,26 +200,27 @@ CREATE TABLE `sys_relation`
   COLLATE = utf8mb4_general_ci
   AUTO_INCREMENT = 2000 COMMENT = '用户角色权限关系表';
 
--- 7. 操作日志（可选）
+-- 8. 操作日志（可选）
 DROP TABLE IF EXISTS `sys_log`;
 CREATE TABLE `sys_log`
 (
     `id`               BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
+    `name`             VARCHAR(50)  DEFAULT NULL COMMENT '日志名称',
+    `log_type`         TINYINT      DEFAULT NULL COMMENT '日志类型(字典 0默认日志 1访问日志 2操作日志 3交互日志)',
     `module`           VARCHAR(50)  DEFAULT NULL COMMENT '系统/模块',
-    `log_type`         TINYINT      DEFAULT NULL COMMENT '日志类型(字典 0默认日志 1操作日志 2登录认证 3三方交互)',
     `business`         VARCHAR(50)  DEFAULT NULL COMMENT '业务',
     `operate`          VARCHAR(50)  DEFAULT NULL COMMENT '操作/接口',
     `content`          VARCHAR(255) DEFAULT NULL COMMENT '内容说明',
-    `op_ip`            VARCHAR(50)  DEFAULT NULL COMMENT '客户端ip',
-    `op_browser`       VARCHAR(50)  DEFAULT NULL COMMENT '客户端浏览器',
-    `op_os`            VARCHAR(50)  DEFAULT NULL COMMENT '客户端操作系统',
-    `op_platform`      VARCHAR(50)  DEFAULT NULL COMMENT '客户端操作系统',
-    `request_url`      VARCHAR(255) DEFAULT NULL COMMENT '请求路径地址',
+    `request_url`      VARCHAR(512) DEFAULT NULL COMMENT '请求路径地址',
     `request_content`  TEXT         DEFAULT NULL comment '请求参数',
     `response_content` TEXT         DEFAULT NULL comment '返回结果',
     `start_time`       DATETIME     DEFAULT NULL COMMENT '开始时间',
     `end_time`         DATETIME     DEFAULT NULL COMMENT '结束时间',
     `execution_time`   BIGINT       DEFAULT NULL COMMENT '执行耗时(ms)',
+    `source_client`    VARCHAR(50)  DEFAULT NULL COMMENT '客户端/ip',
+    `source_province`  VARCHAR(50)  DEFAULT NULL COMMENT '来源省份',
+    `source_city`      VARCHAR(50)  DEFAULT NULL COMMENT '来源城市',
+    `user_agent`       VARCHAR(512) DEFAULT NULL COMMENT '客户端信息',
     `deleted`          TINYINT      DEFAULT NULL COMMENT '删除标志（0未删除  1已删除）',
     `create_by`        VARCHAR(32)  DEFAULT NULL COMMENT '创建人',
     `create_time`      DATETIME     DEFAULT NULL COMMENT '创建时间',
@@ -203,3 +229,28 @@ CREATE TABLE `sys_log`
 ) ENGINE = InnoDB
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_general_ci COMMENT ='系统日志表';
+
+-- 9. 系统配置表（可选）
+drop table if exists sys_config;
+create table sys_config
+(
+    `id`           BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
+    `config_name`  VARCHAR(64)   DEFAULT NULL COMMENT '配置项名称',
+    `config_key`   VARCHAR(64)   DEFAULT NULL COMMENT '配置key',
+    `config_value` VARCHAR(1024) DEFAULT NULL COMMENT '配置value',
+    `config_type`  VARCHAR(64)   DEFAULT NULL COMMENT '配置类型',
+
+    `status`       TINYINT       DEFAULT 0 COMMENT '使用状态（0正常 1停用）',
+    `ext_json`     TEXT          DEFAULT NULL COMMENT '扩展信息',
+    `remark`       TEXT          DEFAULT NULL comment '备注',
+    `deleted`      TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
+    `create_time`  DATETIME      DEFAULT NULL COMMENT '创建时间',
+    `create_by`    VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
+    `update_time`  DATETIME      DEFAULT NULL COMMENT '修改时间',
+    `update_by`    VARCHAR(32)   DEFAULT NULL COMMENT '修改人',
+    primary key (`id`),
+    UNIQUE INDEX `uniq_config_key` (`config_key`)
+) ENGINE = InnoDB
+  CHARACTER SET = utf8mb4
+  COLLATE = utf8mb4_general_ci
+  AUTO_INCREMENT = 100 COMMENT = '系统配置表';
