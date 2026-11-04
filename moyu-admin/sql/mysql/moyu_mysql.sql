@@ -13,7 +13,7 @@ CREATE TABLE `sys_org`
     `sort_num`    INT           DEFAULT NULL COMMENT '排序顺序',
     `status`      TINYINT       DEFAULT 0 COMMENT '状态（0正常 1停用）',
     `ext_json`    TEXT          DEFAULT NULL COMMENT '扩展信息',
-    `remark`      TEXT          DEFAULT NULL comment '备注',
+    `remark`      TEXT          DEFAULT NULL COMMENT '备注',
     `deleted`     TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
     `create_time` DATETIME      DEFAULT NULL COMMENT '创建时间',
     `create_by`   VARCHAR(20)   DEFAULT NULL COMMENT '创建人',
@@ -38,7 +38,6 @@ create table sys_user
     `avatar`          VARCHAR(255)  DEFAULT NULL COMMENT '头像',
     `name`            VARCHAR(64)   DEFAULT NULL COMMENT '姓名',
     `gender`          TINYINT(4)    DEFAULT NULL COMMENT '性别(字典 0未知 1男 2女)',
-    `birthday`        DATETIME      DEFAULT NULL COMMENT '生日',
     `email`           VARCHAR(64)   DEFAULT NULL COMMENT '邮箱',
     `phone`           VARCHAR(20)   DEFAULT NULL COMMENT '手机',
     `id_no`           VARCHAR(20)   DEFAULT NULL COMMENT '身份证号',
@@ -49,12 +48,6 @@ create table sys_user
     `org_code`        VARCHAR(64)   DEFAULT NULL COMMENT '直属组织编码',
     `org_name`        VARCHAR(64)   DEFAULT NULL COMMENT '直属组织名称',
     `org_path`        VARCHAR(1024) DEFAULT NULL COMMENT '组织机构层级路径,逗号分隔,父节点在后',
-
-    `login_ip`        VARCHAR(20)   DEFAULT NULL COMMENT '登陆IP',
-    `login_time`      DATETIME      DEFAULT NULL COMMENT '登陆时间',
-    `last_login_ip`   VARCHAR(20)   DEFAULT NULL COMMENT '上次登陆IP',
-    `last_login_time` DATETIME      DEFAULT NULL COMMENT '上次登陆时间',
-    `pwd_update_time` DATETIME      DEFAULT NULL COMMENT '上次密码更新时间',
 
     `status`          TINYINT       DEFAULT 0 COMMENT '状态（0正常 1停用）',
     `remark`          TEXT          DEFAULT NULL comment '备注',
@@ -83,7 +76,7 @@ create table sys_role
     `sort_num`    INT         DEFAULT NULL COMMENT '排序顺序',
     `status`      TINYINT     DEFAULT 0 COMMENT '使用状态（0正常 1停用）',
     `ext_json`    TEXT        DEFAULT NULL COMMENT '扩展信息',
-    `remark`      TEXT        DEFAULT NULL comment '备注',
+    `remark`      TEXT        DEFAULT NULL COMMENT '备注',
     `deleted`     TINYINT     DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
     `create_time` DATETIME    DEFAULT NULL COMMENT '创建时间',
     `create_by`   VARCHAR(32) DEFAULT NULL COMMENT '创建人',
@@ -105,12 +98,11 @@ create table sys_group
     `name`        VARCHAR(64)   DEFAULT NULL COMMENT '名称',
     `org_code`    VARCHAR(64)   DEFAULT NULL COMMENT '直属组织编码',
     `org_name`    VARCHAR(64)   DEFAULT NULL COMMENT '直属组织名称',
-    `org_path`    VARCHAR(1024) DEFAULT NULL COMMENT '组织机构层级路径,逗号分隔,父节点在后',
 
     `sort_num`    INT           DEFAULT NULL COMMENT '排序顺序',
     `status`      TINYINT       DEFAULT 0 COMMENT '状态（0正常 1停用）',
     `ext_json`    TEXT          DEFAULT NULL COMMENT '扩展信息',
-    `remark`      TEXT          DEFAULT NULL comment '备注',
+    `remark`      TEXT          DEFAULT NULL COMMENT '备注',
     `deleted`     TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
     `create_time` DATETIME      DEFAULT NULL COMMENT '创建时间',
     `create_by`   VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
@@ -124,36 +116,36 @@ create table sys_group
   COLLATE = utf8mb4_general_ci
   AUTO_INCREMENT = 1000 COMMENT = '分组信息表';
 
--- 5. 资源信息表
-drop table if exists sys_resource;
-create table sys_resource
+-- 5. 菜单资源信息表
+drop table if exists sys_menu;
+create table sys_menu
 (
-    `id`            BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
-    `code`          VARCHAR(64)   DEFAULT NULL COMMENT '编码',
-    `name`          VARCHAR(64)   DEFAULT NULL COMMENT '名称',
-    `parent_code`   VARCHAR(64)   DEFAULT '0' COMMENT '父编码',
-    `resource_type` TINYINT       DEFAULT NULL COMMENT '资源类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）',
-    `path`          VARCHAR(1024) DEFAULT NULL COMMENT '路由地址',
-    `component`     VARCHAR(64)   DEFAULT NULL COMMENT '组件地址',
-    `permission`    VARCHAR(64)   DEFAULT NULL COMMENT '权限标识',
-    `icon`          VARCHAR(64)   DEFAULT NULL COMMENT '图标',
-    `visible`       TINYINT       DEFAULT 1 COMMENT '是否可见（0不可见 1可见）',
-    `module`        VARCHAR(64)   DEFAULT NULL COMMENT '归属模块',
+    `id`          BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
+    `code`        VARCHAR(64)   DEFAULT NULL COMMENT '编码',
+    `name`        VARCHAR(64)   DEFAULT NULL COMMENT '名称',
+    `parent_code` VARCHAR(64)   DEFAULT '0' COMMENT '父编码',
+    `menu_type`   TINYINT       DEFAULT NULL COMMENT '菜单类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）',
+    `path`        VARCHAR(1024) DEFAULT NULL COMMENT '路由地址',
+    `component`   VARCHAR(64)   DEFAULT NULL COMMENT '组件地址',
+    `permission`  VARCHAR(64)   DEFAULT NULL COMMENT '权限标识',
+    `icon`        VARCHAR(64)   DEFAULT NULL COMMENT '图标',
+    `visible`     TINYINT       DEFAULT 1 COMMENT '是否可见（0不可见 1可见）',
+    `module`      VARCHAR(64)   DEFAULT NULL COMMENT '归属模块',
 
-    `sort_num`      INT           DEFAULT NULL COMMENT '排序顺序',
-    `ext_json`      TEXT          DEFAULT NULL COMMENT '扩展信息',
-    `remark`        TEXT          DEFAULT NULL comment '备注',
-    `deleted`       TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
-    `create_time`   DATETIME      DEFAULT NULL COMMENT '创建时间',
-    `create_by`     VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
-    `update_time`   DATETIME      DEFAULT NULL COMMENT '修改时间',
-    `update_by`     VARCHAR(32)   DEFAULT NULL COMMENT '修改人',
+    `sort_num`    INT           DEFAULT NULL COMMENT '排序顺序',
+    `ext_json`    TEXT          DEFAULT NULL COMMENT '扩展信息',
+    `remark`      TEXT          DEFAULT NULL COMMENT '备注',
+    `deleted`     TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
+    `create_time` DATETIME      DEFAULT NULL COMMENT '创建时间',
+    `create_by`   VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
+    `update_time` DATETIME      DEFAULT NULL COMMENT '修改时间',
+    `update_by`   VARCHAR(32)   DEFAULT NULL COMMENT '修改人',
     primary key (`id`),
     UNIQUE INDEX `uniq_code` (`code`)
 ) ENGINE = InnoDB
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_general_ci
-  AUTO_INCREMENT = 2000 COMMENT = '资源信息表';
+  AUTO_INCREMENT = 2000 COMMENT = '菜单资源信息表';
 
 -- 6. 接口信息表
 drop table if exists sys_api;
@@ -164,10 +156,9 @@ create table sys_api
     `name`        VARCHAR(64)   DEFAULT NULL COMMENT '接口名称',
     `path`        VARCHAR(1024) DEFAULT NULL COMMENT '接口地址',
     `has_scope`   TINYINT       DEFAULT 0 COMMENT '是否有数据范围',
-    `api_type`    TINYINT       DEFAULT 0 COMMENT '接口类型（字典 1后端接口 2三方接口）',
 
     `ext_json`    TEXT          DEFAULT NULL COMMENT '扩展信息',
-    `remark`      TEXT          DEFAULT NULL comment '备注',
+    `remark`      TEXT          DEFAULT NULL COMMENT '备注',
     `deleted`     TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
     `create_time` DATETIME      DEFAULT NULL COMMENT '创建时间',
     `create_by`   VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
@@ -205,25 +196,25 @@ DROP TABLE IF EXISTS `sys_log`;
 CREATE TABLE `sys_log`
 (
     `id`               BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键id',
-    `name`             VARCHAR(50)  DEFAULT NULL COMMENT '日志名称',
-    `log_type`         TINYINT      DEFAULT NULL COMMENT '日志类型(字典 0默认日志 1访问日志 2操作日志 3交互日志)',
-    `module`           VARCHAR(50)  DEFAULT NULL COMMENT '系统/模块',
-    `business`         VARCHAR(50)  DEFAULT NULL COMMENT '业务',
-    `operate`          VARCHAR(50)  DEFAULT NULL COMMENT '操作/接口',
-    `content`          VARCHAR(255) DEFAULT NULL COMMENT '内容说明',
-    `request_url`      VARCHAR(512) DEFAULT NULL COMMENT '请求路径地址',
-    `request_content`  TEXT         DEFAULT NULL comment '请求参数',
-    `response_content` TEXT         DEFAULT NULL comment '返回结果',
-    `start_time`       DATETIME     DEFAULT NULL COMMENT '开始时间',
-    `end_time`         DATETIME     DEFAULT NULL COMMENT '结束时间',
-    `execution_time`   BIGINT       DEFAULT NULL COMMENT '执行耗时(ms)',
-    `source_client`    VARCHAR(50)  DEFAULT NULL COMMENT '客户端/ip',
-    `source_province`  VARCHAR(50)  DEFAULT NULL COMMENT '来源省份',
-    `source_city`      VARCHAR(50)  DEFAULT NULL COMMENT '来源城市',
-    `user_agent`       VARCHAR(512) DEFAULT NULL COMMENT '客户端信息',
-    `deleted`          TINYINT      DEFAULT NULL COMMENT '删除标志（0未删除  1已删除）',
-    `create_by`        VARCHAR(32)  DEFAULT NULL COMMENT '创建人',
-    `create_time`      DATETIME     DEFAULT NULL COMMENT '创建时间',
+    `name`             VARCHAR(50)   DEFAULT NULL COMMENT '日志名称',
+    `log_type`         TINYINT       DEFAULT NULL COMMENT '日志类型(字典 0默认日志 1访问日志 2操作日志 3交互日志)',
+    `module`           VARCHAR(50)   DEFAULT NULL COMMENT '系统/模块',
+    `business`         VARCHAR(50)   DEFAULT NULL COMMENT '业务',
+    `operate`          VARCHAR(50)   DEFAULT NULL COMMENT '操作/接口',
+    `content`          VARCHAR(255)  DEFAULT NULL COMMENT '内容说明',
+    `request_url`      VARCHAR(1024) DEFAULT NULL COMMENT '请求路径地址',
+    `request_content`  TEXT          DEFAULT NULL COMMENT '请求参数',
+    `response_content` TEXT          DEFAULT NULL COMMENT '返回结果',
+    `start_time`       DATETIME      DEFAULT NULL COMMENT '开始时间',
+    `end_time`         DATETIME      DEFAULT NULL COMMENT '结束时间',
+    `execution_time`   BIGINT        DEFAULT NULL COMMENT '执行耗时(ms)',
+    `source_client`    VARCHAR(50)   DEFAULT NULL COMMENT '客户端/ip',
+    `source_province`  VARCHAR(50)   DEFAULT NULL COMMENT '来源省份',
+    `source_city`      VARCHAR(50)   DEFAULT NULL COMMENT '来源城市',
+    `user_agent`       VARCHAR(512)  DEFAULT NULL COMMENT '客户端信息',
+    `deleted`          TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
+    `create_by`        VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
+    `create_time`      DATETIME      DEFAULT NULL COMMENT '创建时间',
     primary key (`id`),
     KEY `idx_create_time` (`create_time`)
 ) ENGINE = InnoDB
@@ -242,7 +233,7 @@ create table sys_config
 
     `status`       TINYINT       DEFAULT 0 COMMENT '使用状态（0正常 1停用）',
     `ext_json`     TEXT          DEFAULT NULL COMMENT '扩展信息',
-    `remark`       TEXT          DEFAULT NULL comment '备注',
+    `remark`       TEXT          DEFAULT NULL COMMENT '备注',
     `deleted`      TINYINT       DEFAULT 0 COMMENT '删除标志（0未删除  1已删除）',
     `create_time`  DATETIME      DEFAULT NULL COMMENT '创建时间',
     `create_by`    VARCHAR(32)   DEFAULT NULL COMMENT '创建人',
@@ -254,3 +245,4 @@ create table sys_config
   CHARACTER SET = utf8mb4
   COLLATE = utf8mb4_general_ci
   AUTO_INCREMENT = 100 COMMENT = '系统配置表';
+
