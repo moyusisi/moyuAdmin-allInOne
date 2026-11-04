@@ -49,6 +49,13 @@
                 <span>{{ formData.extJson }}</span>
               </a-form-item>
             </a-col>
+          </a-row>
+        </a-card>
+        <a-card>
+          <template #title>
+            <span><RightSquareFilled style="color: dodgerblue;"/> 其他信息</span>
+          </template>
+          <a-row :gutter="24">
             <a-col :span="8">
               <a-form-item name="createTime" label="创建时间" tooltip="" >
                 <span>{{ formData.createTime }}</span>

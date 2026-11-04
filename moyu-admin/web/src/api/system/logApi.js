@@ -4,10 +4,6 @@ import service from '@/utils/request'
  * 系统日志相关接口
  */
 export default {
-  // 查询系统日志列表
-  logList(data) {
-    return service.postJson('/api/sys/log/list', data)
-  },
   // 分页查询系统日志列表
   logPage(data) {
     return service.postJson('/api/sys/log/page', data)

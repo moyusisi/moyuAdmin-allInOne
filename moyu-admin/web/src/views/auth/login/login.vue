@@ -17,33 +17,35 @@
 					</div>
 					<a-tabs v-model:activeKey="activeKey">
 						<a-tab-pane key="userAccount" tab="账号密码">
-							<a-form ref="loginForm" :model="formData">
+							<a-form ref="loginForm" :model="formData" :rules="rules">
 								<a-form-item name="account">
-									<a-input
-										v-model:value="formData.account"
-										placeholder="请输入账号"
-										size="large"
-										@keyup.enter="login"
-									>
+									<a-input v-model:value="formData.account" placeholder="请输入账号" size="large" @keyup.enter="login">
 										<template #prefix>
 											<UserOutlined class="login-icon-gray" />
 										</template>
 									</a-input>
 								</a-form-item>
 								<a-form-item name="password">
-									<a-input-password
-										v-model:value="formData.password"
-										placeholder="请输入密码"
-										size="large"
-										autocomplete="off"
-										@keyup.enter="login"
-									>
+									<a-input-password v-model:value="formData.password" placeholder="请输入密码" size="large" autocomplete="off" @keyup.enter="login">
 										<template #prefix>
 											<LockOutlined class="login-icon-gray" />
 										</template>
 									</a-input-password>
 								</a-form-item>
-
+                <a-form-item name="captchaCode">
+                  <a-row :gutter="8">
+                    <a-col :span="17">
+                      <a-input v-model:value="formData.captchaCode" placeholder="请输入验证码" size="large" @keyup.enter="login">
+                        <template #prefix>
+                          <verified-outlined class="login-icon-gray" />
+                        </template>
+                      </a-input>
+                    </a-col>
+                    <a-col :span="7">
+                      <img :src="captchaBase64" class="login-captchaCode-img" @click="loginCaptcha" />
+                    </a-col>
+                  </a-row>
+                </a-form-item>
 								<a-form-item>
 									<a-button type="primary" class="login-btn" :loading="loading" size="large" @click="login">登陆
 									</a-button>
@@ -57,43 +59,56 @@
 	</div>
 </template>
 <script setup>
+  import loginApi from '@/api/auth/loginApi.js'
+  import { required } from "@/utils/formRules.js"
+
 	import settings from '@/config/settings'
-  import { useUserStore } from "@/store"
+  import { useUserStore, useMenuStore } from "@/store"
   import { useRoute, useRouter } from 'vue-router'
   import { message } from "ant-design-vue"
 
   const userStore = useUserStore()
+  const menuStore = useMenuStore()
   const route = useRoute()
   const router = useRouter()
 
 	const activeKey = ref('userAccount')
 	const loading = ref(false)
+  const captchaBase64 = ref('')
 
 	const formData = ref({
 		account: 'auditor',
 		password: 'qwer@123!',
-		validCode: '',
-		validCodeReqNo: '',
+    captchaCode: '',
+    captchaId: '',
 		autologin: false
 	})
 
 	//登陆
 	const loginForm = ref()
+
+  const rules = reactive({
+    account: [required("登陆账号不能为空", 'blur')],
+    password: [required("密码不能为空", 'blur')],
+    captchaCode: [required("验证码不能为空", 'blur')]
+  })
   const login = async () => {
     loginForm.value.validate().then(async () => {
       loading.value = true
       const loginData = {
         account: formData.value.account,
         password: formData.value.password,
-        validCode: formData.value.validCode,
-        validCodeReqNo: formData.value.validCodeReqNo
+        captchaId: formData.value.captchaId,
+        captchaCode: formData.value.captchaCode
       }
       // 获取token
       try {
         // 登录
         await userStore.login(loginData)
         // 初始化用户信息
-        await userStore.refreshUserInfo()
+        await userStore.initUserInfo()
+        // 重新加载路由
+        await menuStore.reloadRoutes()
         message.success('登录成功')
         const redirectPath = (route.query.redirect) || "/"
         await router.push(redirectPath)
@@ -107,10 +122,31 @@
     })
   }
 
+  // 加载完毕调用
+  onMounted(() => {
+    // 加载验证码
+    loginCaptcha()
+  })
+
+  // 获取验证码
+  const loginCaptcha = () => {
+    loginApi.loginCaptcha().then((res) => {
+      captchaBase64.value = res.data.captchaBase64
+      formData.value.captchaId = res.data.captchaId
+    })
+  }
+
 </script>
 <style >
 .login-icon-gray {
   color: rgba(0, 0, 0, 0.25);
+}
+
+.login-captchaCode-img {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  width: 100%;
+  height: 40px;
 }
 
 .login-wrapper {

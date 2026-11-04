@@ -22,23 +22,13 @@
           </template>
           <a-row :gutter="24">
             <a-col :span="8">
-              <a-form-item name="name" label="组织名称" tooltip="" >
-                <span>{{ formData.name }}</span>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
               <a-form-item name="code" label="组织编码" tooltip="" >
                 <span><a>{{ formData.code }}</a></span>
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="staffCode" label="员工编码" tooltip="" >
-                <span>{{ formData.staffCode }}</span>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="parentCode" label="上级组织" tooltip="">
-                <OrgTreeSelect :tree-data="treeData" :defaultValue="formData.parentCode" disabled/>
+              <a-form-item name="name" label="组织名称" tooltip="" >
+                <span>{{ formData.name }}</span>
               </a-form-item>
             </a-col>
             <a-col :span="8">
@@ -48,6 +38,11 @@
                   <a-tag v-if="formData.orgType === 2" color="blue">部门机构</a-tag>
                   <a-tag v-if="formData.orgType === 3" color="purple">虚拟节点</a-tag>
                 </span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="parentCode" label="上级组织" tooltip="">
+                <OrgTreeSelect :tree-data="treeData" :defaultValue="formData.parentCode" disabled/>
               </a-form-item>
             </a-col>
             <a-col :span="8" v-if="formData.orgType === 1">
@@ -77,11 +72,6 @@
             <a-col :span="8">
               <a-form-item name="remark" label="备注" tooltip="" >
                 <span style="white-space: pre-wrap;">{{ formData.remark }}</span>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="extJson" label="扩展信息" tooltip="" >
-                <span>{{ formData.extJson }}</span>
               </a-form-item>
             </a-col>
             <a-col :span="8">

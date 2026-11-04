@@ -52,7 +52,7 @@
               </template>
               <template v-if="column.dataIndex === 'code'">
                 <a-tooltip :title="text" placement="topLeft">
-                  <a>{{ record.code }}</a>
+                  <a-tag v-if="record.code" :bordered="false">{{ record.code }}</a-tag>
                 </a-tooltip>
               </template>
               <template v-if="column.dataIndex === 'orgName'">
@@ -60,11 +60,21 @@
                   <span>{{ text }}</span>
                 </a-tooltip>
               </template>
+              <template v-if="column.dataIndex === 'action'">
+                <a-space>
+                  <a-tooltip title="菜单透视">
+                    <a @click="showMenuTree(record)"><EyeOutlined /></a>
+                  </a-tooltip>
+                </a-space>
+              </template>
             </template>
           </a-table>
         </a-card>
       </a-col>
     </a-row>
+
+    <!-- 弹窗 -->
+    <MenuTree ref="menuTreeRef"/>
 
   </a-drawer>
 </template>
@@ -72,9 +82,10 @@
 <script setup>
   import groupApi from '@/api/system/groupApi'
 
+  import { h, ref } from "vue";
   import { useSettingsStore } from "@/store";
-  import { h } from "vue";
-  import { RedoOutlined, SearchOutlined } from "@ant-design/icons-vue";
+  import { RedoOutlined, SearchOutlined, EyeOutlined } from "@ant-design/icons-vue";
+  import MenuTree from "@/views/system/components/menuTree.vue"
 
   const settingsStore = useSettingsStore()
   const columns = [
@@ -91,7 +102,7 @@
       align: "center",
       resizable: true,
       ellipsis: true,
-      width: 200
+      width: 150
     },
     {
       title: '岗位编码',
@@ -99,7 +110,7 @@
       align: "center",
       resizable: true,
       ellipsis: true,
-      width: 100
+      width: 150
     },
     {
       title: "所属组织机构",
@@ -108,6 +119,13 @@
       resizable: true,
       ellipsis: true,
       width: 200,
+    },
+    {
+      title: '操作',
+      dataIndex: 'action',
+      align: 'center',
+      resizable: true,
+      width: 100
     }
   ]
 
@@ -118,6 +136,10 @@
   // 表单数据
   const searchFormRef = ref()
   const searchFormData = ref({})
+
+  // 其他页面操作
+  const menuTreeRef = ref()
+
   // table数据
   const tableRef = ref()
   // 表格中的数据(loadTableData中会更新)
@@ -155,6 +177,13 @@
   const reset = () => {
     searchFormData.value = {}
     loadTableData()
+  }
+  // 菜单透视
+  const showMenuTree = (row) => {
+    let data = { code: row.code }
+    groupApi.menuTree(data).then((res) => {
+      menuTreeRef.value.onOpen(res.data)
+    })
   }
 
   // 获取Drawer渲染到的dom容器。 默认body,当有vxe-grid时使用表格dom

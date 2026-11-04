@@ -36,14 +36,6 @@
                 <a-input v-model:value="formData.path" placeholder="接口地址" allowClear />
               </a-form-item>
             </a-col>
-            <a-col :span="12">
-              <a-form-item name="apiType" label="接口类型" tooltip="" >
-                <a-radio-group v-model:value="formData.apiType" option-type="button" button-style="solid">
-                  <a-radio :value="1">后端接口</a-radio>
-                  <a-radio :value="2">三方接口</a-radio>
-                </a-radio-group>
-              </a-form-item>
-            </a-col>
             <a-col :span="12" v-if="formData.apiType === 1">
               <a-form-item name="hasScope" label="数据范围" tooltip="是否控制数据范围" >
                 <a-radio-group v-model:value="formData.hasScope" option-type="button" button-style="solid">
@@ -96,11 +88,12 @@ const drawerWidth = computed(() => {
 // 是否为编辑
 const edit = ref(false)
 // 表单数据
-const formRef = ref()
-const formData = ref({
+const defaultFormData = {
   apiType: 1,
   hasScope: 0,
-})
+}
+const formRef = ref()
+const formData = ref({...defaultFormData})
 const dataLoading = ref(false)
 const submitLoading = ref(false)
 
@@ -120,7 +113,10 @@ const onOpen = (row) => {
 }
 // 关闭抽屉
 const onClose = () => {
+  // 重置校验字段
   formRef.value.resetFields()
+  // 关闭时恢复默认值
+  formData.value = { ...defaultFormData }
   visible.value = false
 }
 // 加载数据

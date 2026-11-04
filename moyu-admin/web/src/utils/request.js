@@ -64,9 +64,23 @@ service.interceptors.response.use(
 		return Promise.reject(res)
 	},
 	(error) => {
-		console.error('系统错误', error)
-		message.error('网络请求失败，请检查网络设置')
-		return Promise.reject(error.message);
+		// 无响应：断网/超时/跨域
+		if (!error.response) {
+			if (error.message.includes('timeout')) {
+				message.error('网络请求超时，请检查网络设置')
+			} else {
+				message.error('网络连接失败，请检查网络设置')
+			}
+			return Promise.reject(error)
+		}
+		// 存在响应，获取HTTP状态码
+		const status = error.response.status
+		// 未登录 / token过期
+		if (status === 401) {
+			reLogin()
+		}
+		// 将错误抛出，交给业务页面catch捕获
+		return Promise.reject(error);
 	}
 )
 

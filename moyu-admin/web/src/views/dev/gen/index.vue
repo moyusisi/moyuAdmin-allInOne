@@ -198,14 +198,14 @@
       dataIndex: "createTime",
       align: 'center',
       resizable: true,
-      width: 160,
+      width: 170,
     },
     {
       title: "更新时间",
       dataIndex: "updateTime",
       align: 'center',
       resizable: true,
-      width: 160,
+      width: 170,
     },
     // 单行操作，不需要可以删掉
     {

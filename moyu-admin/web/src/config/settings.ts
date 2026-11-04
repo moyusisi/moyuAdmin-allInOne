@@ -27,7 +27,7 @@ const defaultSettings: AppSettings = {
   // 是否展示面包屑
   breadcrumbView: true,
   // 是否展示多标签页
-  tagsView: false,
+  tabsView: false,
   // 是否启用水印
   watermarkEnabled: false,
 

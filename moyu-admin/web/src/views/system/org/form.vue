@@ -42,7 +42,7 @@
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item name="sortNum" label="排序顺序" tooltip="排序顺序" required>
+            <a-form-item name="sortNum" label="排序顺序" tooltip="" required>
               <a-input-number v-model:value="formData.sortNum" style="width: 100%"/>
             </a-form-item>
           </a-col>
@@ -64,6 +64,11 @@
                 <a-radio-button :value="2">二级公司</a-radio-button>
                 <a-radio-button :value="3">三级公司</a-radio-button>
               </a-radio-group>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item name="address" label="备注" tooltip="">
+              <a-textarea v-model:value="formData.remark" placeholder="请输入备注" allowClear showCount :maxlength="100"/>
             </a-form-item>
           </a-col>
         </a-row>
@@ -105,11 +110,12 @@
   const treeData = ref([])
 
   // 表单数据
+  const defaultFormData = {
+    status: 0,
+    orgType: 1
+  }
   const formRef = ref()
-  // 有默认值
-  const formData = ref({
-    status: 0
-  })
+  const formData = ref({...defaultFormData})
   const edit = ref(false)
   const dataLoading = ref(false)
   const submitLoading = ref(false)
@@ -139,7 +145,10 @@
   }
   // 关闭抽屉
   const onClose = () => {
+    // 重置校验字段
     formRef.value.resetFields()
+    // 关闭时恢复默认值
+    formData.value = { ...defaultFormData }
     visible.value = false
   }
   // 加载数据

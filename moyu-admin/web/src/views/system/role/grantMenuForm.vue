@@ -33,33 +33,33 @@
           <template v-if="column.dataIndex === 'name'">
             <!-- 长文本省略提示 -->
             <a-tooltip :title="text" placement="top">
-              <span v-if="record.resourceType === 1">
+              <span v-if="record.menuType === 1">
                 <a-tag color="orange">模块</a-tag>{{ record.name }}
               </span>
-              <span v-if="record.resourceType === 2">
+              <span v-if="record.menuType === 2">
                 <a-tag color="cyan">目录</a-tag>{{ record.name }}
               </span>
-              <span v-if="record.resourceType === 3">
+              <span v-if="record.menuType === 3">
                 <a-tag color="blue">菜单</a-tag>{{ record.name }}
               </span>
-              <span v-if="record.resourceType === 4">
+              <span v-if="record.menuType === 4">
                 <a-tag color="gold">内链</a-tag>{{ record.name }}
               </span>
-              <span v-if="record.resourceType === 5">
+              <span v-if="record.menuType === 5">
                 <a-tag color="green">链接</a-tag>{{ record.name }}
               </span>
-              <span v-if="record.resourceType === 6">
+              <span v-if="record.menuType === 6">
                 <a-tag color="purple">按钮</a-tag>{{ record.name }}
               </span>
             </a-tooltip>
           </template>
-          <template v-if="column.dataIndex === 'resourceType'">
-            <a-tag v-if="record.resourceType === 1" color="orange">模块</a-tag>
-            <a-tag v-if="record.resourceType === 2" color="cyan">目录</a-tag>
-            <a-tag v-if="record.resourceType === 3" color="blue">菜单</a-tag>
-            <a-tag v-if="record.resourceType === 4" color="gold">内链</a-tag>
-            <a-tag v-if="record.resourceType === 5" color="green">链接</a-tag>
-            <a-tag v-if="record.resourceType === 6" color="purple">按钮</a-tag>
+          <template v-if="column.dataIndex === 'menuType'">
+            <a-tag v-if="record.menuType === 1" color="orange">模块</a-tag>
+            <a-tag v-if="record.menuType === 2" color="cyan">目录</a-tag>
+            <a-tag v-if="record.menuType === 3" color="blue">菜单</a-tag>
+            <a-tag v-if="record.menuType === 4" color="gold">内链</a-tag>
+            <a-tag v-if="record.menuType === 5" color="green">链接</a-tag>
+            <a-tag v-if="record.menuType === 6" color="purple">按钮</a-tag>
           </template>
           <template v-if="column.dataIndex === 'icon'">
             <span v-if="record.icon && record.icon !== '#'" >
@@ -95,8 +95,7 @@
 </template>
 
 <script setup>
-  import roleApi from '@/api/system/roleApi'
-  import { ref } from "vue";
+  import roleApi from '@/api/system/roleApi';
   import { message } from "ant-design-vue";
   import { CloseOutlined, DeleteOutlined } from "@ant-design/icons-vue"
   import { useMenuStore } from '@/store/menu'
@@ -159,7 +158,6 @@
     {
       title: '按钮权限',
       dataIndex: 'buttonList',
-      resizable: true,
       ellipsis: true,
     }
   ]

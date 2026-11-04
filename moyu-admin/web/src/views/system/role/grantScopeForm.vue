@@ -109,9 +109,10 @@
 </template>
 
 <script setup>
-  import resourceApi from "@/api/system/resourceApi.js";
+  import menuApi from "@/api/system/menuApi.js";
   import orgApi from "@/api/system/orgApi.js";
-  import roleApi from '@/api/system/roleApi'
+  import roleApi from '@/api/system/roleApi';
+
   import { h, ref } from "vue";
   import { message } from "ant-design-vue";
   import { CloseOutlined, RedoOutlined, SearchOutlined } from "@ant-design/icons-vue"
@@ -145,8 +146,8 @@
 
   // 查询表单相关对象
   const queryFormRef = ref()
-  // resourceType=6表示按钮
-  const queryFormData = ref({ resourceType: 6 })
+  // menuTypeType=6表示按钮
+  const queryFormData = ref({ menuTypeType: 6 })
   // 模块列表
   const moduleList = ref([])
   // 当前选中模块id
@@ -230,7 +231,7 @@
   const initModuleList = async () => {
     if (!moduleId.value) {
       // 若无moduleId, 则查询module列表第一个module的code作为默认moduleId
-      const moduleRes = await resourceApi.moduleList()
+      const moduleRes = await menuApi.moduleList()
       moduleList.value = moduleRes.data
       moduleId.value = moduleList.value[0]?.code
     }

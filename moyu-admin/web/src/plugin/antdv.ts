@@ -13,7 +13,7 @@ export function setupAntdVue(app: App<Element>) {
   // 已自动按需引入,减少打包体积 https://antdv.com/docs/vue/introduce-cn
   // app.use(Antd)
 
-  // 全局注册所有 Ant Design 图标 (自动引入无法使用动态图标,如h(icon-name))
+  // 全局注册所有 Ant Design 图标 (自动引入无法使用动态图标,如h(icon-name)、<component :is="xxx">)
   for (const iconName in antdvIcons) {
     app.component(iconName, (antdvIcons as any)[iconName])
   }

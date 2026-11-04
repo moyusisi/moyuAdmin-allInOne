@@ -8,7 +8,7 @@
       <!-- 最上方导航 -->
       <NavBar />
       <!-- 多标签 -->
-       <TagsView v-if="tagsView" />
+      <TabsView v-if="tabsView" />
       <!-- 主要内容区域 -->
       <a-layout-content class="main-content-wrapper">
         <AppMain/>
@@ -20,16 +20,16 @@
 
 <script setup>
 import { notification, Button } from 'ant-design-vue'
-import { getLocalHash, checkHash } from '@/utils/version'
+import { getLocalVersion, getOnlineVersion } from '@/utils/version'
 import SideBar from "@/layout/components/SideBar/index.vue"
 import NavBar from "@/layout/components/NavBar/index.vue"
-import TagsView from "@/layout/components/TagsView/index.vue"
+import TabsView from "@/layout/components/TabsView/index.vue"
 import AppMain from "@/layout/components/AppMain/index.vue"
 import { useSettingsStore } from "@/store"
 
 const settingsStore = useSettingsStore()
-const tagsView = computed(() => {
-  return settingsStore.tagsView
+const tabsView = computed(() => {
+  return settingsStore.tabsView
 })
 
 onMounted(() => {
@@ -41,11 +41,12 @@ const updateVersion = () => {
   if (updateVersionOpen) {
     setTimeout(async () => {
       // 本地
-      let localVersion = getLocalHash()
+      let localVersion = getLocalVersion()
       // 线上
-      let onlineVersion = await checkHash()
-      // 如果不一样，提示更新
-      if (localVersion !== onlineVersion) {
+      let onlineVersion = await getOnlineVersion()
+      // 如果有新版本且不一样，提示更新
+      if (onlineVersion && localVersion !== onlineVersion) {
+        // 防止重复弹出更新提示
         if (document.querySelector('.notification-update-version')) {
           return
         }
@@ -53,18 +54,16 @@ const updateVersion = () => {
         notification.open({
           type: 'info',
           message: '发现新版本',
-          description: '检测到新版本，请刷新后使用',
+          description: '检测到新版本，请更新后使用',
           duration: 0,
-          class: 'notification-update-version',
           btn: () =>
               h(
                   Button,
                   {
                     type: 'primary',
-                    size: 'small',
                     onClick: () => {
                       notification.close(key)
-                      window.location.reload()
+                      window.location.reload(true)
                     }
                   },
                   { default: () => '立即更新' }

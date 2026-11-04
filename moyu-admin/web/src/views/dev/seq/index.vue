@@ -4,8 +4,8 @@
     <a-form ref="queryFormRef" :model="queryFormData">
       <a-row :gutter="24">
         <a-col :span="6">
-          <a-form-item name="keyword" label="序列器">
-            <a-input v-model:value="queryFormData.keyword" placeholder="搜索序列器" allowClear />
+          <a-form-item name="idKey" label="序列器">
+            <a-input v-model:value="queryFormData.idKey" placeholder="搜索序列器" allowClear />
           </a-form-item>
         </a-col>
         <a-col :span="6">
@@ -13,6 +13,7 @@
             <a-flex gap="small">
               <a-button type="primary" :icon="h(SearchOutlined)" @click="querySubmit">查询</a-button>
               <a-button :icon="h(RedoOutlined)" @click="reset">重置</a-button>
+              <a-button v-if="hasRole('ROOT') || hasPerm('dev:seq:inc')" type="primary" :icon="h(RiseOutlined)" @click="incSubmit">增长</a-button>
             </a-flex>
           </a-form-item>
         </a-col>
@@ -30,13 +31,16 @@
   import seqApi from '@/api/dev/seqApi.js'
 
   import { h, ref } from "vue"
-  import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined, CloudOutlined } from "@ant-design/icons-vue"
+  import { PlusOutlined, RiseOutlined, RedoOutlined, SearchOutlined, CloudOutlined } from "@ant-design/icons-vue"
   import configApi from "@/api/system/configApi.js";
   import { message } from "ant-design-vue";
+  import { hasAnyRole, hasPerm, hasRole } from "@/utils/permission"
 
   // 查询表单相关对象
   const queryFormRef = ref()
-  const queryFormData = ref({})
+  const queryFormData = ref({
+    idKey: ''
+  })
 
 
   /***** 表格相关对象 start *****/
@@ -87,7 +91,7 @@
       { type: 'seq', title: '序号', width: 50 },
       { field: 'idKey', title: '序列器', width: 300 },
       { field: 'idValue', title: '序列值', width: 300 },
-      { field: 'seq', title: '序列号' },
+      { field: 'sn', title: '序列号' },
     ],
   })
   /***** 表格相关对象 end *****/
@@ -102,6 +106,19 @@
     // query 当前页触发ajax.query
     gridRef.value?.commitProxy("reload")
   }
+
+  // 提交查询
+  const incSubmit = () => {
+    // 分页参数
+    let param = { prefix : queryFormData.value.idKey}
+    return seqApi.incSeq(param).then((res) => {
+      // res.data 为 list数组
+      return querySubmit()
+    }).catch((err) => {
+      console.error(err)
+    })
+  }
+
   // 重置
   const reset = () => {
     queryFormRef.value.resetFields()

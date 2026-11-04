@@ -8,4 +8,8 @@ export default {
   seqList(data) {
     return service.postForm('/api/seq/day/list', data)
   },
+  // 序列器递增
+  incSeq(data) {
+    return service.postForm('/api/seq/day/inc', data)
+  },
 }

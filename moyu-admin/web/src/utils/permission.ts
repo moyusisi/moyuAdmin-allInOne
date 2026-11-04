@@ -11,8 +11,6 @@ import { useUserStore } from '@/store/index.js'
 const userStore = useUserStore()
 
 // const { roles: userRoles = [], perms: userPerms = [] } = userStore.userInfo;
-const userRoles = userStore.userInfo?.roles ?? [];
-const userPerms = userStore.userInfo?.perms ?? [];
 
 /**
  * 检查是否有权限
@@ -20,6 +18,7 @@ const userPerms = userStore.userInfo?.perms ?? [];
  * @returns 是否有权限
  */
 export function hasPerm(value: string | string[]): boolean {
+  const userPerms = userStore.userInfo?.perms ?? [];
   return Array.isArray(value)
     ? hasAnyPerm(value)
     : userPerms.includes(value)
@@ -31,6 +30,7 @@ export function hasPerm(value: string | string[]): boolean {
  * @returns 是否有任一权限
  */
 export function hasAnyPerm(perms: string[]): boolean {
+  const userPerms = userStore.userInfo?.perms ?? [];
   return perms.some((perm: string) => {
     return userPerms.includes(perm)
   })
@@ -42,6 +42,7 @@ export function hasAnyPerm(perms: string[]): boolean {
  * @returns 是否有所有权限
  */
 export function hasAllPerms(perms: string[]): boolean {
+  const userPerms = userStore.userInfo?.perms ?? [];
   return perms.every((perm: string) => {
     return userPerms.includes(perm)
   })
@@ -53,6 +54,7 @@ export function hasAllPerms(perms: string[]): boolean {
  * @returns 是否有角色
  */
 export function hasRole(value: string | string[]): boolean {
+  const userRoles = userStore.userInfo?.roles ?? [];
   return Array.isArray(value)
     ? hasAnyRole(value)
     : userRoles.includes(value)
@@ -64,6 +66,7 @@ export function hasRole(value: string | string[]): boolean {
  * @returns 是否有任一角色
  */
 export function hasAnyRole(roles: string[]): boolean {
+  const userRoles = userStore.userInfo?.roles ?? [];
   return roles.some((role: string) => {
     return userRoles.includes(role)
   })
@@ -75,6 +78,7 @@ export function hasAnyRole(roles: string[]): boolean {
  * @returns 是否有所有角色
  */
 export function hasAllRoles(roles: string[]): boolean {
+  const userRoles = userStore.userInfo?.roles ?? [];
   return roles.every((role: string) => {
     return userRoles.includes(role)
   })

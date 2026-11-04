@@ -33,12 +33,12 @@
   import { ExclamationCircleOutlined, UserSwitchOutlined } from '@ant-design/icons-vue'
   import { Modal } from 'ant-design-vue'
   import { message } from 'ant-design-vue'
-  import { useMenuStore, useTagsViewStore, useUserStore } from '@/store/index.js'
+  import { useMenuStore, useTabsViewStore, useUserStore } from '@/store/index.js'
   import { useRoute, useRouter } from 'vue-router'
 
   const userStore = useUserStore()
   const menuStore = useMenuStore()
-  const tagsViewStore = useTagsViewStore()
+  const tabsViewStore = useTabsViewStore()
   const route = useRoute()
   const router = useRouter()
   const avatarImg = '/img/avatar.gif?' +new Date()
@@ -57,7 +57,7 @@
       await userStore.switchUserGroup(groupCode)
       message.loading('切换中...', 0.5)
       await menuStore.reloadRoutes()
-      tagsViewStore.initTags()
+      tabsViewStore.initTabs()
       router.push({ path: '/' })
       // window.location.href = '/index'
       message.success('切换成功')
@@ -77,7 +77,7 @@
         message.loading('退出中...', 0.5)
         userStore.logout().then(() => {
           menuStore.clear()
-          tagsViewStore.initTags()
+          tabsViewStore.initTabs()
           router.push(`/login?redirect=${route.fullPath}`);
           // router.push({ path: '/login' })
         }).catch((err) => {

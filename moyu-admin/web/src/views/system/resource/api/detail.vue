@@ -22,24 +22,18 @@
           </template>
           <a-row :gutter="24">
             <a-col :span="8">
-              <a-form-item name="apiType" label="接口类型" tooltip="" >
-                <a-tag v-if="formData.apiType === 1" color="blue">后端接口</a-tag>
-                <a-tag v-if="formData.apiType === 2" color="cyan">三方接口</a-tag>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
               <a-form-item name="name" label="接口名称" tooltip="">
                 <span>{{ formData.name }}</span>
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="code" label="权限标识" tooltip="权限标识/唯一标识">
-                <span><a-tag>{{ formData.code }}</a-tag></span>
+              <a-form-item name="path" label="接口地址" tooltip="">
+                <span>{{ formData.path }}</span>
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="path" label="接口地址" tooltip="">
-                <span>{{ formData.path }}</span>
+              <a-form-item name="code" label="权限标识" tooltip="权限标识/唯一标识">
+                <span><a-tag>{{ formData.code }}</a-tag></span>
               </a-form-item>
             </a-col>
             <a-col :span="8" v-if="formData.apiType === 1">

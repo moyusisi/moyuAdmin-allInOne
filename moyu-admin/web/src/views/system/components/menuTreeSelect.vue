@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import resourceApi from "@/api/system/resourceApi"
+import menuApi from "@/api/system/menuApi"
 
 import { TreeSelect } from "ant-design-vue"
 
@@ -61,7 +61,7 @@ onMounted(() => {
 // 加载左侧的树
 const loadTreeData = () => {
   // 获取当前登陆者的orgTree 获取所有组织机构可使用orgApi.orgTree
-  resourceApi.menuTreeSelector({}).then((res) => {
+  menuApi.menuTreeSelector({}).then((res) => {
     if (res.data !== null) {
       const moduleList = res.data
       if (props.moduleCode) {

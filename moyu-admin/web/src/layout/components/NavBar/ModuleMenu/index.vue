@@ -9,7 +9,7 @@
             :key="item.code"
             class="module-menu-item"
             @click="switchModule(item.code)"
-            :class="{ 'ant-menu-item-select': item.code === module }"
+            :class="{ 'ant-menu-item-select': item.code === moduleId }"
         >
           <template #icon>
             <component :is="item.meta.icon" />
@@ -28,7 +28,7 @@
                 :key="item.code"
                 class="module-menu-item"
                 @click="switchModule(item.code)"
-                :class="{ 'ant-menu-item-select': item.code === module }"
+                :class="{ 'ant-menu-item-select': item.code === moduleId }"
             >
               <template #icon>
                 <component :is="item.meta.icon" />
@@ -47,30 +47,30 @@
 <script setup>
   import { h, toRefs } from 'vue'
   import { useRoute, useRouter } from "vue-router";
-  import { useMenuStore, useSettingsStore, useTagsViewStore } from '@/store/index.js'
+  import { useMenuStore, useSettingsStore, useTabsViewStore } from '@/store/index.js'
   import { AppstoreOutlined, FullscreenOutlined, MenuUnfoldOutlined } from "@ant-design/icons-vue";
 
   const settingsStore = useSettingsStore()
-  const tagsViewStore = useTagsViewStore()
+  const tabsViewStore = useTabsViewStore()
   const menuStore = useMenuStore()
   const route = useRoute()
   const router = useRouter()
 
   // 缓存页面集合, 直接解构store中的同名字段
-  const { moduleList, module } = toRefs(menuStore);
+  const { moduleList, moduleId } = toRefs(menuStore);
   // module菜单是否打开
   const moduleOpen = computed(() => {
     return settingsStore.moduleOpen
   })
   // 选中的module
   const selectedKeys = computed(() => {
-    return [module.value]
+    return [moduleId.value]
   })
 
   // 切换模块
   const switchModule = (code) => {
     // 未变化不切换
-    if (module.value === code) {
+    if (moduleId.value === code) {
       return
     }
     // 路由到模块首页
@@ -86,7 +86,7 @@
     }
     // 路由到模块的首页
     menuStore.switchModule(code)
-    tagsViewStore.initTags()
+    tabsViewStore.initTabs()
     router.push({ path: moduleHome })
   }
 

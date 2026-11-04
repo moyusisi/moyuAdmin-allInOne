@@ -22,7 +22,7 @@
         <a-switch :checked="breadcrumbView" @change="toggleState('breadcrumbView')"/>
       </a-form-item>
       <a-form-item label="多标签">
-        <a-switch :checked="tagsView" @change="toggleState('tagsView')"/>
+        <a-switch :checked="tabsView" @change="toggleState('tabsView')"/>
       </a-form-item>
       <a-form-item label="折叠菜单">
         <a-switch :checked="menuCollapsed" @change="toggleState('menuCollapsed')"/>
@@ -65,8 +65,8 @@
   const breadcrumbView = computed(() => {
     return settingsStore.breadcrumbView
   })
-  const tagsView = computed(() => {
-    return settingsStore.tagsView
+  const tabsView = computed(() => {
+    return settingsStore.tabsView
   })
   const menuCollapsed = computed(() => {
     return settingsStore.menuCollapsed

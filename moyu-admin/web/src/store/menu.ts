@@ -23,10 +23,10 @@ export const useMenuStore = defineStore('menuStore', () => {
   const routes = ref<RouteRecordRaw[]>([]);
   const dynamicRouter = ref<boolean>(false)
   // 所有module的所有menu,用于保存后端返回的原始数据
-  const moduleList = ref([])
+  const moduleList = useStorage("MENU", []);
   // 当前使用的module
   // 侧边栏菜单是否排他展开
-  const module = useStorage("MODULE_ID", "");
+  const moduleId = useStorage("MODULE_ID", "");
   // 当前module的菜单(即module的子节点)
   const menuList = ref([])
 
@@ -35,11 +35,7 @@ export const useMenuStore = defineStore('menuStore', () => {
    * 初始化模块及菜单(优先本地，无则api获取)
    */
   const initModuleMenu = async () => {
-    // 优先获取本地数据
-    const menu = localStorage.getItem('MENU')
-    let localMenu = JSON.parse(menu as string)
-    if (localMenu) {
-      moduleList.value = localMenu
+    if (moduleList.value && moduleList.value.length > 0) {
       initMenuList()
     } else {
       // 本地无则从api获取
@@ -56,7 +52,6 @@ export const useMenuStore = defineStore('menuStore', () => {
       console.log("无任何菜单权限", res.data)
       res.data = []
     }
-    localStorage.setItem('MENU', JSON.stringify(res.data))
     moduleList.value = res.data
     initMenuList()
   };
@@ -65,12 +60,12 @@ export const useMenuStore = defineStore('menuStore', () => {
    * 初始化module对应的菜单menuList
    */
   function initMenuList() {
-    if (!module.value) {
+    if (!moduleId.value) {
       // @ts-ignore
-      module.value = moduleList.value[0]?.code
+      moduleId.value = moduleList.value[0]?.code
     }
     // @ts-ignore
-    const moduleItem = moduleList.value.find((item) => item.code === module.value)
+    const moduleItem = moduleList.value.find((item) => item.code === moduleId.value)
     // @ts-ignore
     menuList.value = moduleItem ? moduleItem.children : []
   }
@@ -79,7 +74,7 @@ export const useMenuStore = defineStore('menuStore', () => {
    * 清空菜单及路由数据
    */
   const switchModule = (moduleCode: string) => {
-    if (module.value === moduleCode) {
+    if (moduleId.value === moduleCode) {
       console.log("module未发生变化...")
       return
     }
@@ -90,7 +85,7 @@ export const useMenuStore = defineStore('menuStore', () => {
       return
     }
     // module赋值
-    module.value = moduleCode
+    moduleId.value = moduleCode
     // 加载module的菜单
     initMenuList()
   }
@@ -176,11 +171,6 @@ export const useMenuStore = defineStore('menuStore', () => {
     // 遍历所有菜单
     menus.forEach((menu) => {
       menu.meta = menu.meta ? menu.meta : {}
-      // 处理外部链接特殊路由
-      if (menu.meta.type === 'iframe') {
-        menu.meta.url = menu.path
-        menu.path = `/${menu.code}`
-      }
       // menu转路由对象
       const route: RouteRecordRaw = {
         name: menu.code,
@@ -243,7 +233,7 @@ export const useMenuStore = defineStore('menuStore', () => {
     routes,
     dynamicRouter,
     moduleList,
-    module,
+    moduleId,
     menuList,
     clear,
     switchModule,

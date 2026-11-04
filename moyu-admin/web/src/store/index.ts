@@ -11,6 +11,6 @@ export function setupStore(app: App<Element>) {
 export * from './settings'
 export * from './user'
 export * from './menu'
-export * from './tagsView'
+export * from './tabsView'
 export * from './search'
 export { store };

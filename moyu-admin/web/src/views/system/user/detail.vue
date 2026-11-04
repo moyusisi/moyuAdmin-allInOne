@@ -22,23 +22,13 @@
           </template>
           <a-row :gutter="24">
             <a-col :span="8">
-              <a-form-item name="account" label="账号" tooltip="账号" >
+              <a-form-item name="account" label="账号" tooltip="登陆账号" >
                 <span><a>{{ formData.account }}</a></span>
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="name" label="姓名" tooltip="" >
+              <a-form-item name="name" label="姓名" tooltip="真实姓名" >
                 <span>{{ formData.name }}</span>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="staffCode" label="员工编码" tooltip="" >
-                <span>{{ formData.staffCode }}</span>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="orgCode" label="直属组织" tooltip="">
-                <OrgTreeSelect :defaultValue="formData.orgCode" disabled/>
               </a-form-item>
             </a-col>
             <a-col :span="8">
@@ -51,8 +41,8 @@
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="birthday" label="出生日期" tooltip="" >
-                <span>{{ formData.birthday }}</span>
+              <a-form-item name="account" label="用户ID" tooltip="用户userId" >
+                <span>{{ formData.userId }}</span>
               </a-form-item>
             </a-col>
             <a-col :span="8">
@@ -76,16 +66,27 @@
               </a-form-item>
             </a-col>
             <a-col :span="8">
-              <a-form-item name="entryDate" label="入职日期" tooltip="" >
-                <span>{{ formData.entryDate }}</span>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
               <a-form-item name="status" label="账号状态" tooltip="" >
                 <span>
                   <a-tag v-if="formData.status === 0" color="green">正常</a-tag>
                   <a-tag v-else>已停用</a-tag>
                 </span>
+              </a-form-item>
+            </a-col>
+
+            <a-col :span="8">
+              <a-form-item name="staffCode" label="员工编码" tooltip="" >
+                <span>{{ formData.staffCode }}</span>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="orgCode" label="直属组织" tooltip="">
+                <OrgTreeSelect :defaultValue="formData.orgCode" disabled/>
+              </a-form-item>
+            </a-col>
+            <a-col :span="8">
+              <a-form-item name="entryDate" label="入职日期" tooltip="" >
+                <span>{{ formData.entryDate }}</span>
               </a-form-item>
             </a-col>
           </a-row>

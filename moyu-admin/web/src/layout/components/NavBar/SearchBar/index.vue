@@ -68,7 +68,7 @@ const pool = computed(() => {
 
 // 这份数据是展示在搜索面板下面的
 const resultsList = computed(() => {
-  return results.value.length === 0 || searchText.value === '' ? pool.value : results.value
+  return searchText.value === '' ? pool.value : results.value
 })
 
 const inputRef = ref()
@@ -96,12 +96,11 @@ const closeSearch = () => {
 // 根据 pool 更新 fuse 实例
 const fuse = computed(() => {
   return new Fuse(pool.value, {
-    shouldSort: true, // 按分数对结果列表进行排序
-    threshold: 0.3, // 什么时候放弃
-    location: 0, // 大致位置
-    distance: 5, // 接近程度
-    minMatchCharLength: 1, // 匹配长度
-    keys: ['name', 'namePinyin', 'namePinyinFirst']
+    keys: ['name', 'fullName', 'namePinyin', 'namePinyinFirst'], // 搜索哪些属性
+    threshold: 0.3, // 模糊匹配阈值，精确编码0，名称推荐0.3，长文本0.6
+    ignoreLocation: true, // 忽略匹配位置的影响，消除位置扣分
+    minMatchCharLength: 1, // 匹配行为控制，匹配长度，只匹配长度≥该值的片段
+    shouldSort: true, // 输出结果控制，是否按匹配得分从优到劣排序
   })
 })
 

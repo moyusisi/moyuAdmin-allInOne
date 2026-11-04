@@ -159,7 +159,7 @@ import codegenApi from '@/api/dev/codegenApi'
 import { message, TreeSelect } from 'ant-design-vue'
 import { required } from "@/utils/formRules.js";
 import { useSettingsStore } from "@/store/index.js";
-import resourceApi from "@/api/system/resourceApi.js";
+import menuApi from "@/api/system/menuApi.js";
 
 const settingsStore = useSettingsStore()
 
@@ -229,12 +229,6 @@ const columns = [
     title: '列表显示',
     align: 'center',
     dataIndex: 'showInList',
-    width: 50
-  },
-  {
-    title: '省略提示',
-    align: 'center',
-    dataIndex: 'ellipsis',
     width: 50
   },
   {
@@ -370,7 +364,7 @@ const onClose = () => {
 // 加载数据
 const loadData = async () => {
   // 获取菜单树
-  const menuTreeList = await resourceApi.menuTreeSelector({ })
+  const menuTreeList = await menuApi.menuTreeSelector({ })
   treeData.value = menuTreeList.data
   defaultExpandedKeys.value = [treeData.value[0]?.code]
   // 获取详细信息

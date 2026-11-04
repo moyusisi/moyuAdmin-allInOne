@@ -25,7 +25,7 @@ export interface AppSettings {
   // 是否展示面包屑
   breadcrumbView: boolean,
   // 是否展示多标签页
-  tagsView: boolean,
+  tabsView: boolean,
   // 是否启用水印
   watermarkEnabled: boolean,
 
@@ -39,10 +39,12 @@ export interface AppSettings {
  * 页签对象
  */
 export interface TagView {
-  /** 页签名称 */
-  name: string;
   /** 页签标题 */
   title: string;
+  /** 页签名称 */
+  name: string;
+  /** 路由name */
+  routeName?: string;
   /** 页签路由路径 */
   path: string;
   /** 包括 路径、查询参数和哈希值的完整地址 */
@@ -57,6 +59,8 @@ export interface TagView {
   noCache?: boolean;
   /** 路由查询参数 */
   query?: any;
+  /** 路由属性参数 */
+  params?: any
 }
 
 /**

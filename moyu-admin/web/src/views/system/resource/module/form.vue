@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-  import resourceApi from '@/api/system/resourceApi.js'
+  import menuApi from '@/api/system/menuApi.js'
 
   import { required } from '@/utils/formRules'
   import { message } from "ant-design-vue"
@@ -72,13 +72,14 @@
   // 是否为编辑
   const edit = ref(false)
   // 表单数据
-  const formRef = ref()
-  const formData = ref({
-    resourceType: 1,
+  const defaultFormData = {
+    menuType: 1,
     visible: 1,
     sortNum: 99,
     component: 'Layout'
-  })
+  }
+  const formRef = ref()
+  const formData = ref({...defaultFormData})
   const dataLoading = ref(false)
   const submitLoading = ref(false)
   const iconSelectorRef = ref()
@@ -99,7 +100,10 @@
   }
   // 关闭抽屉
   const onClose = () => {
+    // 重置校验字段
     formRef.value.resetFields()
+    // 关闭时恢复默认值
+    formData.value = { ...defaultFormData }
     visible.value = false
   }
   // 加载数据
@@ -108,7 +112,7 @@
     // 组装请求参数
     let param = { id: row.id }
     // 获取模块信息
-    resourceApi.resourceDetail(param).then((res) => {
+    menuApi.menuDetail(param).then((res) => {
       formData.value = res.data
     }).finally(() => {
       dataLoading.value = false
@@ -129,9 +133,9 @@
     formRef.value.validate().then(() => {
       submitLoading.value = true
       // formData.value 加工处理 add/edit
-      let fun = resourceApi.addResource
+      let fun = menuApi.addMenu
       if (edit.value) {
-        fun = resourceApi.editResource
+        fun = menuApi.editMenu
       }
       // add/edit 发送不同请求
       fun(formData.value).then((res) => {

@@ -34,13 +34,13 @@
             <span>{{ text }}</span>
           </a-tooltip>
         </template>
-        <template v-if="column.dataIndex === 'resourceType'">
-          <a-tag v-if="node.resourceType === 1" color="orange">模块</a-tag>
-          <a-tag v-if="node.resourceType === 2" color="cyan">目录</a-tag>
-          <a-tag v-if="node.resourceType === 3" color="blue">菜单</a-tag>
-          <a-tag v-if="node.resourceType === 4" color="gold">内链</a-tag>
-          <a-tag v-if="node.resourceType === 5" color="green">链接</a-tag>
-          <a-tag v-if="node.resourceType === 6" color="purple">按钮</a-tag>
+        <template v-if="column.dataIndex === 'menuType'">
+          <a-tag v-if="node.menuType === 1" color="orange">模块</a-tag>
+          <a-tag v-if="node.menuType === 2" color="cyan">目录</a-tag>
+          <a-tag v-if="node.menuType === 3" color="blue">菜单</a-tag>
+          <a-tag v-if="node.menuType === 4" color="gold">内链</a-tag>
+          <a-tag v-if="node.menuType === 5" color="green">链接</a-tag>
+          <a-tag v-if="node.menuType === 6" color="purple">按钮</a-tag>
         </template>
         <template v-if="column.dataIndex === 'code'">
           <!-- 唯一键点击查看详情 -->
@@ -74,7 +74,7 @@
           <span v-else />
         </template>
         <template v-if="column.dataIndex === 'visible'">
-          <span v-if="node.resourceType !== 6" >
+          <span v-if="node.menuType !== 6" >
             <a-tag v-if="node.visible === 1" color="green">显示</a-tag>
             <a-tag v-else>隐藏</a-tag>
           </span>
@@ -85,14 +85,14 @@
             <template #split>
               <a-divider type="vertical" />
             </template>
-            <a-tooltip v-if="node.resourceType === 2" title="添加菜单">
+            <a-tooltip v-if="node.menuType === 2" title="添加菜单">
               <a style="color:#53C61D;" @click="formRef.onOpen(null, module, 3, node.code)"><PlusSquareOutlined /></a>
             </a-tooltip>
-            <a-tooltip v-else-if="node.resourceType === 3" title="添加按钮">
-              <a style="color:#53C61D;" @click="buttonFormRef.onOpen(null, module, node.code)"><PlusSquareOutlined /></a>
+            <a-tooltip v-else-if="node.menuType === 3" title="添加按钮">
+              <a style="color:#53C61D;" @click="formRef.onOpen(null, module, 6, node.code)"><PlusSquareOutlined /></a>
             </a-tooltip>
-            <a-tooltip v-if="node.resourceType === 6" title="编辑">
-              <a @click="buttonFormRef.onOpen(node, module)"><FormOutlined /></a>
+            <a-tooltip v-if="node.menuType === 6" title="编辑">
+              <a @click="formRef.onOpen(node, module)"><FormOutlined /></a>
             </a-tooltip>
             <a-tooltip v-else title="编辑">
               <a @click="formRef.onOpen(node, module)"><FormOutlined /></a>
@@ -108,19 +108,17 @@
     </MTable>
   </a-card>
   <Form ref="formRef" @successful="handleSuccess" />
-  <ButtonForm ref="buttonFormRef" @successful="handleSuccess" />
   <Detail ref="detailRef"/>
 </template>
 
 <script setup>
-  import resourceApi from '@/api/system/resourceApi.js'
+  import menuApi from '@/api/system/menuApi.js'
 
   import { h, ref } from "vue"
   import { useRoute, useRouter } from "vue-router";
   import { PlusOutlined, DeleteOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import Form from './form.vue'
-  import ButtonForm from './btnForm.vue'
   import BatchDeleteButton from '@/components/BatchDeleteButton/index.vue'
   import MTable from "@/components/MTable/index.vue"
   import Detail from "@/views/system/resource/detail.vue"
@@ -135,7 +133,6 @@
   const moduleId = ref()
   // 其他页面操作
   const formRef = ref()
-  const buttonFormRef = ref()
   const detailRef = ref()
 
   /***** 表格相关对象 start *****/
@@ -153,7 +150,7 @@
     },
     {
       title: '类型',
-      dataIndex: 'resourceType',
+      dataIndex: 'menuType',
       align: 'center',
       width: 80
     },
@@ -216,7 +213,7 @@
   const init = async () => {
     if (!moduleId.value) {
       // 若无moduleId, 则查询module列表第一个module的code作为默认moduleId
-      const moduleRes = await resourceApi.moduleList()
+      const moduleRes = await menuApi.moduleList()
       moduleList.value = moduleRes.data
       module.value = moduleRes.data.length > 0 ? moduleRes.data[0] : null
       moduleId.value = module.value.code
@@ -229,12 +226,12 @@
     if (!moduleId.value) {
       await init()
       param.module = moduleId.value
-      const treeRes = await resourceApi.menuTree(param)
+      const treeRes = await menuApi.menuTree(param)
       return treeRes.data ? treeRes.data : []
     } else {
       param.module = moduleId.value
       // menuTree获取到的data中的id和parentId均为code
-      const treeRes = await resourceApi.menuTree(param)
+      const treeRes = await menuApi.menuTree(param)
       return treeRes.data ? treeRes.data : []
     }
   }
@@ -252,7 +249,7 @@
   // 单个删除
   const deleteMenu = (node) => {
     let data = { codes: [node.code] }
-    resourceApi.deleteMenuTree(data).then((res) => {
+    menuApi.deleteMenuTree(data).then((res) => {
       message.success(res.message)
       tableRef.value.refresh()
     })
@@ -264,7 +261,7 @@
       return
     }
     let data = { codes: selectedRowKeys.value }
-    resourceApi.deleteMenuTree(data).then((res) => {
+    menuApi.deleteMenuTree(data).then((res) => {
       message.success(res.message)
       tableRef.value.refresh()
     })

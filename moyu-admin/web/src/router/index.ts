@@ -3,6 +3,7 @@ import systemRouter from './systemRouter'
 import NProgress from '@/utils/nprogress'
 import settings from "@/config/settings.ts"
 import { useMenuStore, useUserStore } from "@/store";
+import { versionUpdate } from "@/utils/version.ts";
 
 export const constRoutes: RouteRecordRaw[] = [...systemRouter]
 
@@ -87,7 +88,13 @@ router.afterEach((to, from) => {
 
 router.onError((error) => {
   NProgress.done()
-  console.error(error)
+  console.error({ message: '路由错误', description: error.message })
+  // 匹配动态导入chunk资源加载失败的报错
+  const isChunkLoadError = error.message.includes('Failed to fetch dynamically imported module')
+  if (isChunkLoadError) {
+    // 资源加载失败，执行版本校验更新
+    versionUpdate()
+  }
 })
 
 export default router

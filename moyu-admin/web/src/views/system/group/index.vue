@@ -9,7 +9,7 @@
           </a-form-item>
         </a-col>
         <a-col :span="6">
-          <a-form-item name="code" label="唯一编码">
+          <a-form-item name="code" label="岗位编码">
             <a-input v-model:value="queryFormData.code" placeholder="请输入编码" allowClear />
           </a-form-item>
         </a-col>
@@ -56,7 +56,7 @@
             <a-divider type="vertical" />
           </template>
           <a-tooltip title="菜单透视">
-            <a @click="showMenuTree(row)"><EyeOutlined /></a>
+            <a @click="showMenuTree(row)"><SearchOutlined /></a>
           </a-tooltip>
           <a-tooltip title="岗位角色">
             <a style="color:#1980FF;" @click="groupRoleRef.onOpen(row)"><DeploymentUnitOutlined /></a>
@@ -121,6 +121,11 @@
     pagerConfig: {
       enabled: true,
     },
+    // 排序配置项
+    sortConfig: {
+      // 服务端排序
+      remote: true,
+    },
     // 数据代理配置
     proxyConfig: {
       // 获取响应的值配置
@@ -130,10 +135,19 @@
         // 只对 pager-config 配置时有效，响应结果中获取分页的属性（分页场景）
         total: "total",
       },
+      // 启用排序请求代理
+      sort: true,
       ajax: {
         query: ({ page, sort, sorts, filters, form }) => {
+          const sortItem = sorts[0] || {}
+          // console.log(sortItem)
           // 默认接收 Promise<{ result: [], page: { total: 100 } }>
-          return loadData({ pageNum: page.currentPage, pageSize: page.pageSize })
+          return loadData({
+            pageNum: page.currentPage,
+            pageSize: page.pageSize,
+            sortField: sortItem.field,
+            sortOrder: sortItem.order
+          })
         },
         delete: ({ body, form }) => {
           // 删除已选
@@ -146,7 +160,7 @@
     columns: [
       { type: 'checkbox', width: 50 },
       { field: 'name', title: '岗位名称', width: 150 },
-      { field: 'code', title: '唯一编码', width: 150, slots: { default: 'code' } },
+      { field: 'code', title: '岗位编码', width: 150, slots: { default: 'code' } },
       { field: 'orgName', title: '所属组织机构', width: 200 },
       { field: 'status', title: '状态', width: 80, slots: { default: 'status' } },
       { field: 'sortNum', title: '排序顺序', width: 80 },

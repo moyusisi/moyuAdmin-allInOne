@@ -17,7 +17,7 @@
     <template #trigger>
       <div class="side-menu-footer">
         <SettingBar/>
-        <span>MY管理系统</span>
+        <span>MoyuAdmin</span>
         <Hamburger/>
       </div>
     </template>
@@ -90,7 +90,7 @@ function showModuleMenu() {
     }
   })
   // 有moduleCode则切换，否则保持原样
-  if (moduleCode && moduleCode !== menuStore.module) {
+  if (moduleCode && moduleCode !== menuStore.moduleId) {
     // 路由到模块的首页
     menuStore.switchModule(moduleCode)
   }

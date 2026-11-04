@@ -3,7 +3,7 @@
     <a-form ref="queryFormRef" :model="queryFormData">
       <a-row :gutter="24">
         <a-col :span="6">
-          <a-form-item name="code" label="唯一编码">
+          <a-form-item name="code" label="角色编码">
             <a-input v-model:value="queryFormData.code" placeholder="请输入编码" allowClear />
           </a-form-item>
         </a-col>
@@ -76,7 +76,7 @@
 <script setup>
   import roleApi from '@/api/system/roleApi'
 
-  import { h, ref } from "vue"
+  import { h, ref } from "vue";
   import { PlusOutlined, DeleteOutlined, RedoOutlined, SearchOutlined, UserAddOutlined, PicLeftOutlined, ApiOutlined, FormOutlined } from "@ant-design/icons-vue"
   import { message } from "ant-design-vue"
   import { hasPerm, hasRole } from "@/utils/permission"
@@ -130,12 +130,12 @@
       { type: 'checkbox', width: 50 },
       { type: 'seq', width: 50 },
       { field: 'name', title: '角色名称', width: 200 },
-      { field: 'code', title: '唯一编码', width: 200, slots: { default: 'code' } },
+      { field: 'code', title: '角色编码', width: 200, slots: { default: 'code' } },
       { field: 'status', title: '状态', width: 100, slots: { default: 'status' } },
       { field: 'sortNum', title: '排序顺序', width: 100 },
       { field: 'remark', title: '备注' },
       { field: 'updateTime', title: '更新时间', width: 170 },
-      { field: 'action', title: '操作', width: 200, slots: { default: 'action' } },
+      { field: 'action', title: '操作', width: 250, slots: { default: 'action' } },
     ],
     // 工具栏配置
     toolbarConfig: {

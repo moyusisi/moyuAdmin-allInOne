@@ -16,20 +16,15 @@ export const useSettingsStore = defineStore('settings', () => {
 	// 是否显示面包屑
 	const breadcrumbView = useStorage("breadcrumbView", config.breadcrumbView);
 	// 是否显示标签视图
-	const tagsView = useStorage("tagsView", config.tagsView);
+	const tabsView = useStorage("tabsView", config.tabsView);
 	// 是否启用水印
 	const watermarkEnabled = useStorage("watermarkEnabled", config.watermarkEnabled);
 	// 主题 light|dark
 	const theme = useStorage("theme", config.theme);
-	// 主题颜色
-	const themeColor = useStorage("themeColor", config.themeColor);
 
 	// actions
 	const setTheme = (value) => {
 		theme.value = value
-	}
-	const setThemeColor = (value) => {
-		themeColor.value = value
 	}
 
 	// 值为bool类型的配置组成的开关map
@@ -38,7 +33,7 @@ export const useSettingsStore = defineStore('settings', () => {
 		menuCollapsed,
 		sideUniqueOpen,
 		breadcrumbView,
-		tagsView,
+		tabsView,
 		watermarkEnabled,
 	};
 
@@ -57,12 +52,10 @@ export const useSettingsStore = defineStore('settings', () => {
 		menuCollapsed,
 		sideUniqueOpen,
 		breadcrumbView,
-		tagsView,
+		tabsView,
 		watermarkEnabled,
 		theme,
-		themeColor,
 		setTheme,
-		setThemeColor,
 		toggleConfig
 	};
 });

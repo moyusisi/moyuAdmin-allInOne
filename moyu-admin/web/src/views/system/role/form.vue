@@ -51,7 +51,6 @@
 <script setup>
   import roleApi from '@/api/system/roleApi'
 
-  import { required } from '@/utils/formRules'
   import { message } from "ant-design-vue"
   import { useSettingsStore } from "@/store"
 

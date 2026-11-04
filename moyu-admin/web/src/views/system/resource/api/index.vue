@@ -29,8 +29,13 @@
           </a-form-item>
         </a-col>
         <a-col :span="6" v-if="showMore">
-          <a-form-item name="apiType" label="接口类型">
-            <a-select v-model:value="queryFormData.apiType" placeholder="请选择接口类型" :options="apiTypeOptions" allowClear />
+          <a-form-item name="hasScope" label="数据范围">
+            <a-select v-model:value="queryFormData.hasScope" placeholder="请选择" :options="hasScopeOptions" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="6" v-if="showMore">
+          <a-form-item name="remark" label="备注">
+            <a-input v-model:value="queryFormData.remark" placeholder="搜索备注" allowClear />
           </a-form-item>
         </a-col>
       </a-row>
@@ -47,14 +52,11 @@
         </a-space>
       </template>
       <!-- 字段插槽 -->
-      <template #name="{row, rowIndex, column, columnIndex}">
-        <a @click="detailRef.onOpen(row)">{{ row.name }}</a>
+      <template #code="{row, rowIndex, column, columnIndex}">
+        <a @click="detailRef.onOpen(row)">{{ row.code }}</a>
       </template>
       <template #path="{row, rowIndex, column, columnIndex}">
         <a-tag v-if="row.path" :bordered="false">{{ row.path }}</a-tag>
-      </template>
-      <template #code="{row, rowIndex, column, columnIndex}">
-        <a-tag v-if="row.code" :bordered="false">{{ row.code }}</a-tag>
       </template>
       <template #hasScope="{row, rowIndex, column, columnIndex}">
           <a-tag v-if="row.hasScope === 1" color="green">有</a-tag>
@@ -100,10 +102,10 @@ const queryFormRef = ref()
 const queryFormData = ref({})
 // 是否展示更多搜索条件
 const showMore = ref(false)
-// 接口类型(字典 1后端接口 2三方接口)
-const apiTypeOptions = [
-  { label: "后端接口", value: 1 },
-  { label: "三方接口", value: 2 }
+// 是否有数据范围(字典 0无 1有)
+const hasScopeOptions = [
+  { label: "无", value: 0 },
+  { label: "有", value: 1 }
 ]
 // 其他页面操作
 const formRef = ref()
@@ -156,9 +158,9 @@ const gridOptions = ref({
   columns: [
     { type: 'checkbox', width: 50 },
     { type: 'seq', width: 50 },
-    { field: 'name', title: '接口名称', width: 150, slots: { default: 'name' } },
+    { field: 'code', title: '唯一标识', width: 200, sortable: true, slots: { default: 'code' } },
+    { field: 'name', title: '接口名称', width: 150 },
     { field: 'path', title: '接口地址', width: 200, sortable: true, slots: { default: 'path' } },
-    { field: 'code', title: '接口标识', width: 200, sortable: true, slots: { default: 'code' } },
     { field: 'hasScope', title: '数据范围', width: 100, sortable: true, slots: { default: 'hasScope' } },
     { field: 'remark', title: '备注' },
     { field: 'updateTime', title: '修改时间', width: 170 },
