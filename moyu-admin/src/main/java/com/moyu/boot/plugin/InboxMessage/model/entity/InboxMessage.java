@@ -1,6 +1,11 @@
 package com.moyu.boot.plugin.inboxMessage.model.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.moyu.boot.common.mybatis.handler.CustomInsertListener;
+import com.moyu.boot.common.mybatis.handler.CustomUpdateListener;
+import com.mybatisflex.annotation.Column;
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,15 +19,13 @@ import java.util.Date;
  */
 @Getter
 @Setter
-@TableName("inbox_message")
+@Table(value = "inbox_message", onInsert = CustomInsertListener.class, onUpdate = CustomUpdateListener.class)
 public class InboxMessage {
-
     /**
      * 主键id
      */
-    @TableId(value = "id", type = IdType.AUTO)
+    @Id(keyType = KeyType.Auto)
     private Long id;
-
     /**
      * 唯一编码
      */
@@ -51,10 +54,9 @@ public class InboxMessage {
      * 过期时间
      */
     private Date expireTime;
-
     /**
      * 删除标志（0未删除  1已删除）
      */
-    @TableField(fill = FieldFill.INSERT)
+    @Column(isLogicDelete = true)
     private Integer deleted;
 }

@@ -1,19 +1,30 @@
 package com.moyu.boot.system.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.moyu.boot.common.core.model.BaseEntity;
+import com.moyu.boot.common.mybatis.handler.CustomInsertListener;
+import com.moyu.boot.common.mybatis.handler.CustomUpdateListener;
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 用户角色权限关系表
+ * 用户角色权限关系表(sys_relation)实体对象
  *
- * @TableName sys_relation
+ * @author moyusisi
+ * @since 2025-10-22
  */
 @Getter
 @Setter
-@TableName(value = "sys_relation")
+@Table(value = "sys_relation", onInsert = CustomInsertListener.class, onUpdate = CustomUpdateListener.class)
 public class SysRelation extends BaseEntity {
+    /**
+     * 主键id
+     */
+    @Id(keyType = KeyType.Auto)
+    private Long id;
+
     /**
      * 对象ID
      */

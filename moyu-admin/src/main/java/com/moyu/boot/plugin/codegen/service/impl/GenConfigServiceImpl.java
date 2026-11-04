@@ -13,15 +13,11 @@ import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLColumnDefinition;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
 import com.alibaba.druid.util.JdbcConstants;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.base.CaseFormat;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
-import com.moyu.boot.common.core.model.PageData;
 import com.moyu.boot.common.core.model.BaseEntity;
+import com.moyu.boot.common.core.model.PageData;
 import com.moyu.boot.plugin.codeGen.config.CodegenProperties;
 import com.moyu.boot.plugin.codeGen.enums.FormTypeEnum;
 import com.moyu.boot.plugin.codeGen.enums.JavaTypeEnum;
@@ -34,10 +30,14 @@ import com.moyu.boot.plugin.codeGen.model.entity.GenField;
 import com.moyu.boot.plugin.codeGen.model.param.GenConfigParam;
 import com.moyu.boot.plugin.codeGen.model.vo.CodePreviewVO;
 import com.moyu.boot.plugin.codeGen.model.vo.FieldConfigVO;
-import com.moyu.boot.plugin.codeGen.model.vo.GenConfigInfo;
+import com.moyu.boot.plugin.codeGen.model.vo.GenConfigVO;
 import com.moyu.boot.plugin.codeGen.model.vo.TableMetaData;
 import com.moyu.boot.plugin.codeGen.service.GenConfigService;
 import com.moyu.boot.plugin.codeGen.service.GenFieldService;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.QueryWrapper;
+import com.mybatisflex.core.row.DbChain;
+import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -79,47 +79,47 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
     private TransactionTemplate transactionTemplate;
 
     @Override
-    public PageData<GenConfig> pageList(GenConfigParam param) {
+    public PageData<GenConfigVO> pageList(GenConfigParam param) {
         // 查询条件
-        LambdaQueryWrapper<GenConfig> queryWrapper = Wrappers.lambdaQuery(GenConfig.class)
+        QueryWrapper queryWrapper = QueryWrapper.create()
                 // 关键词搜索(表表名、表描述)
-                .like(StrUtil.isNotBlank(param.getSearchKey()), GenConfig::getTableName, param.getSearchKey())
-                .or()
-                .like(StrUtil.isNotBlank(param.getSearchKey()), GenConfig::getTableComment, param.getSearchKey())
-                .orderByDesc(GenConfig::getUpdateTime);
+                .like(GenConfig::getTableName, param.getSearchKey(), StrUtil.isNotBlank(param.getSearchKey()))
+                .or(qw -> qw.like(GenConfig::getTableComment, param.getSearchKey()), StrUtil.isNotBlank(param.getSearchKey()))
+                .orderBy(GenConfig::getUpdateTime, false);
         // 分页查询
-        Page<GenConfig> page = new Page<>(param.getPageNum(), param.getPageSize());
-        Page<GenConfig> rolePage = this.page(page, queryWrapper);
-        return new PageData<>(rolePage.getTotal(), rolePage.getRecords());
+        Page<GenConfigVO> page = Page.of(param.getPageNum(), param.getPageSize());
+        Page<GenConfigVO> voPage = this.pageAs(page, queryWrapper, GenConfigVO.class);
+        return new PageData<>(voPage.getTotalRow(), voPage.getRecords());
     }
 
     @Override
-    public GenConfigInfo configDetail(GenConfigParam param) {
+    public GenConfigVO configDetail(GenConfigParam param) {
         // 查询表生成配置
-        LambdaQueryWrapper<GenConfig> queryWrapper = Wrappers.lambdaQuery(GenConfig.class)
-                .eq(ObjectUtil.isNotEmpty(param.getId()), GenConfig::getId, param.getId())
-                .eq(ObjectUtil.isNotEmpty(param.getTableName()), GenConfig::getTableName, param.getTableName());
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .eq(GenConfig::getId, param.getId(), ObjectUtil.isNotEmpty(param.getId()))
+                .eq(GenConfig::getTableName, param.getTableName(), ObjectUtil.isNotEmpty(param.getTableName()));
         // id、tableName 均为唯一标识
         GenConfig genConfig = this.getOne(queryWrapper);
         if (genConfig == null) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定数据");
         }
         // 字段配置
-        List<GenField> fieldList = genFieldService.list(Wrappers.lambdaQuery(GenField.class)
-                .eq(GenField::getTableId, genConfig.getId()).orderByAsc(GenField::getFieldSort));
+        List<GenField> fieldList = genFieldService.list(QueryWrapper.create()
+                .eq(GenField::getTableId, genConfig.getId()).orderBy(GenField::getFieldSort, true));
         // 组装VO
         return buildGenConfigInfo(genConfig, fieldList);
     }
 
     @Override
-    public void saveConfig(GenConfigInfo genConfigInfo) {
-        List<FieldConfigVO> fieldConfigList = genConfigInfo.getFieldConfigList();
+    public void saveConfig(GenConfigVO genConfigVO) {
+        List<FieldConfigVO> fieldConfigList = genConfigVO.getFieldConfigList();
         if (CollectionUtil.isEmpty(fieldConfigList)) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "字段配置不能为空");
         }
 
         // 新生成的表配置
-        GenConfig genConfig = buildGenTable(genConfigInfo);
+        GenConfig genConfig = buildGenTable(genConfigVO);
+        genConfig.setUpdateTime(new Date());
         this.saveOrUpdate(genConfig);
 
         // 组装实体
@@ -140,17 +140,30 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
         // 删除实体配置
         this.removeByIds(idSet);
         // 删除字段配置
-        genFieldService.remove(Wrappers.lambdaQuery(GenField.class).in(GenField::getTableId, idSet));
+        genFieldService.remove(QueryWrapper.create().in(GenField::getTableId, idSet));
     }
 
     @Override
     public PageData<TableMetaData> tablePageList(GenConfigParam param) {
-        Page<TableMetaData> page = new Page<>(param.getPageNum(), param.getPageSize());
         // 设置排除的表
-        param.setExcludeTables(codegenProperties.getExcludeTables());
+        List<String> excludeList = new ArrayList<>(codegenProperties.getExcludeTables());
+        // 查已有的
+        List<String> tableList = this.listAs(QueryWrapper.create().select(GenConfig::getTableName), String.class);
+        excludeList.addAll(tableList);
         //  分页查询
-        Page<TableMetaData> tablePage = dataBaseMapper.getTablePage(page, param);
-        return new PageData<>(tablePage.getTotal(), tablePage.getRecords());
+        Page<TableMetaData> page = Page.of(param.getPageNum(), param.getPageSize());
+        String key = "%" + param.getSearchKey() + "%";
+        QueryWrapper queryWrapper = DbChain.table("information_schema", "tables").as("t1")
+                .select("t1.TABLE_NAME as tableName", "t1.TABLE_COMMENT as tableComment", "t1.CREATE_TIME as createTime", "t1.UPDATE_TIME as updateTime")
+                .where("t1.TABLE_SCHEMA = (SELECT DATABASE())")
+                .and("t1.table_type = 'BASE TABLE'")
+                .and(qw -> qw.or("t1.TABLE_NAME LIKE ?", key).or("t1.TABLE_COMMENT LIKE ?", key),
+                        ObjectUtil.isNotEmpty(param.getSearchKey()))
+                .notIn("t1.TABLE_NAME", excludeList, ObjectUtil.isNotEmpty(excludeList))
+                .orderBy("t1.CREATE_TIME", false);
+
+        Page<TableMetaData> tablePage = this.pageAs(page, queryWrapper, TableMetaData.class);
+        return new PageData<>(tablePage.getTotalRow(), tablePage.getRecords());
     }
 
     @Override
@@ -258,7 +271,7 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
                 }
             }
             // 删除字段配置
-            genFieldService.remove(Wrappers.lambdaQuery(GenField.class).eq(GenField::getTableId, genConfig.getId()));
+            genFieldService.remove(QueryWrapper.create().eq(GenField::getTableId, genConfig.getId()));
             // 写入新字段配置
             genFieldService.saveBatch(genFieldList);
         }
@@ -267,7 +280,7 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
     @Override
     public List<CodePreviewVO> previewCode(GenConfigParam param) {
         // 查询表配置
-        GenConfig genConfig = this.getOne(Wrappers.lambdaQuery(GenConfig.class).eq(GenConfig::getId, param.getId()));
+        GenConfig genConfig = this.getOne(QueryWrapper.create().eq(GenConfig::getId, param.getId()));
         if (genConfig == null) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定数据");
         }
@@ -278,7 +291,7 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
     public byte[] downloadZip(GenConfigParam param) {
         Assert.isTrue(param.getIds().size() <= 10, "下载内容过多，每次生成不能超过10个");
         // 查询表配置
-        List<GenConfig> genConfigList = this.list(Wrappers.lambdaQuery(GenConfig.class).in(GenConfig::getId, param.getIds()));
+        List<GenConfig> genConfigList = this.list(QueryWrapper.create().in(GenConfig::getId, param.getIds()));
         if (CollectionUtils.isEmpty(genConfigList)) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "暂无数据");
         }
@@ -306,7 +319,7 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
         // code代码列表
         List<CodePreviewVO> codeList = new ArrayList<>();
         // 字段配置
-        List<GenField> fieldList = genFieldService.list(Wrappers.lambdaQuery(GenField.class).eq(GenField::getTableId, genConfig.getId()));
+        List<GenField> fieldList = genFieldService.list(QueryWrapper.create().eq(GenField::getTableId, genConfig.getId()));
         if (CollectionUtil.isEmpty(fieldList)) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定数据");
         }
@@ -460,6 +473,8 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
         genConfig.setModuleName(codegenProperties.getModuleName());
         genConfig.setAuthor(codegenProperties.getAuthor());
         genConfig.setSourceType("TABLE");
+        genConfig.setCreateTime(new Date());
+        genConfig.setUpdateTime(new Date());
         return genConfig;
     }
 
@@ -571,22 +586,22 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
     /**
      * 根据配置生成配置信息 entity -> vo
      */
-    private GenConfigInfo buildGenConfigInfo(GenConfig genConfig, List<GenField> fieldList) {
+    private GenConfigVO buildGenConfigInfo(GenConfig genConfig, List<GenField> fieldList) {
         if (genConfig == null) {
             return null;
         }
-        GenConfigInfo genConfigInfo = new GenConfigInfo();
-        genConfigInfo.setId(genConfig.getId());
-        genConfigInfo.setTableName(genConfig.getTableName());
-        genConfigInfo.setTableComment(genConfig.getTableComment());
-        genConfigInfo.setPackageName(genConfig.getPackageName());
-        genConfigInfo.setModuleName(genConfig.getModuleName());
-        genConfigInfo.setEntityName(genConfig.getEntityName());
-        genConfigInfo.setEntityDesc(genConfig.getEntityDesc());
-        genConfigInfo.setParentMenuCode(genConfig.getParentMenuCode());
-        genConfigInfo.setAuthor(genConfig.getAuthor());
-        genConfigInfo.setDetailOpenType(genConfig.getDetailOpenType());
-        genConfigInfo.setSourceType(genConfig.getSourceType());
+        GenConfigVO genConfigVO = new GenConfigVO();
+        genConfigVO.setId(genConfig.getId());
+        genConfigVO.setTableName(genConfig.getTableName());
+        genConfigVO.setTableComment(genConfig.getTableComment());
+        genConfigVO.setPackageName(genConfig.getPackageName());
+        genConfigVO.setModuleName(genConfig.getModuleName());
+        genConfigVO.setEntityName(genConfig.getEntityName());
+        genConfigVO.setEntityDesc(genConfig.getEntityDesc());
+        genConfigVO.setParentMenuCode(genConfig.getParentMenuCode());
+        genConfigVO.setAuthor(genConfig.getAuthor());
+        genConfigVO.setDetailOpenType(genConfig.getDetailOpenType());
+        genConfigVO.setSourceType(genConfig.getSourceType());
         List<FieldConfigVO> fieldConfigList = new ArrayList<>();
         if (CollectionUtil.isNotEmpty(fieldList)) {
             for (GenField field : fieldList) {
@@ -594,29 +609,29 @@ public class GenConfigServiceImpl extends ServiceImpl<GenConfigMapper, GenConfig
                 fieldConfigList.add(fieldConfigVO);
             }
         }
-        genConfigInfo.setFieldConfigList(fieldConfigList);
-        return genConfigInfo;
+        genConfigVO.setFieldConfigList(fieldConfigList);
+        return genConfigVO;
     }
 
     /**
      * 生成代码配置表 vo -> entity
      */
-    private GenConfig buildGenTable(GenConfigInfo genConfigInfo) {
-        if (genConfigInfo == null) {
+    private GenConfig buildGenTable(GenConfigVO genConfigVO) {
+        if (genConfigVO == null) {
             return null;
         }
         GenConfig genConfig = new GenConfig();
-        genConfig.setId(genConfigInfo.getId());
-        genConfig.setTableName(genConfigInfo.getTableName());
-        genConfig.setTableComment(genConfigInfo.getTableComment());
-        genConfig.setPackageName(genConfigInfo.getPackageName());
-        genConfig.setModuleName(genConfigInfo.getModuleName());
-        genConfig.setEntityName(genConfigInfo.getEntityName());
-        genConfig.setEntityDesc(genConfigInfo.getEntityDesc());
-        genConfig.setParentMenuCode(genConfigInfo.getParentMenuCode());
-        genConfig.setAuthor(genConfigInfo.getAuthor());
-        genConfig.setDetailOpenType(genConfigInfo.getDetailOpenType());
-        genConfig.setSourceType(genConfigInfo.getSourceType());
+        genConfig.setId(genConfigVO.getId());
+        genConfig.setTableName(genConfigVO.getTableName());
+        genConfig.setTableComment(genConfigVO.getTableComment());
+        genConfig.setPackageName(genConfigVO.getPackageName());
+        genConfig.setModuleName(genConfigVO.getModuleName());
+        genConfig.setEntityName(genConfigVO.getEntityName());
+        genConfig.setEntityDesc(genConfigVO.getEntityDesc());
+        genConfig.setParentMenuCode(genConfigVO.getParentMenuCode());
+        genConfig.setAuthor(genConfigVO.getAuthor());
+        genConfig.setDetailOpenType(genConfigVO.getDetailOpenType());
+        genConfig.setSourceType(genConfigVO.getSourceType());
         return genConfig;
     }
 

@@ -1,9 +1,14 @@
 package com.moyu.boot.system.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moyu.boot.common.core.model.BaseEntity;
+import com.moyu.boot.common.mybatis.handler.CustomInsertListener;
+import com.moyu.boot.common.mybatis.handler.CustomUpdateListener;
+import com.mybatisflex.annotation.Column;
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -11,15 +16,22 @@ import java.time.LocalDate;
 import java.util.Date;
 
 /**
- * 用户信息表
+ * 用户信息表(sys_user)实体对象
  *
- * @TableName sys_user
+ * @author moyusisi
+ * @since 2025-10-22
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName(value = "sys_user")
+@Table(value = "sys_user", onInsert = CustomInsertListener.class, onUpdate = CustomUpdateListener.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SysUser extends BaseEntity {
+
+    /**
+     * 主键id
+     */
+    @Id(keyType = KeyType.Auto)
+    private Long id;
 
     /**
      * 用户唯一标识
@@ -56,11 +68,6 @@ public class SysUser extends BaseEntity {
      * 性别(字典 0未知 1男 2女)
      */
     private Integer gender;
-
-    /**
-     * 生日
-     */
-    private LocalDate birthday;
 
     /**
      * 邮箱
@@ -108,34 +115,15 @@ public class SysUser extends BaseEntity {
     private String orgPath;
 
     /**
-     * 登陆IP
-     */
-    private String loginIp;
-
-    /**
-     * 登陆时间
-     */
-    private Date loginTime;
-
-    /**
-     * 上次登陆IP
-     */
-    private String lastLoginIp;
-
-    /**
-     * 上次登陆时间
-     */
-    private Date lastLoginTime;
-
-    /**
-     * 上次密码更新时间
-     */
-    private Date pwdUpdateTime;
-
-    /**
      * 状态（0正常 1停用）
      */
     private Integer status;
+
+    /**
+     * 删除标志（0未删除  1已删除）
+     */
+    @Column(isLogicDelete = true)
+    private Integer deleted;
 
     /**
      * 备注

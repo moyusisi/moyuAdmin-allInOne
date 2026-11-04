@@ -1,6 +1,5 @@
 package com.moyu.boot.authN.service.impl;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.moyu.boot.authN.service.UserDetailsService;
 import com.moyu.boot.common.authZ.model.LoginUser;
 import com.moyu.boot.common.core.enums.DataScopeEnum;
@@ -10,6 +9,7 @@ import com.moyu.boot.system.model.entity.SysUser;
 import com.moyu.boot.system.service.SysGroupService;
 import com.moyu.boot.system.service.SysRoleService;
 import com.moyu.boot.system.service.SysUserService;
+import com.mybatisflex.core.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +43,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public SysUser loadUserByUsername(String username) {
         log.info("加载{}的用户信息", username);
         // 如果auth与user属于不同的服务，则这里应该通过远程调用获取用户信息
-        SysUser sysUser = sysUserService.getOne(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getAccount, username));
+        SysUser sysUser = sysUserService.getOne(QueryWrapper.create().eq(SysUser::getAccount, username));
         if (sysUser == null) {
             log.info("登录用户:{}不存在", username);
             throw new BusinessException(ResultCodeEnum.USER_ACCOUNT_NOT_EXIST);
@@ -64,7 +64,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .username(sysUser.getAccount())
                 .name(sysUser.getName())
                 .orgCode(sysUser.getOrgCode())
-                // 角色集合(默认角色+直接拥有的角色)
+                // 角色集合(默认岗位=直接拥有的角色)
                 .roles(roleSet)
                 // 权限标识集合(仅接口,无菜单)
                 .perms(sysRoleService.rolePerms(roleSet))

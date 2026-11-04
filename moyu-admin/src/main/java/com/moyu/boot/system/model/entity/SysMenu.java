@@ -1,0 +1,102 @@
+package com.moyu.boot.system.model.entity;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.moyu.boot.common.core.model.BaseEntity;
+import com.moyu.boot.common.mybatis.handler.CustomInsertListener;
+import com.moyu.boot.common.mybatis.handler.CustomUpdateListener;
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * 菜单权限表(sys_menu)实体对象
+ *
+ * @author moyusisi
+ * @since 2025-10-22
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Table(value = "sys_menu", onInsert = CustomInsertListener.class, onUpdate = CustomUpdateListener.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class SysMenu extends BaseEntity {
+    /**
+     * 主键id
+     */
+    @Id(keyType = KeyType.Auto)
+    private Long id;
+
+    /**
+     * 父编码
+     */
+    private String parentCode;
+
+    /**
+     * 名称
+     */
+    private String name;
+
+    /**
+     * 编码
+     */
+    private String code;
+
+    /**
+     * 菜单类型（字典 1模块 2目录 3菜单 4内链 5外链 6按钮）
+     *
+     * @see com.moyu.boot.system.enums.MenuTypeEnum
+     */
+    private Integer menuType;
+
+    /**
+     * 路由地址
+     */
+    private String path;
+
+    /**
+     * 组件地址
+     */
+    private String component;
+
+    /**
+     * 权限标识
+     */
+    private String permission;
+
+    /**
+     * 图标
+     */
+    private String icon;
+
+    /**
+     * 是否可见（0不可见 1可见）
+     */
+    private Integer visible;
+
+    /**
+     * 归属模块
+     */
+    private String module;
+
+    /**
+     * 排序顺序
+     */
+    private Integer sortNum;
+
+    /**
+     * 扩展信息
+     */
+    private String extJson;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
+    /**
+     * 删除标志（0未删除  1已删除）
+     */
+    private Integer deleted;
+
+}

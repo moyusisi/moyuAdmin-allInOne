@@ -1,7 +1,12 @@
 package com.moyu.boot.system.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.moyu.boot.common.core.model.BaseEntity;
+import com.moyu.boot.common.mybatis.handler.CustomInsertListener;
+import com.moyu.boot.common.mybatis.handler.CustomUpdateListener;
+import com.mybatisflex.annotation.Column;
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,9 +18,13 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@TableName("sys_api")
+@Table(value = "sys_api", onInsert = CustomInsertListener.class, onUpdate = CustomUpdateListener.class)
 public class SysApi extends BaseEntity {
-
+    /**
+     * 主键id
+     */
+    @Id(keyType = KeyType.Auto)
+    private Long id;
     /**
      * 接口名称
      */
@@ -33,10 +42,6 @@ public class SysApi extends BaseEntity {
      */
     private Integer hasScope;
     /**
-     * 接口类型（字典 1后端接口 2三方接口）
-     */
-    private Integer apiType;
-    /**
      * 扩展信息
      */
     private String extJson;
@@ -44,5 +49,10 @@ public class SysApi extends BaseEntity {
      * 备注
      */
     private String remark;
+    /**
+     * 删除标志（0未删除  1已删除）
+     */
+    @Column(isLogicDelete = true)
+    private Integer deleted;
 
 }

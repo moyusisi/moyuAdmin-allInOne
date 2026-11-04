@@ -1,14 +1,14 @@
 package com.moyu.boot.system.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.moyu.boot.system.model.entity.SysRole;
+import com.mybatisflex.core.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
+ * 针对表sys_role(角色信息表)的数据库操作Mapper
+ *
  * @author shisong
- * @description 针对表【sys_role(角色信息表)】的数据库操作Mapper
- * @createDate 2024-12-15 20:49:43
- * @Entity com.moyu.system.sys.model.entity.SysRole
+ * @since 2024-12-25 20:35:45
  */
 @Mapper
 public interface SysRoleMapper extends BaseMapper<SysRole> {

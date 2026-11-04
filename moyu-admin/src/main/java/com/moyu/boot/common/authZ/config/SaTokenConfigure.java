@@ -3,17 +3,18 @@ package com.moyu.boot.common.authZ.config;
 import cn.dev33.satoken.config.SaTokenConfig;
 import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.context.model.SaStorage;
+import cn.dev33.satoken.exception.FirewallCheckException;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.filter.SaServletFilter;
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import cn.dev33.satoken.stp.StpLogic;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.strategy.SaFirewallStrategy;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.extra.servlet.ServletUtil;
 import com.google.gson.Gson;
 import com.moyu.boot.common.authZ.constant.AuthConstants;
 import com.moyu.boot.common.authZ.model.LoginUser;
-import com.moyu.boot.common.authZ.service.TokenService;
 import com.moyu.boot.common.authZ.util.ExceptionWrapperUtils;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.model.Result;
@@ -23,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,8 +44,6 @@ public class SaTokenConfigure {
 
     @Resource
     private AuthProperties properties;
-    @Resource
-    private TokenService tokenService;
 
     // Sa-Token 参数配置，此配置会与配置文件中的配置合并(代码配置优先) 参考文档：https://sa-token.cc/doc.html#/use/config
     @Resource
@@ -112,10 +112,15 @@ public class SaTokenConfigure {
 
                 // 异常处理函数：过滤器中抛出的异常无法进入全局@ExceptionHandler
                 .setError(e -> {
-                    log.info("===== 进入Filter层异常处理 =====");
                     // 获取原始请求对象
                     HttpServletRequest request = (HttpServletRequest) SaHolder.getRequest().getSource();
                     HttpServletResponse response = (HttpServletResponse) SaHolder.getResponse().getSource();
+                    if (e instanceof NotLoginException) {
+//                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        log.info("===== 进入Filter层异常处理，鉴权未登录:{} =====", e.getMessage());
+                    } else {
+                        log.error("===== 进入Filter层异常处理 =====", e);
+                    }
                     return filterErrorHandler(request, response, e);
                 })
 
@@ -133,6 +138,16 @@ public class SaTokenConfigure {
                 });
     }
 
+    @PostConstruct
+    public void saTokenPostConstruct() {
+        SaFirewallStrategy.instance.registerHookToFirst((req, res, extArg) -> {
+            // requestPath 为null空指针情况，提前处理
+            if (req.getRequestPath() == null) {
+                throw new FirewallCheckException("非法请求：null");
+            }
+        });
+    }
+
     /**
      * 处理Filter层的异常
      */
@@ -142,6 +157,8 @@ public class SaTokenConfigure {
         if (e instanceof NotLoginException) {
             // 处理登录异常，区分未认证的具体场景
             result = ExceptionWrapperUtils.handleNotLogin((NotLoginException) e);
+        } else {
+            log.error("认证鉴权异常", e);
         }
         // 设置响应头
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

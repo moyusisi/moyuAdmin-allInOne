@@ -1,8 +1,9 @@
 package com.moyu.boot.common.authZ.model;
 
+import cn.dev33.satoken.json.SaJsonType;
+import com.moyu.boot.common.core.enums.DataScopeEnum;
 import lombok.*;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,8 +19,7 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginUser implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class LoginUser implements SaJsonType {
 
     /**
      * 用户id
@@ -69,12 +69,12 @@ public class LoginUser implements Serializable {
      * 数据范围信息
      **/
     @Data
-    public static class DataScopeInfo {
+    public static class DataScopeInfo implements SaJsonType {
 
         /**
          * 数据权限(字典 0无限制 1仅本人数据 2仅本机构 3本机构及以下 4本公司及以下 5自定义)
          *
-         * @see com.moyu.boot.common.core.enums.DataScopeEnum
+         * @see DataScopeEnum
          */
         private Integer dataScope;
 

@@ -1,18 +1,18 @@
 package com.moyu.boot.plugin.codeGen.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.moyu.boot.common.core.model.PageData;
 import com.moyu.boot.plugin.codeGen.model.entity.GenConfig;
 import com.moyu.boot.plugin.codeGen.model.param.GenConfigParam;
 import com.moyu.boot.plugin.codeGen.model.vo.CodePreviewVO;
-import com.moyu.boot.plugin.codeGen.model.vo.GenConfigInfo;
+import com.moyu.boot.plugin.codeGen.model.vo.GenConfigVO;
 import com.moyu.boot.plugin.codeGen.model.vo.TableMetaData;
+import com.mybatisflex.core.service.IService;
 
 import java.util.List;
 import java.util.Set;
 
 /**
- * 针对表【gen_config(代码生成实体配置表)】的数据库操作Service
+ * 代码生成实体配置表服务类Service
  *
  * @author shisong
  * @since 2025-09-14
@@ -22,17 +22,17 @@ public interface GenConfigService extends IService<GenConfig> {
     /**
      * 分页获取记录列表
      */
-    PageData<GenConfig> pageList(GenConfigParam param);
+    PageData<GenConfigVO> pageList(GenConfigParam param);
 
     /**
      * 查询代码配置详情(包括字段配置)
      */
-    GenConfigInfo configDetail(GenConfigParam param);
+    GenConfigVO configDetail(GenConfigParam param);
 
     /**
      * 保存代码生成配置(包括字段配置)
      */
-    void saveConfig(GenConfigInfo genConfigInfo);
+    void saveConfig(GenConfigVO genConfigVO);
 
     /**
      * 通过ids删除记录(包括字段配置)

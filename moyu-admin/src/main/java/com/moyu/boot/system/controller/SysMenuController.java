@@ -1,0 +1,137 @@
+package com.moyu.boot.system.controller;
+
+import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.hutool.core.lang.Assert;
+import cn.hutool.core.lang.tree.Tree;
+import cn.hutool.core.util.ObjectUtil;
+import com.moyu.boot.common.core.annotation.Log;
+import com.moyu.boot.common.core.annotation.SysLog;
+import com.moyu.boot.common.core.model.PageData;
+import com.moyu.boot.common.core.model.Result;
+import com.moyu.boot.system.model.param.SysMenuParam;
+import com.moyu.boot.system.model.vo.SysMenuVO;
+import com.moyu.boot.system.service.SysMenuService;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * 菜单资源控制器
+ *
+ * @author shisong
+ * @since 2024-12-11
+ */
+@Log(jsonLog = true)
+@RestController
+@RequestMapping("/api/sys/menu")
+public class SysMenuController {
+
+
+    @Resource
+    private SysMenuService sysMenuService;
+
+    /**
+     * 资源列表
+     */
+    @PostMapping("/list")
+    public Result<List<SysMenuVO>> list(@RequestBody SysMenuParam resourceParam) {
+        List<SysMenuVO> list = sysMenuService.list(resourceParam);
+        return Result.success(list);
+    }
+
+    /**
+     * 资源分页列表
+     */
+    @Log(jsonLog = true, response = false)
+    @SysLog(module = "system", logType = 2, value = "查询资源列表")
+//    @SaCheckPermission("sys:menu:page")
+    @PostMapping("/page")
+    public Result<PageData<SysMenuVO>> pageList(@RequestBody SysMenuParam resourceParam) {
+        Assert.isTrue(ObjectUtil.isAllNotEmpty(resourceParam.getPageNum(), resourceParam.getPageSize()), "分页参数pageNum,pageSize都不能为空");
+        PageData<SysMenuVO> list = sysMenuService.pageList(resourceParam);
+        return Result.success(list);
+    }
+
+    /**
+     * 获取资源树(可指定module)
+     */
+    @SysLog(module = "system", logType = 2, value = "获取资源树")
+//    @SaCheckPermission("sys:menu:tree")
+    @Log(jsonLog = true, response = false)
+    @PostMapping("/tree")
+    public Result<List<Tree<String>>> tree(@RequestBody SysMenuParam resourceParam) {
+        List<Tree<String>> treeList = sysMenuService.tree(resourceParam);
+        return Result.success(treeList);
+    }
+
+    /**
+     * 获取资源详情
+     */
+    @SysLog(module = "system", logType = 2, value = "查询资源详情")
+//    @SaCheckPermission("sys:menu:detail")
+    @PostMapping("/detail")
+    public Result<SysMenuVO> detail(@RequestBody SysMenuParam resourceParam) {
+        Assert.isTrue(!ObjectUtil.isAllEmpty(resourceParam.getId(), resourceParam.getCode()), "id和code不能同时为空");
+        return Result.success(sysMenuService.detail(resourceParam));
+    }
+
+    /**
+     * 添加资源
+     */
+    @SysLog(module = "system", logType = 2, value = "添加资源")
+    @SaCheckPermission(value = "sys:menu:add", orRole = "ROOT")
+    @PostMapping("/add")
+    public Result<String> add(@RequestBody SysMenuParam resourceParam) {
+        sysMenuService.add(resourceParam);
+        return Result.success();
+    }
+
+    /**
+     * 删除资源
+     */
+    @SysLog(module = "system", logType = 2, value = "删除资源")
+    @SaCheckPermission(value = "sys:menu:delete", orRole = "ROOT")
+    @PostMapping("/delete")
+    public Result<String> delete(@RequestBody SysMenuParam resourceParam) {
+        Assert.notEmpty(resourceParam.getIds(), "删除列表ids不能为空");
+        sysMenuService.deleteByIds(resourceParam);
+        return Result.success();
+    }
+
+    /**
+     * 删除资源树,会集联删除
+     */
+    @SysLog(module = "system", logType = 2, value = "集联删除资源树")
+    @SaCheckPermission(value = "sys:menu:deleteTree", orRole = "ROOT")
+    @PostMapping("/deleteTree")
+    public Result<String> deleteTree(@RequestBody SysMenuParam resourceParam) {
+        Assert.notEmpty(resourceParam.getCodes(), "删除列表codes不能为空");
+        sysMenuService.deleteTree(resourceParam);
+        return Result.success();
+    }
+
+    /**
+     * 编辑资源
+     */
+    @SysLog(module = "system", logType = 2, value = "修改资源信息")
+    @SaCheckPermission(value = "sys:menu:edit", orRole = "ROOT")
+    @PostMapping("/edit")
+    public Result<String> edit(@RequestBody SysMenuParam resourceParam) {
+        Assert.isTrue(!ObjectUtil.isAllEmpty(resourceParam.getId(), resourceParam.getCode()), "id和code不能同时为空");
+        sysMenuService.update(resourceParam);
+        return Result.success();
+    }
+
+    /**
+     * 获取菜单树选择器
+     */
+    @PostMapping("/menuTreeSelector")
+    public Result<List<Tree<String>>> menuTreeSelector(@RequestBody SysMenuParam resourceParam) {
+        return Result.success(sysMenuService.menuTreeSelector(resourceParam));
+    }
+
+}

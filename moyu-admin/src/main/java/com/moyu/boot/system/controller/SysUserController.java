@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 用户控制器
@@ -61,7 +62,7 @@ public class SysUserController {
     @SysLog(module = "system", logType = 2, value = "新增用户", response = true)
     @SaCheckPermission(value = "sys:user:add", orRole = "ROOT")
     @PostMapping("/add")
-    public Result<String> add(@Validated @RequestBody SysUserParam sysUserParam) {
+    public Result<?> add(@Validated @RequestBody SysUserParam sysUserParam) {
         sysUserService.add(sysUserParam);
         return Result.success();
     }
@@ -72,7 +73,7 @@ public class SysUserController {
     @SysLog(module = "system", logType = 2, value = "删除用户", response = true)
     @SaCheckPermission(value = "sys:user:delete", orRole = "ROOT")
     @PostMapping("/delete")
-    public Result<String> delete(@RequestBody SysUserParam sysUserParam) {
+    public Result<?> delete(@RequestBody SysUserParam sysUserParam) {
         Assert.notEmpty(sysUserParam.getIds(), "删除列表ids不能为空");
         sysUserService.deleteByIds(sysUserParam);
         return Result.success();
@@ -113,4 +114,13 @@ public class SysUserController {
         return Result.success();
     }
 
+    /**
+     * 获取用户选择下拉列表
+     */
+    @SaCheckPermission(value = "sys:user:selector")
+    @PostMapping("/userSelector")
+    public Result<List<SysUserVO>> userSelector(@RequestBody SysUserParam userParam) {
+        List<SysUserVO> list = sysUserService.userSelector(userParam);
+        return Result.success(list);
+    }
 }

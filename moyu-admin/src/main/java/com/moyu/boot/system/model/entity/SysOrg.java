@@ -1,21 +1,34 @@
 package com.moyu.boot.system.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.moyu.boot.common.core.model.BaseEntity;
+import com.moyu.boot.common.mybatis.handler.CustomInsertListener;
+import com.moyu.boot.common.mybatis.handler.CustomUpdateListener;
+import com.moyu.boot.system.enums.OrgTypeEnum;
+import com.mybatisflex.annotation.Column;
+import com.mybatisflex.annotation.Id;
+import com.mybatisflex.annotation.KeyType;
+import com.mybatisflex.annotation.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 组织机构表
+ * 组织机构表(sys_org)实体对象
  *
- * @TableName sys_org
+ * @author moyusisi
+ * @since 2025-10-22
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName(value = "sys_org")
+@Table(value = "sys_org", onInsert = CustomInsertListener.class, onUpdate = CustomUpdateListener.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SysOrg extends BaseEntity {
+    /**
+     * 主键id
+     */
+    @Id(keyType = KeyType.Auto)
+    private Long id;
+
     /**
      * 父编码
      */
@@ -31,7 +44,7 @@ public class SysOrg extends BaseEntity {
     /**
      * 组织机构类型(字典 1公司组织 2部门机构 3虚拟节点)
      *
-     * @see com.moyu.boot.system.enums.OrgTypeEnum
+     * @see OrgTypeEnum
      */
     private Integer orgType;
     /**
@@ -58,4 +71,9 @@ public class SysOrg extends BaseEntity {
      * 备注
      */
     private String remark;
+    /**
+     * 删除标志（0未删除  1已删除）
+     */
+    @Column(isLogicDelete = true)
+    private Integer deleted;
 }

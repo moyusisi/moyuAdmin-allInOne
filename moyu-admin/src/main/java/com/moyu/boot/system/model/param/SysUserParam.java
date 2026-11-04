@@ -35,10 +35,6 @@ public class SysUserParam extends PageParam {
      * 指定的account集合
      */
     private Set<String> codeSet;
-    /**
-     * 搜索关键词
-     */
-    private String searchKey;
 
     //********** db中存在的字段 **********//
     /**
@@ -79,11 +75,6 @@ public class SysUserParam extends PageParam {
      */
     @NotNull(message = "用户性别gender不能为空")
     private Integer gender;
-    /**
-     * 生日
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date birthday;
     /**
      * 邮箱
      */

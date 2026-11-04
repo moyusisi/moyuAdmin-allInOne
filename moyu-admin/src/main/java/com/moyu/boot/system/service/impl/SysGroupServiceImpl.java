@@ -3,24 +3,20 @@ package com.moyu.boot.system.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.tree.Tree;
-import cn.hutool.core.lang.tree.TreeUtil;
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Strings;
-import com.moyu.boot.common.authZ.util.LoginUserUtils;
-import com.moyu.boot.common.core.enums.DataScopeEnum;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
+import com.moyu.boot.common.core.enums.SortOrderEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
 import com.moyu.boot.common.core.model.BaseEntity;
 import com.moyu.boot.common.core.model.PageData;
-import com.moyu.boot.system.constant.SysConstants;
+import com.moyu.boot.common.mybatis.util.DataScopeHelper;
 import com.moyu.boot.system.enums.RelationTypeEnum;
+import com.moyu.boot.system.enums.StatusEnum;
 import com.moyu.boot.system.mapper.SysGroupMapper;
 import com.moyu.boot.system.model.entity.SysGroup;
+import com.moyu.boot.system.model.entity.SysOrg;
 import com.moyu.boot.system.model.entity.SysRelation;
 import com.moyu.boot.system.model.entity.SysUser;
 import com.moyu.boot.system.model.param.SysGroupParam;
@@ -31,6 +27,10 @@ import com.moyu.boot.system.model.vo.SysGroupVO;
 import com.moyu.boot.system.model.vo.SysRoleVO;
 import com.moyu.boot.system.model.vo.SysUserVO;
 import com.moyu.boot.system.service.*;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.QueryWrapper;
+import com.mybatisflex.core.update.UpdateChain;
+import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -66,21 +66,27 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
     @Override
     public List<SysGroup> list(SysGroupParam param) {
         // 查询条件
-        LambdaQueryWrapper<SysGroup> queryWrapper = Wrappers.lambdaQuery(SysGroup.class);
+        QueryWrapper queryWrapper = QueryWrapper.create();
         // 指定name查询
-        queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysGroup::getName, param.getName());
+        queryWrapper.like(SysGroup::getName, param.getName(), ObjectUtil.isNotEmpty(param.getName()));
         // 指定code查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysGroup::getCode, param.getCode());
+        queryWrapper.eq(SysGroup::getCode, param.getCode(), ObjectUtil.isNotEmpty(param.getCode()));
         // 指定codeSet集合查询
-        queryWrapper.in(ObjectUtil.isNotEmpty(param.getCodeSet()), SysGroup::getCode, param.getCodeSet());
+        queryWrapper.in(SysGroup::getCode, param.getCodeSet(), ObjectUtil.isNotEmpty(param.getCodeSet()));
         // 指定orgCode查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getOrgCode()), SysGroup::getOrgCode, param.getOrgCode());
+        queryWrapper.eq(SysGroup::getOrgCode, param.getOrgCode(), ObjectUtil.isNotEmpty(param.getOrgCode()));
         // 指定status查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getStatus()), SysGroup::getStatus, param.getStatus());
+        queryWrapper.eq(SysGroup::getStatus, param.getStatus(), ObjectUtil.isNotEmpty(param.getStatus()));
         // 仅查询未删除的
         queryWrapper.eq(SysGroup::getDeleted, 0);
         // 指定排序
-        queryWrapper.orderByAsc(SysGroup::getSortNum);
+        if (ObjectUtil.isAllNotEmpty(param.getSortField(), param.getSortOrder())) {
+            // 检查排序方式
+            SortOrderEnum.validate(param.getSortOrder());
+            queryWrapper.orderBy(StrUtil.toUnderlineCase(param.getSortField()), param.getSortOrder().equals(SortOrderEnum.ASC.getValue()));
+        } else {
+            queryWrapper.orderBy(SysGroup::getSortNum, true);
+        }
         // 查询
         List<SysGroup> groupList = this.list(queryWrapper);
         return groupList;
@@ -89,54 +95,41 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
     @Override
     public PageData<SysGroupVO> pageList(SysGroupParam param) {
         // 查询条件
-        LambdaQueryWrapper<SysGroup> queryWrapper = Wrappers.lambdaQuery(SysGroup.class);
+        QueryWrapper queryWrapper = QueryWrapper.create();
         // 指定name查询
-        queryWrapper.like(ObjectUtil.isNotEmpty(param.getName()), SysGroup::getName, param.getName());
+        queryWrapper.like(SysGroup::getName, param.getName(), ObjectUtil.isNotEmpty(param.getName()));
         // 指定code查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysGroup::getCode, param.getCode());
+        queryWrapper.eq(SysGroup::getCode, param.getCode(), ObjectUtil.isNotEmpty(param.getCode()));
         // 指定codeSet集合查询
-        queryWrapper.in(ObjectUtil.isNotEmpty(param.getCodeSet()), SysGroup::getCode, param.getCodeSet());
+        queryWrapper.in(SysGroup::getCode, param.getCodeSet(), ObjectUtil.isNotEmpty(param.getCodeSet()));
         // 指定orgCode查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getOrgCode()), SysGroup::getOrgCode, param.getOrgCode());
+        queryWrapper.eq(SysGroup::getOrgCode, param.getOrgCode(), ObjectUtil.isNotEmpty(param.getOrgCode()));
         // 指定status查询
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getStatus()), SysGroup::getStatus, param.getStatus());
+        queryWrapper.eq(SysGroup::getStatus, param.getStatus(), ObjectUtil.isNotEmpty(param.getStatus()));
         // 仅查询未删除的
         queryWrapper.eq(SysGroup::getDeleted, 0);
         // 指定排序
-        queryWrapper.orderByAsc(SysGroup::getSortNum);
-        // 非ROOT则限制数据权限
-        if (!LoginUserUtils.isRoot()) {
-            // 指定的列名
-            Integer dataScope = LoginUserUtils.getDataScope();
-            Set<String> scopeSet = LoginUserUtils.getScopes();
-            if (DataScopeEnum.SELF.getCode().equals(dataScope)) {
-                String username = LoginUserUtils.getUsername();
-                queryWrapper.eq(SysGroup::getCreateBy, username);
-            } else if (DataScopeEnum.ORG.getCode().equals(dataScope)) {
-                String orgCode = LoginUserUtils.getOrgCode();
-                queryWrapper.eq(SysGroup::getOrgCode, orgCode);
-            } else if (DataScopeEnum.ORG_CHILD.getCode().equals(dataScope)) {
-                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet);
-            } else if (DataScopeEnum.COMPANY.getCode().equals(dataScope)) {
-                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet);
-            } else if (DataScopeEnum.ORG_DEFINE.getCode().equals(dataScope)) {
-                queryWrapper.in(ObjectUtil.isNotEmpty(scopeSet), SysGroup::getOrgCode, scopeSet);
-            }
-            log.debug("数据权限为:{}, 已追加过滤条件", DataScopeEnum.getByCode(dataScope));
+        if (ObjectUtil.isAllNotEmpty(param.getSortField(), param.getSortOrder())) {
+            // 检查排序方式
+            SortOrderEnum.validate(param.getSortOrder());
+            queryWrapper.orderBy(StrUtil.toUnderlineCase(param.getSortField()), param.getSortOrder().equals(SortOrderEnum.ASC.getValue()));
+        } else {
+            queryWrapper.orderBy(SysGroup::getSortNum, true);
         }
+        // 限制数据权限
+        DataScopeHelper.dataScopeFilter(queryWrapper, SysGroup::getCreateBy, SysGroup::getOrgCode);
         // 分页查询
-        Page<SysGroup> page = new Page<>(param.getPageNum(), param.getPageSize());
-        Page<SysGroup> groupPage = this.page(page, queryWrapper);
-        List<SysGroupVO> voList = buildGroupVOList(groupPage.getRecords());
-        return new PageData<>(groupPage.getTotal(), voList);
+        Page<SysGroupVO> page = Page.of(param.getPageNum(), param.getPageSize());
+        Page<SysGroupVO> voPage = this.pageAs(page, queryWrapper, SysGroupVO.class);
+        return new PageData<>(voPage.getTotalRow(), voPage.getRecords());
     }
 
     @Override
     public SysGroupVO detail(SysGroupParam param) {
         // 查询条件 id、code均为唯一标识
-        LambdaQueryWrapper<SysGroup> queryWrapper = Wrappers.lambdaQuery(SysGroup.class);
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getId()), SysGroup::getId, param.getId());
-        queryWrapper.eq(ObjectUtil.isNotEmpty(param.getCode()), SysGroup::getCode, param.getCode());
+        QueryWrapper queryWrapper = QueryWrapper.create();
+        queryWrapper.eq(SysGroup::getId, param.getId(), ObjectUtil.isNotEmpty(param.getId()));
+        queryWrapper.eq(SysGroup::getCode, param.getCode(), ObjectUtil.isNotEmpty(param.getCode()));
         SysGroup sysGroup = this.getOne(queryWrapper);
         if (sysGroup == null) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定数据");
@@ -154,19 +147,15 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         // 若未指定唯一编码code，则自动生成
         if (Strings.isNullOrEmpty(group.getCode())) {
             // 唯一code RandomUtil.randomString(10)、IdUtil.objectId()24位、IdUtil.getSnowflakeNextId()19位
-            group.setCode(SysConstants.GROUP_PREFIX + IdUtil.getSnowflakeNextId());
+//            group.setCode(SysConstants.GROUP_PREFIX + IdUtil.getSnowflakeNextId());
         }
-        // 若指定了直属组织，则设置所属组织
-        if (ObjectUtil.isNotEmpty(group.getOrgCode())) {
-            // 获取组织结构树
-            Tree<String> rootTree = sysOrgService.singleTree();
-            Tree<String> orgNode = rootTree.getNode(group.getOrgCode());
-            // 设置直属机构名称
-            group.setOrgName(orgNode.getName().toString());
-            // 组织机构层级路径,逗号分隔,父节点在后
-            List<String> list = TreeUtil.getParentsId(orgNode, true);
-            group.setOrgPath(SysConstants.COMMA_JOINER.join(list));
+        // 查询指定组织
+        SysOrg org = sysOrgService.getOne(QueryWrapper.create().eq(SysOrg::getCode, param.getOrgCode()));
+        if (org == null) {
+            throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定组织");
         }
+        // 设置直属机构名称
+        group.setOrgName(org.getName());
         this.save(group);
     }
 
@@ -175,15 +164,18 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         // 待删除的id集合
         Set<Long> idSet = param.getIds();
         // 删除时先查再删
-        List<SysGroup> groupList = this.listByIds(idSet);
-        // 要删除的和查询到的进行比对
-        if (ObjectUtil.notEqual(idSet.size(), groupList.size())) {
+        long count = this.count(QueryWrapper.create().in(SysGroup::getId, idSet));
+        // 查到的数量比对
+        if (idSet.size() != count) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "删除失败，未查到原数据");
         }
         // 物理删除
         //this.removeByIds(idSet);
         // 逻辑删除
-        this.update(Wrappers.lambdaUpdate(SysGroup.class).in(SysGroup::getId, idSet).set(SysGroup::getDeleted, 1));
+        UpdateChain.of(SysGroup.class)
+                .set(SysGroup::getDeleted, 1)
+                .where(SysGroup::getId).in(idSet)
+                .update();
     }
 
     @Override
@@ -196,16 +188,15 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         // 属性复制
         SysGroup updateGroup = BeanUtil.copyProperties(param, SysGroup.class, BaseEntity.UPDATE_TIME, BaseEntity.UPDATE_BY);
         updateGroup.setId(oldGroup.getId());
-        // 若新指定了直属组织，则设置组织名
-        if (ObjectUtil.notEqual(oldGroup.getOrgCode(), updateGroup.getOrgCode()) && ObjectUtil.isNotEmpty(updateGroup.getOrgCode())) {
-            // 获取组织结构树
-            Tree<String> rootTree = sysOrgService.singleTree();
-            Tree<String> orgNode = rootTree.getNode(updateGroup.getOrgCode());
+        // 若新指定了直属组织
+        if (ObjectUtil.notEqual(oldGroup.getOrgCode(), updateGroup.getOrgCode())) {
+            // 查询指定组织
+            SysOrg org = sysOrgService.getOne(QueryWrapper.create().eq(SysOrg::getCode, param.getOrgCode()));
+            if (org == null) {
+                throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定组织");
+            }
             // 设置直属机构名称
-            updateGroup.setOrgName(orgNode.getName().toString());
-            // 组织机构层级路径,逗号分隔,父节点在后
-            List<String> list = TreeUtil.getParentsId(orgNode, true);
-            updateGroup.setOrgPath(SysConstants.COMMA_JOINER.join(list));
+            updateGroup.setOrgName(org.getName());
         }
         this.updateById(updateGroup);
     }
@@ -245,9 +236,9 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
             return new ArrayList<>();
         }
         // 查询岗位分组
-        List<SysGroup> groupList = this.list(Wrappers.lambdaQuery(SysGroup.class)
+        List<SysGroup> groupList = this.list(QueryWrapper.create()
                 .in(SysGroup::getCode, groupSet)
-                .eq(SysGroup::getStatus, 0)
+                .eq(SysGroup::getStatus, StatusEnum.ENABLE.getCode())
                 .eq(SysGroup::getDeleted, 0)
         );
         return groupList;
@@ -324,7 +315,7 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
         Set<String> oldUserSet = new HashSet<>();
         Set<String> otherGroupUserSet = new HashSet<>();
         // 查询指定group关联的的user，放入oldSet
-        sysRelationService.list(Wrappers.lambdaQuery(SysRelation.class)
+        sysRelationService.list(QueryWrapper.create()
                 .in(SysRelation::getObjectId, userSet)
                 .eq(SysRelation::getRelationType, RelationTypeEnum.USER_HAS_GROUP.getCode())
         ).forEach(e -> {
@@ -379,16 +370,15 @@ public class SysGroupServiceImpl extends ServiceImpl<SysGroupMapper, SysGroup> i
     public List<Tree<String>> menuTree(SysGroupParam param) {
         // 查询指定group的所有role
         Set<String> roleSet = sysRelationService.groupRole(param.getCode());
-        if (ObjectUtil.isEmpty(roleSet)) {
-            return new ArrayList<>();
-        }
+        // 所有岗位都拥有默认角色
+        roleSet.add(sysRoleService.defaultRole());
         return sysRoleService.menuTree(SysRoleParam.builder().codeSet(roleSet).build());
     }
 
     @Override
     public SysGroup userDefaultGroup(String username) {
         // 查询用户
-        SysUser user = sysUserService.getOne(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getAccount, username));
+        SysUser user = sysUserService.getOne(QueryWrapper.create().eq(SysUser::getAccount, username));
         if (user == null) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "未查到指定数据");
         }
