@@ -24,7 +24,7 @@ management:
 spring:
   # 数据源配置
   datasource:
-    url: jdbc:mysql://127.0.0.1/moyu?useSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://127.0.0.1/moyu?useSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&autoReconnect=true&serverTimezone=Asia/Shanghai
     username: moyu
     password: cTEL2ctLLCBWxWbt
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -98,7 +98,10 @@ custom:
     enabled: true
     # 令牌类型，默认redis 支持: jwt | redis
     token-type: redis
-    # 白名单列表，跳过 AuthorizationFilter 认证过滤器
+    # 需要进行认证的列表
+    auth-list:
+      - /api/**
+    # 白名单列表，不经过认证过滤器
     white-list:
       # 认证授权类
       - /api/auth/login/**

@@ -4,12 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.enums.SortOrderEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
@@ -20,7 +14,13 @@ import ${packageName}.${moduleName}.model.entity.${entityName};
 import ${packageName}.${moduleName}.model.param.${entityName}Param;
 import ${packageName}.${moduleName}.model.vo.${entityName}VO;
 import ${packageName}.${moduleName}.service.${entityName}Service;
+import com.mybatisflex.core.logicdelete.LogicDeleteManager;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.QueryWrapper;
+import com.mybatisflex.core.update.UpdateChain;
+import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.CollectionUtils;
@@ -42,43 +42,43 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
     @Override
     public List<${entityName}VO> list(${entityName}Param param) {
         // 查询条件
-        QueryWrapper<${entityName}> queryWrapper = Wrappers.query(${entityName}.class).checkSqlInjection();
+        QueryWrapper queryWrapper = QueryWrapper.create();
 <#if fieldList??>
     <#list fieldList as fieldConfig>
         <#if fieldConfig.showInQuery == 1>
         // 指定${fieldConfig.fieldName}查询
             <#if fieldConfig.queryType == "LIKE">
-        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.like(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'EQ'>
-        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.eq(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'GT'>
-        queryWrapper.lambda().gt(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.gt(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'GE'>
-        queryWrapper.lambda().ge(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.ge(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'LT'>
-        queryWrapper.lambda().lt(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.lt(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'LE'>
-        queryWrapper.lambda().le(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.le(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'NE'>
-        queryWrapper.lambda().ne(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.ne(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'BETWEEN'>
         ${fieldConfig.fieldType} start = param.get${fieldConfig.fieldName?cap_first}1();
         ${fieldConfig.fieldType} end = param.get${fieldConfig.fieldName?cap_first}2();
                 <#if fieldConfig.formType == "DATE">
         // 如果是日期范围，则endTime应为当日的结尾
-        end = DateUtil.endOfDay(end);
+        end = new DateTime(end).withTime(23, 59, 59, 0).toDate();
                 </#if>
         // 范围查询-起始
-        queryWrapper.lambda().ge(ObjectUtil.isNotEmpty(start), ${entityName}::get${fieldConfig.fieldName?cap_first}, start);
+        queryWrapper.ge(${entityName}::get${fieldConfig.fieldName?cap_first}, start, ObjectUtil.isNotEmpty(start));
         // 范围查询-截止
-        queryWrapper.lambda().le(ObjectUtil.isNotEmpty(end), ${entityName}::get${fieldConfig.fieldName?cap_first}, end);
+        queryWrapper.le(${entityName}::get${fieldConfig.fieldName?cap_first}, end, ObjectUtil.isNotEmpty(end));
             <#elseif fieldConfig.queryType == 'IN'>
-        queryWrapper.lambda().in(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.in(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             </#if>
         </#if>
         <#if fieldConfig.fieldName == 'deleted'>
         // 仅查询未删除的
-        queryWrapper.lambda().eq(${entityName}::getDeleted, 0);
+        queryWrapper.eq(${entityName}::getDeleted, 0);
         </#if>
     </#list>
 </#if>
@@ -86,58 +86,55 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         if (ObjectUtil.isAllNotEmpty(param.getSortField(), param.getSortOrder())) {
             // 检查排序方式
             SortOrderEnum.validate(param.getSortOrder());
-            queryWrapper.orderBy(true, param.getSortOrder().equals(SortOrderEnum.ASC.getValue()),
-            StrUtil.toUnderlineCase(param.getSortField()));
+            queryWrapper.orderBy(StrUtil.toUnderlineCase(param.getSortField()), param.getSortOrder().equals(SortOrderEnum.ASC.getValue()));
         } else {
-            queryWrapper.lambda().orderByDesc(${entityName}::getUpdateTime);
+            queryWrapper.orderBy(${entityName}::getUpdateTime, false);
         }
         // 查询
-        List<${entityName}> ${entityName?uncap_first}List = this.list(queryWrapper);
-        // 转换为voList
-        List<${entityName}VO> voList = build${entityName}VOList(${entityName?uncap_first}List);
+        List<${entityName}VO> voList = this.listAs(queryWrapper, ${entityName}VO.class);
         return voList;
     }
 
     @Override
     public PageData<${entityName}VO> pageList(${entityName}Param param) {
         // 查询条件
-        QueryWrapper<${entityName}> queryWrapper = Wrappers.query(${entityName}.class).checkSqlInjection();
+        QueryWrapper queryWrapper = QueryWrapper.create();
 <#if fieldList??>
     <#list fieldList as fieldConfig>
         <#if fieldConfig.showInQuery == 1>
         // 指定${fieldConfig.fieldName}查询
             <#if fieldConfig.queryType == "LIKE">
-        queryWrapper.lambda().like(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.like(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'EQ'>
-        queryWrapper.lambda().eq(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.eq(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'GT'>
-        queryWrapper.lambda().gt(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.gt(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'GE'>
-        queryWrapper.lambda().ge(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.ge(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'LT'>
-        queryWrapper.lambda().lt(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.lt(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'LE'>
-        queryWrapper.lambda().le(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.le(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'NE'>
-        queryWrapper.lambda().ne(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.ne(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             <#elseif fieldConfig.queryType == 'BETWEEN'>
         ${fieldConfig.fieldType} start = param.get${fieldConfig.fieldName?cap_first}1();
         ${fieldConfig.fieldType} end = param.get${fieldConfig.fieldName?cap_first}2();
                 <#if fieldConfig.formType == "DATE">
         // 如果是日期，则endTime应为当日的结尾
-        end = DateUtil.endOfDay(end);
+        end = new DateTime(end).withTime(23, 59, 59, 0).toDate();
                 </#if>
         // 范围查询-起始
-        queryWrapper.lambda().ge(ObjectUtil.isNotEmpty(start), ${entityName}::get${fieldConfig.fieldName?cap_first}, start);
+        queryWrapper.ge(${entityName}::get${fieldConfig.fieldName?cap_first}, start, ObjectUtil.isNotEmpty(start));
         // 范围查询-截止
-        queryWrapper.lambda().le(ObjectUtil.isNotEmpty(end), ${entityName}::get${fieldConfig.fieldName?cap_first}, end);
+        queryWrapper.le(${entityName}::get${fieldConfig.fieldName?cap_first}, end, ObjectUtil.isNotEmpty(end));
             <#elseif fieldConfig.queryType == 'IN'>
-        queryWrapper.lambda().in(ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()), ${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}());
+        queryWrapper.in(${entityName}::get${fieldConfig.fieldName?cap_first}, param.get${fieldConfig.fieldName?cap_first}(), ObjectUtil.isNotEmpty(param.get${fieldConfig.fieldName?cap_first}()));
             </#if>
         </#if>
         <#if fieldConfig.fieldName == 'deleted'>
         // 仅查询未删除的
-        queryWrapper.lambda().eq(${entityName}::getDeleted, 0);
+        queryWrapper.eq(${entityName}::getDeleted, 0);
         </#if>
     </#list>
 </#if>
@@ -145,16 +142,14 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         if (ObjectUtil.isAllNotEmpty(param.getSortField(), param.getSortOrder())) {
             // 检查排序方式
             SortOrderEnum.validate(param.getSortOrder());
-            queryWrapper.orderBy(true, param.getSortOrder().equals(SortOrderEnum.ASC.getValue()),
-            StrUtil.toUnderlineCase(param.getSortField()));
-            } else {
-            queryWrapper.lambda().orderByDesc(${entityName}::getUpdateTime);
+            queryWrapper.orderBy(StrUtil.toUnderlineCase(param.getSortField()), param.getSortOrder().equals(SortOrderEnum.ASC.getValue()));
+        } else {
+            queryWrapper.orderBy(${entityName}::getUpdateTime, false);
         }
         // 分页查询
-        Page<${entityName}> page = new Page<>(param.getPageNum(), param.getPageSize());
-        Page<${entityName}> ${entityName?uncap_first}Page = this.page(page, queryWrapper);
-        List<${entityName}VO> voList = build${entityName}VOList(${entityName?uncap_first}Page.getRecords());
-        return new PageData<>(${entityName?uncap_first}Page.getTotal(), voList);
+        Page<${entityName}VO> page = Page.of(param.getPageNum(), param.getPageSize());
+        Page<${entityName}VO> voPage = this.pageAs(page, queryWrapper, ${entityName}VO.class);
+        return new PageData<>(voPage.getTotalRow(), voPage.getRecords());
     }
 
     @Override
@@ -197,15 +192,16 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         // 待删除的id集合
         Set<Long> idSet = param.getIds();
         // 删除时先查再删
-        List<${entityName}> toDelList = this.listByIds(idSet);
-        // 要删除的和查询到的进行比对
-        if (ObjectUtil.notEqual(idSet.size(), toDelList.size())) {
+        long count = this.count(QueryWrapper.create().in(${entityName}::getId, idSet));
+        // 要删除的和查询到的进行数量比对
+        if (idSet.size() != count) {
             throw new BusinessException(ResultCodeEnum.INVALID_PARAMETER_ERROR, "删除失败，未查到原数据");
         }
-        // 物理删除
-        //this.removeByIds(idSet);
+        // 物理删除 or 逻辑删除
+        this.removeByIds(idSet);
+        //LogicDeleteManager.execWithoutLogicDelete(() -> this.removeByIds(idSet));
         // 逻辑删除
-        this.update(Wrappers.lambdaUpdate(${entityName}.class).in(${entityName}::getId, idSet).set(${entityName}::getDeleted, 1));
+        //UpdateChain.of(${entityName}.class).set(${entityName}::getDeleted, 1).where(${entityName}::getId).in(idSet).update();
     }
 
     /**
