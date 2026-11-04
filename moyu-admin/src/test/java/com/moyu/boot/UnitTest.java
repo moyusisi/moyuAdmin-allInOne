@@ -1,12 +1,26 @@
 package com.moyu.boot;
 
+import cn.dev33.satoken.sign.SaSignManager;
+import cn.dev33.satoken.sign.config.SaSignConfig;
+import cn.dev33.satoken.sign.template.SaSignMany;
+import cn.dev33.satoken.sign.template.SaSignUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.SmUtil;
 import com.google.common.base.CaseFormat;
-import com.moyu.boot.common.core.util.IpUtils;
+import com.moyu.boot.system.constant.SysConstants;
+import com.moyu.boot.system.util.IpUtils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+import org.jasypt.iv.RandomIvGenerator;
+import org.jasypt.salt.RandomSaltGenerator;
 import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 本地测试类
@@ -34,7 +48,7 @@ public class UnitTest {
     public void testId() {
         // 24位: 67c7b60fd19001d4b33539b6
         log.info(IdUtil.objectId());
-        // 20位随机NanoId: R06PP2RUZeS9j6g0bNxyW
+        // 21位随机NanoId: R06PP2RUZeS9j6g0bNxyW
         log.info(IdUtil.nanoId());
         // 指定位数: g4Pq_XFDRq
         log.info(IdUtil.nanoId(10));
@@ -51,5 +65,75 @@ public class UnitTest {
     @Test
     public void testIp() {
         log.info(IpUtils.getRegion("127.0.0.1"));
+    }
+
+    @Test
+    public void testEncode() {
+        String sm4Key = "KeyMustBe16Size.";
+        byte[] key = sm4Key.getBytes(StandardCharsets.UTF_8);
+
+        String rawPassword = SysConstants.DEFAULT_PASSWORD;
+        String pwd = SmUtil.sm4(key).encryptHex(rawPassword);
+
+        String encodedPassword = "5b0b3e32ecc28623dc0f9af02227f27c";
+        String plain = SmUtil.sm4(key).decryptStr(encodedPassword, StandardCharsets.UTF_8);
+
+        log.info(plain);
+    }
+
+
+    /**
+     * 构建加密器
+     */
+    private StandardPBEStringEncryptor buildEncryptor() {
+        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+        encryptor.setPassword("mySecretKey");
+        encryptor.setAlgorithm("PBEWITHHMACSHA512ANDAES_256");
+        encryptor.setSaltGenerator(new RandomSaltGenerator());
+        encryptor.setIvGenerator(new RandomIvGenerator());
+        return encryptor;
+    }
+
+    @Test
+    public void testJasyptEncode() {
+        // 加密器
+        StandardPBEStringEncryptor encryptor = buildEncryptor();
+
+        // 加解密示例
+        String plainText = "123456";
+        String encryptedText = encryptor.encrypt(plainText);
+        log.info("encryptedText:{}", encryptedText);
+        encryptedText = "RpUCoqFV5RXBxCHYVFcdKn1Nb13rCbhOXWhHDk2hDDHe79e8IoQia3cejJD2Hn6o";
+        plainText = encryptor.decrypt(encryptedText);
+        log.info("plainText:{}", plainText);
+    }
+
+    @Test
+    public void testSign() {
+        // 默认配置
+        SaSignConfig signConfig = new SaSignConfig("6a82ddac41b2c4f7b568e2bb");
+        SaSignManager.setConfig(signConfig);
+
+        // 多app配置
+        Map<String, SaSignConfig> signMany = new HashMap<>();
+        SaSignConfig config1 = new SaSignConfig("6a82ddac41b2c4f7b568e2bb");
+        config1.setDigestAlgo("sha256");
+        signMany.put("appId1", config1);
+        SaSignManager.setSignMany(signMany);
+
+        // 请求参数
+        Map<String, Object> paramMap = new LinkedHashMap<>();
+        paramMap.put("userId", 10001);
+        paramMap.put("money", 1000);
+        // 补全 timestamp、nonce、sign 参数，并序列化为 kv 字符串
+        String paramStr = SaSignUtil.addSignParamsAndJoin(paramMap);
+        String paramStr2 = SaSignMany.getSignTemplate("appId1").addSignParamsAndJoin(paramMap);
+        // 补全，以map形式返回
+        Map<String, Object> paramStr3 = SaSignMany.getSignTemplate("appId1").addSignParams(paramMap);
+        log.info("paramStr:{}", paramStr);
+        log.info("paramStr2:{}", paramStr2);
+        log.info("paramStr2:{}", paramStr3);
+//        SaSignUtil.checkRequest(SaHolder.getRequest(), "id", "name");
+
     }
 }
