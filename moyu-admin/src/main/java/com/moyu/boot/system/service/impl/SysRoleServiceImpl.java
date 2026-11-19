@@ -7,8 +7,8 @@ import cn.hutool.core.lang.tree.TreeNode;
 import cn.hutool.core.lang.tree.TreeNodeConfig;
 import cn.hutool.core.lang.tree.TreeUtil;
 import cn.hutool.core.lang.tree.parser.DefaultNodeParser;
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
@@ -29,7 +29,10 @@ import com.moyu.boot.system.constant.SysConstants;
 import com.moyu.boot.system.enums.MenuTypeEnum;
 import com.moyu.boot.system.enums.RelationTypeEnum;
 import com.moyu.boot.system.mapper.SysRoleMapper;
-import com.moyu.boot.system.model.entity.*;
+import com.moyu.boot.system.model.entity.SysApi;
+import com.moyu.boot.system.model.entity.SysMenu;
+import com.moyu.boot.system.model.entity.SysRelation;
+import com.moyu.boot.system.model.entity.SysRole;
 import com.moyu.boot.system.model.entity.ext.RelationExt;
 import com.moyu.boot.system.model.param.SysRoleParam;
 import com.moyu.boot.system.model.param.SysUserParam;
@@ -40,12 +43,12 @@ import com.moyu.boot.system.service.*;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.CollectionUtils;
 
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -164,7 +167,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         // 若未指定唯一编码code，则自动生成
         if (Strings.isNullOrEmpty(role.getCode())) {
             // 唯一code IdUtil.objectId()24位、IdUtil.getSnowflakeNextId()19位
-            role.setCode(SysConstants.ROLE_PREFIX + IdUtil.getSnowflakeNextId());
+            role.setCode(SysConstants.ROLE_PREFIX + RandomUtil.randomStringLower(10));
         }
         this.save(role);
     }
@@ -362,13 +365,12 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             SysApi api = apiMap.get(btn.getPermission());
             // apiMap中仅包含有数据范围的接口
             if (ObjectUtil.isNotNull(api)) {
-                PermScopeInfo vo = PermScopeInfo.builder()
-                        .code(code)
-                        .btnName(btn.getName())
-                        .name(api.getName())
-                        .path(api.getPath())
-                        .permission(api.getCode())
-                        .build();
+                PermScopeInfo vo = new PermScopeInfo();
+                vo.setCode(code);
+                vo.setBtnName(btn.getName());
+                vo.setName(api.getName());
+                vo.setPath(api.getPath());
+                vo.setPermission(api.getCode());
                 SysRelation relation = permMap.get(code);
                 RelationExt.ScopeExt ext = gson.fromJson(relation.getExtJson(), RelationExt.ScopeExt.class);
                 if (ext != null) {
@@ -535,10 +537,11 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             return new ArrayList<>();
         }
         // 查询用户(可指定搜索词)
-        List<SysUserVO> voList = sysUserService.list(SysUserParam.builder()
-                .name(param.getSearchKey())
-                .orgCode(param.getOrgCode())
-                .codeSet(userSet).build());
+        SysUserParam queryParam = new SysUserParam();
+        queryParam.setName(param.getSearchKey());
+        queryParam.setOrgCode(param.getOrgCode());
+        queryParam.setCodeSet(userSet);
+        List<SysUserVO> voList = sysUserService.list(queryParam);
         return voList;
     }
 

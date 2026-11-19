@@ -10,6 +10,10 @@ import com.moyu.boot.common.authZ.util.ExceptionWrapperUtils;
 import com.moyu.boot.common.core.enums.ResultCodeEnum;
 import com.moyu.boot.common.core.exception.BusinessException;
 import com.moyu.boot.common.core.model.Result;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -26,10 +30,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
 
 /**
@@ -211,17 +211,24 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 认证鉴权异常
+     * 认证异常
      * sa鉴权的相关异常(SaTokenException的子类)(注意要使用AOP模式，不要使用拦截器模式,否则无法打印入参)
      */
-    @ExceptionHandler({NotLoginException.class, NotRoleException.class, NotPermissionException.class})
+    @ExceptionHandler({NotLoginException.class})
+    public Result<?> notLoginException(HttpServletRequest request, NotLoginException e) {
+        Result<?> result = ExceptionWrapperUtils.handleNotLogin((NotLoginException) e);
+        log.info("未认证访问：{}", request.getRequestURI());
+        return result;
+    }
+
+    /**
+     * 鉴权异常
+     * sa鉴权的相关异常(SaTokenException的子类)(注意要使用AOP模式，不要使用拦截器模式,否则无法打印入参)
+     */
+    @ExceptionHandler({NotRoleException.class, NotPermissionException.class})
     public Result<?> noPermissionException(HttpServletRequest request, SaTokenException e) {
         Result<?> result = new Result<>(ResultCodeEnum.ACCESS_UNAUTHORIZED);
-        if (e instanceof NotLoginException) {
-            // 登陆认证是在Filter层处理的，这里通常走不到
-            result = ExceptionWrapperUtils.handleNotLogin((NotLoginException) e);
-        }
-        log.info("未授权访问：{}", request.getRequestURI());
+        log.info("未授权访问：{}，{}", request.getRequestURI(), e.getMessage());
         return result;
     }
 
